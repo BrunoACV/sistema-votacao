@@ -59,10 +59,11 @@
             <!-- Gratitude Notice -->
             <div class="text-center text-xs text-[#6272a4] pt-2">
                 <p>Obrigado por celebrar o Halloween conosco! 🦇</p>
-                <p class="mt-1 text-[#bd93f9]">O resultado oficial e os vencedores estão disponíveis no placar.</p>
+                <p class="mt-1 text-[#bd93f9]">Seu voto foi registrado com sucesso.</p>
             </div>
 
-            <!-- Action Button: Ver Placar & Pódio -->
+            {% if session.get('is_admin') %}
+            <!-- Action Button: Ver Placar & Pódio (Apenas Moderador Autenticado) -->
             <div class="pt-2 flex flex-col sm:flex-row gap-3">
                 <a href="{{ url_for('public.results') }}" 
                    class="flex-1 bg-gradient-to-r from-[#f1fa8c] to-[#ffb86c] hover:from-[#f5fb9d] hover:to-[#ffc485] text-[#282a36] font-black py-3.5 px-6 rounded-xl shadow-xl transition transform hover:scale-[1.01] active:scale-[0.99] text-sm flex items-center justify-center space-x-2 text-center">
@@ -70,6 +71,7 @@
                     <span>Acompanhar Placar e Pódio dos Vencedores</span>
                 </a>
             </div>
+            {% endif %}
 
         </div>
     </div>

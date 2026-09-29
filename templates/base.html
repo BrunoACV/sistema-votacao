@@ -42,7 +42,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <!-- Brand / Logo Real do INTS -->
-                <a href="{{ url_for('admin.dashboard') if session.get('is_admin') else url_for('public.results') }}" class="flex items-center space-x-3.5 group">
+                <a href="{{ url_for('admin.dashboard') if session.get('is_admin') else url_for('public.register') }}" class="flex items-center space-x-3.5 group">
                     <img src="{{ url_for('static', filename='img/ints-horizontal.png') }}" 
                          alt="INTS - Instituto Nacional de Tecnologia e Saúde" 
                          class="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
@@ -97,14 +97,8 @@
                     </a>
                 </nav>
                 {% else %}
-                <!-- Public Desktop Navigation Links (Página de votos mantida em URL secreta separada) -->
+                <!-- Public Desktop Navigation Links (Apenas Inscrição e Moderação quando não autenticado) -->
                 <nav class="hidden md:flex items-center space-x-3">
-                    <a href="{{ url_for('public.results') }}" 
-                       class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center space-x-2.5 {% if request.endpoint == 'public.results' %}bg-[#f1fa8c] text-[#282a36] shadow-lg shadow-[#f1fa8c]/30{% else %}bg-[#44475a]/70 hover:bg-[#44475a] text-[#f8f8f2] hover:text-[#f1fa8c]{% endif %}">
-                        <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-6 h-6 rounded-lg object-cover ring-1 ring-[#f1fa8c]/50">
-                        <span>Resultados</span>
-                    </a>
-
                     <a href="{{ url_for('public.register') }}" 
                        class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center space-x-2.5 {% if request.endpoint in ['public.register', 'public.register_success'] %}bg-[#ff79c6] text-[#282a36] shadow-lg shadow-[#ff79c6]/30{% else %}bg-[#44475a]/70 hover:bg-[#44475a] text-[#f8f8f2] hover:text-[#ff79c6]{% endif %}">
                         <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-6 h-6 rounded-lg object-cover ring-1 ring-[#ff79c6]/50">
@@ -161,10 +155,6 @@
                 <span>Sair do Painel</span>
             </a>
             {% else %}
-            <a href="{{ url_for('public.results') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#f1fa8c] hover:bg-[#f1fa8c] hover:text-[#282a36] transition">
-                <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-6 h-6 rounded-lg object-cover">
-                <span>Placar e Pódio do Halloween</span>
-            </a>
             <a href="{{ url_for('public.register') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#ff79c6] text-[#282a36] transition">
                 <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-6 h-6 rounded-lg object-cover">
                 <span>Inscrição de Candidato</span>
