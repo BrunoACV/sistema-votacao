@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# Sistema de Votação Institucional de Halloween INTS em contêiner.
+#
+#   Subir (e reconstruir a imagem):  docker compose up -d --build
+#   Ver o log:                       docker compose logs -f voting
+#   Parar:                           docker compose down
+#   Reiniciar:                       docker compose restart voting
+#
+# A porta de fora é HALLOWEEN_PORTA (padrão 8080); dentro do contêiner é sempre
+# 8080. Para outra porta:  HALLOWEEN_PORTA=8081 docker compose up -d
+# ---------------------------------------------------------------------------
+services:
+  voting:
+    build: .
+    image: ints-voting-system:latest
+    container_name: ints-voting
+    restart: unless-stopped
+
+    # O .env do repositório entra como variável de ambiente, e não como arquivo
+    # dentro da imagem. ATENÇÃO: o Compose interpreta "$" nos valores deste
+    # arquivo; se houver senha com "$", escreva como "$$".
+    env_file:
+      - .env
+
+    environment:
+      # Fixos aqui, vencendo o .env para garantir alinhamento interno do contêiner
+      PORT: "8080"
+      HOST: "0.0.0.0"
+      APP_ENV: production
+      TZ: America/Bahia
+
+    ports:
+      - "${HALLOWEEN_PORTA:-8080}:8080"
+
+    volumes:
+      # Banco de dados SQLite persistente (participantes, fotos, votos, histórico).
+      # Pasta do host, e não volume anônimo: sobrevive a rebuilds e atualizações.
+      - ./data:/app/data
+
+      # Diretório de fotos das fantasias enviadas pelos candidatos.
+      - ./static/uploads:/app/static/uploads
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Classificação e Pódio de Halloween - INTS{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-10">
+    
+    <!-- Title & Summary Metrics (Dracula Dark) -->
+    <div class="text-center max-w-3xl mx-auto pt-2">
+        <div class="inline-flex items-center space-x-2 bg-[#343746] border border-[#f1fa8c]/40 text-[#f1fa8c] text-xs uppercase font-extrabold px-4 py-1.5 rounded-full tracking-wider mb-3 shadow-lg shadow-[#f1fa8c]/10">
+            <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Troféu" class="w-5 h-5 rounded-full object-cover">
+            <span>Classificação Oficial de Halloween</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-black text-[#f8f8f2] tracking-tight">
+            Pódio do <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#f1fa8c] via-[#ffb86c] to-[#ff79c6]">Halloween</span>
+        </h1>
+        <p class="text-[#6272a4] text-xs sm:text-sm mt-2 max-w-md mx-auto">
+            Resultado oficial apurado com base no voto único dos colaboradores do INTS.
+        </p>
+    </div>
+
+    <!-- Summary Statistics Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        <div class="bg-[#343746] rounded-2xl border border-[#6272a4]/30 p-5 text-center shadow-lg">
+            <div class="text-[11px] font-bold text-[#6272a4] uppercase tracking-wider mb-1">Candidatos Inscritos</div>
+            <div class="text-3xl font-black text-[#8be9fd]">{{ summary.total_participants }}</div>
+        </div>
+        <div class="bg-[#343746] rounded-2xl border border-[#6272a4]/30 p-5 text-center shadow-lg">
+            <div class="text-[11px] font-bold text-[#6272a4] uppercase tracking-wider mb-1">Colaboradores Votantes</div>
+            <div class="text-3xl font-black text-[#50fa7b]">{{ summary.total_voters }}</div>
+        </div>
+        <div class="bg-[#343746] rounded-2xl border border-[#6272a4]/30 p-5 text-center shadow-lg">
+            <div class="text-[11px] font-bold text-[#6272a4] uppercase tracking-wider mb-1">Total de Votos Válidos</div>
+            <div class="text-3xl font-black text-[#bd93f9]">{{ summary.total_votes }}</div>
+        </div>
+    </div>
+
+    <!-- Olympic Podium Section (Side-by-Side em TODAS as telas, inclusive celular) -->
+    {% if first_place %}
+    <div class="bg-[#343746] rounded-3xl shadow-2xl border border-[#bd93f9]/30 p-4 sm:p-8 md:p-10 podium-elevated">
+        <div class="text-center mb-6">
+            <h2 class="text-xl sm:text-3xl font-black text-[#f8f8f2] flex items-center justify-center space-x-2">
+                <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Troféu" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover ring-1 ring-[#f1fa8c]/50">
+                <span>Pódio dos Vencedores</span>
+            </h2>
+            <p class="text-xs text-[#6272a4] mt-1">Os concorrentes mais votados da festa institucional</p>
+        </div>
+
+        <!-- PODIUM CONTAINER: Sempre flex-row (lado a lado no mobile e desktop) -->
+        <div class="flex flex-row items-end justify-center gap-1.5 sm:gap-4 md:gap-8 max-w-4xl mx-auto pt-4 pb-2 w-full">
+            
+            <!-- 2º LUGAR - PRATA - ESQUERDA -->
+            <div class="flex-1 min-w-0 flex flex-col items-center">
+                {% if second_place %}
+                    <div class="relative mb-2 text-center w-full px-1">
+                        <span class="inline-block bg-[#44475a] text-[#8be9fd] border border-[#8be9fd]/40 font-black text-[10px] sm:text-xs px-2 py-0.5 rounded-full mb-1">
+                            🥈 2º Lugar
+                        </span>
+                        <div class="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full border-2 sm:border-4 border-[#8be9fd] shadow-lg shadow-[#8be9fd]/20 overflow-hidden mx-auto bg-[#282a36]">
+                            <img src="{{ url_for('static', filename='uploads/' + second_place.foto_filename) }}" 
+                                 alt="{{ second_place.nome_completo }}" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="font-bold text-xs sm:text-sm text-[#f8f8f2] mt-1.5 truncate">{{ second_place.nome_completo }}</h3>
+                        {% if second_place.funcao or second_place.setor %}
+                        <div class="text-[10px] text-[#8be9fd] truncate">
+                            {{ second_place.funcao }}{% if second_place.funcao and second_place.setor %} • {% endif %}{{ second_place.setor }}
+                        </div>
+                        {% endif %}
+                        <div class="text-sm sm:text-xl font-black text-[#8be9fd] mt-0.5">{{ second_place.total_votos }} <span class="text-[10px] sm:text-xs text-[#6272a4]">votos</span></div>
+                        <div class="text-[10px] sm:text-xs font-semibold text-[#6272a4]">{{ second_place.percentual }}%</div>
+                    </div>
+                    <!-- Silver Pedestal -->
+                    <div class="w-full h-24 sm:h-36 md:h-44 bg-gradient-to-t from-[#282a36] via-[#44475a] to-[#6272a4] rounded-t-xl sm:rounded-t-2xl shadow-inner border-t-2 border-[#8be9fd]/60 flex items-center justify-center text-[#8be9fd] font-black text-2xl sm:text-4xl">
+                        2
+                    </div>
+                {% else %}
+                    <div class="w-full h-24 sm:h-36 bg-[#282a36]/60 rounded-t-xl flex items-center justify-center text-[#6272a4] text-xs">
+                        2º Lugar
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 1º LUGAR - OURO (CAMPEÃO) - CENTRO & ELEVADO -->
+            <div class="flex-1 min-w-0 flex flex-col items-center">
+                <div class="relative mb-2 text-center w-full px-1">
+                    <div class="text-xl sm:text-2xl animate-bounce">👑</div>
+                    <span class="inline-block bg-[#f1fa8c]/20 text-[#f1fa8c] border border-[#f1fa8c]/60 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full mb-1 shadow-lg shadow-[#f1fa8c]/20">
+                        🥇 Campeão
+                    </span>
+                    <div class="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full border-2 sm:border-4 border-[#f1fa8c] shadow-2xl shadow-[#f1fa8c]/30 overflow-hidden mx-auto ring-2 sm:ring-4 ring-[#ffb86c]/40 bg-[#282a36]">
+                        <img src="{{ url_for('static', filename='uploads/' + first_place.foto_filename) }}" 
+                             alt="{{ first_place.nome_completo }}" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-black text-xs sm:text-base text-[#f8f8f2] mt-1.5 truncate">{{ first_place.nome_completo }}</h3>
+                    {% if first_place.funcao or first_place.setor %}
+                    <div class="text-[11px] text-[#f1fa8c] font-semibold truncate">
+                        {{ first_place.funcao }}{% if first_place.funcao and first_place.setor %} • {% endif %}{{ first_place.setor }}
+                    </div>
+                    {% endif %}
+                    <div class="text-base sm:text-2xl font-black text-[#f1fa8c] mt-0.5">{{ first_place.total_votos }} <span class="text-[10px] sm:text-xs text-[#ffb86c]">votos</span></div>
+                    <div class="text-[10px] sm:text-xs font-bold text-[#50fa7b]">{{ first_place.percentual }}% dos votos</div>
+                </div>
+                <!-- Gold Pedestal (Mais alto) -->
+                <div class="w-full h-36 sm:h-52 md:h-60 bg-gradient-to-t from-[#282a36] via-[#ffb86c]/30 to-[#f1fa8c] rounded-t-xl sm:rounded-t-2xl shadow-2xl border-t-4 border-[#f1fa8c] flex items-center justify-center text-[#282a36] font-black text-3xl sm:text-5xl">
+                    1
+                </div>
+            </div>
+
+            <!-- 3º LUGAR - BRONZE - DIREITA -->
+            <div class="flex-1 min-w-0 flex flex-col items-center">
+                {% if third_place %}
+                    <div class="relative mb-2 text-center w-full px-1">
+                        <span class="inline-block bg-[#44475a] text-[#ffb86c] border border-[#ffb86c]/40 font-black text-[10px] sm:text-xs px-2 py-0.5 rounded-full mb-1">
+                            🥉 3º Lugar
+                        </span>
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-2 sm:border-4 border-[#ffb86c] shadow-lg shadow-[#ffb86c]/20 overflow-hidden mx-auto bg-[#282a36]">
+                            <img src="{{ url_for('static', filename='uploads/' + third_place.foto_filename) }}" 
+                                 alt="{{ third_place.nome_completo }}" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="font-bold text-xs sm:text-sm text-[#f8f8f2] mt-1.5 truncate">{{ third_place.nome_completo }}</h3>
+                        {% if third_place.funcao or third_place.setor %}
+                        <div class="text-[10px] text-[#ffb86c] truncate">
+                            {{ third_place.funcao }}{% if third_place.funcao and third_place.setor %} • {% endif %}{{ third_place.setor }}
+                        </div>
+                        {% endif %}
+                        <div class="text-sm sm:text-xl font-black text-[#ffb86c] mt-0.5">{{ third_place.total_votos }} <span class="text-[10px] sm:text-xs text-[#6272a4]">votos</span></div>
+                        <div class="text-[10px] sm:text-xs font-semibold text-[#6272a4]">{{ third_place.percentual }}%</div>
+                    </div>
+                    <!-- Bronze Pedestal -->
+                    <div class="w-full h-20 sm:h-32 md:h-36 bg-gradient-to-t from-[#282a36] via-[#44475a] to-[#ffb86c]/60 rounded-t-xl sm:rounded-t-2xl shadow-inner border-t-2 border-[#ffb86c]/60 flex items-center justify-center text-[#ffb86c] font-black text-xl sm:text-3xl">
+                        3
+                    </div>
+                {% else %}
+                    <div class="w-full h-20 sm:h-32 bg-[#282a36]/60 rounded-t-xl flex items-center justify-center text-[#6272a4] text-xs">
+                        3º Lugar
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- VISÃO GERAL (Tabela e lista completa de todos os participantes por votos) -->
+    <div class="bg-[#343746] rounded-3xl shadow-xl border border-[#6272a4]/30 p-5 sm:p-8">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#6272a4]/30">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-black text-[#f8f8f2]">
+                    Visão Geral dos Candidatos
+                </h2>
+                <p class="text-xs text-[#6272a4] mt-0.5">Classificação completa ordenada pelo total de votos recebidos</p>
+            </div>
+            <span class="text-xs font-bold bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/40 px-3 py-1 rounded-full">
+                {{ leaderboard|length }} participantes
+            </span>
+        </div>
+
+        {% if not leaderboard %}
+            <div class="text-center py-10 text-[#6272a4]">
+                <p>Nenhum voto computado ainda.</p>
+            </div>
+        {% else %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-[#6272a4]/30 text-xs font-bold text-[#6272a4] uppercase tracking-wider">
+                            <th class="py-3 px-3">Posição</th>
+                            <th class="py-3 px-3">Participante</th>
+                            <th class="py-3 px-3 text-center">Total de Votos</th>
+                            <th class="py-3 px-3 text-right">Percentual</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#6272a4]/20 text-sm">
+                        {% for cand in leaderboard %}
+                        <tr class="hover:bg-[#44475a]/50 transition-colors">
+                            <td class="py-3.5 px-3 font-extrabold">
+                                {% if loop.index == 1 %}
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#f1fa8c] text-[#282a36] text-xs font-black shadow">1º</span>
+                                {% elif loop.index == 2 %}
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#8be9fd] text-[#282a36] text-xs font-black shadow">2º</span>
+                                {% elif loop.index == 3 %}
+                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#ffb86c] text-[#282a36] text-xs font-black shadow">3º</span>
+                                {% else %}
+                                    <span class="text-[#6272a4] pl-2 font-bold">{{ loop.index }}º</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-3">
+                                <div class="flex items-center space-x-3">
+                                    <img src="{{ url_for('static', filename='uploads/' + cand.foto_filename) }}" 
+                                         alt="{{ cand.nome_completo }}"
+                                         class="w-10 h-10 rounded-xl object-cover border border-[#6272a4]/40 bg-[#282a36]">
+                                    <div>
+                                        <div class="font-bold text-[#f8f8f2]">{{ cand.nome_completo }}</div>
+                                        {% if cand.funcao or cand.setor %}
+                                        <div class="text-[11px] text-[#bd93f9]">
+                                            {{ cand.funcao }}{% if cand.funcao and cand.setor %} • {% endif %}{{ cand.setor }}
+                                        </div>
+                                        {% endif %}
+                                        <div class="text-xs text-[#6272a4] line-clamp-1">{{ cand.descricao }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-3 text-center">
+                                <span class="text-base font-black text-[#50fa7b]">
+                                    {{ cand.total_votos }}
+                                </span>
+                                <span class="text-xs text-[#6272a4]">voto(s)</span>
+                            </td>
+                            <td class="py-3.5 px-3 text-right">
+                                <span class="text-sm font-bold text-[#bd93f9]">
+                                    {{ cand.percentual }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

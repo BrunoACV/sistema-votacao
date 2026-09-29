@@ -1,0 +1,12 @@
+# Quebras de linha controladas por tipo de arquivo
+*.bat text eol=crlf
+*.sh text eol=lf
+*.py text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+Dockerfile text eol=lf

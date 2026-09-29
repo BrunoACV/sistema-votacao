@@ -1,0 +1,608 @@
+{% extends "base.html" %}
+
+{% block title %}Votação - Concurso de Halloween{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Header Section (Dracula Halloween) -->
+    <div class="text-center max-w-3xl mx-auto pt-2 pb-2">
+        <div class="inline-flex items-center space-x-2 bg-[#343746] border border-[#ffb86c]/40 text-[#ffb86c] text-xs uppercase font-extrabold px-4 py-1.5 rounded-full tracking-wider mb-4 shadow-lg shadow-[#ffb86c]/10">
+            <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Voto" class="w-5 h-5 rounded-full object-cover">
+            <span>Voto Único de Halloween</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-black text-[#f8f8f2] tracking-tight">
+            Escolha seu <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ffb86c] via-[#ff79c6] to-[#bd93f9]">Candidato Favorito</span>
+        </h1>
+        <p class="text-[#6272a4] text-xs sm:text-sm mt-3 max-w-xl mx-auto leading-relaxed">
+            Selecione o concorrente de sua preferência para receber seu voto. Cada colaborador do INTS tem direito a <strong class="text-[#50fa7b]">1 voto único</strong> com seu e-mail institucional.
+        </p>
+    </div>
+
+    {% if not candidates %}
+        <!-- Empty State Card -->
+        <div class="bg-[#343746] rounded-3xl shadow-2xl border border-[#6272a4]/30 p-12 text-center max-w-lg mx-auto">
+            <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Vazio" class="w-24 h-24 rounded-2xl mx-auto mb-4 object-cover shadow-lg ring-2 ring-[#bd93f9]/50 animate-float">
+            <h2 class="text-2xl font-bold text-[#f8f8f2] mb-2">Nenhum Participante Inscrito</h2>
+            <p class="text-[#6272a4] text-sm mb-6">
+                Ainda não há concorrentes cadastrados para o concurso. Seja o primeiro a inscrever sua caracterização!
+            </p>
+            <a href="{{ url_for('public.register') }}" class="inline-flex items-center space-x-2 px-6 py-3.5 rounded-xl bg-[#ff79c6] hover:bg-[#ff79c6]/80 text-[#282a36] font-extrabold transition shadow-lg shadow-[#ff79c6]/20">
+                <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-5 h-5 rounded-full object-cover">
+                <span>Inscrever Primeiro Candidato</span>
+            </a>
+        </div>
+    {% else %}
+        <!-- Search Bar (Busca em tempo real por nome e descrição) -->
+        <div class="bg-[#343746] p-4 sm:p-5 rounded-2xl border border-[#6272a4]/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="relative w-full sm:flex-1">
+                <span class="absolute left-4 top-3.5 text-base text-[#bd93f9]">🔍</span>
+                <input type="text" id="candidate-search" 
+                       placeholder="Buscar participante por nome ou fantasia..."
+                       class="w-full pl-12 pr-4 py-3 bg-[#282a36] border border-[#6272a4]/40 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/30 rounded-xl text-sm text-[#f8f8f2] placeholder-[#6272a4] outline-none transition font-medium">
+            </div>
+            <div id="search-counter" class="text-xs font-bold text-[#6272a4] whitespace-nowrap px-2">
+                Exibindo <span id="visible-count" class="text-[#50fa7b]">{{ candidates|length }}</span> de {{ candidates|length }} participantes
+            </div>
+        </div>
+
+        <!-- Voting Form -->
+        <form action="{{ url_for('public.vote') }}" method="POST" id="voting-form" class="space-y-8">
+            
+            <!-- Hidden Input to store the single selected candidate ID -->
+            <input type="hidden" name="selected_candidate" id="selected-candidate-input" value="{{ selected_candidate or '' }}" required>
+
+            <!-- Candidate Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" id="candidates-container">
+                {% for cand in candidates %}
+                <div class="dracula-card rounded-2xl flex flex-col overflow-hidden candidate-card transition-all duration-300 relative"
+                     id="card-cand-{{ cand.id }}"
+                     data-name="{{ cand.nome_completo|lower }}"
+                     data-desc="{{ cand.descricao|lower }}"
+                     data-funcao="{{ cand.funcao|lower if cand.funcao else '' }}"
+                     data-setor="{{ cand.setor|lower if cand.setor else '' }}">
+                    
+                    <!-- Candidate Photo with Fullscreen Aspect Normal trigger -->
+                    <div class="relative h-72 w-full bg-[#1e1f29] overflow-hidden cursor-pointer"
+                         onclick="openPhotoModal('{{ url_for('static', filename='uploads/' + cand.foto_filename) }}', '{{ cand.nome_completo|e }}', '{{ cand.descricao|e }}')">
+                        <img src="{{ url_for('static', filename='uploads/' + cand.foto_filename) }}" 
+                             alt="{{ cand.nome_completo }}"
+                             onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'"
+                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                        
+                        <!-- Candidate ID Badge -->
+                        <div class="absolute top-3 left-3 bg-[#282a36]/80 backdrop-blur-md text-[#ffb86c] border border-[#ffb86c]/30 text-xs font-black px-2.5 py-1 rounded-full shadow">
+                            #{{ cand.id }}
+                        </div>
+
+                        <!-- Selected Badge on Top-Right -->
+                        <div id="badge-selected-{{ cand.id }}" class="hidden absolute top-3 right-3 bg-[#50fa7b] text-[#282a36] font-black text-xs px-3 py-1 rounded-full shadow-xl flex items-center space-x-1 animate-pulse">
+                            <span>✓</span>
+                            <span>SELECIONADO</span>
+                        </div>
+
+                        <!-- Fullscreen Aspect Normal Action Badge -->
+                        <div class="absolute bottom-3 right-3 bg-[#282a36]/85 hover:bg-[#bd93f9] text-[#f8f8f2] hover:text-[#282a36] backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 border border-[#6272a4]/40 shadow-lg">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                            </svg>
+                            <span>Ver Foto Completa</span>
+                        </div>
+                    </div>
+
+                    <!-- Candidate Info & Vote Choice Button -->
+                    <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <h3 class="font-black text-xl text-[#f8f8f2] leading-snug card-cand-name">
+                                {{ cand.nome_completo }}
+                            </h3>
+                            {% if cand.funcao or cand.setor %}
+                            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                {% if cand.funcao %}
+                                <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                                    💼 {{ cand.funcao }}
+                                </span>
+                                {% endif %}
+                                {% if cand.setor %}
+                                <span class="inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-[#8be9fd]/20 text-[#8be9fd] border border-[#8be9fd]/30">
+                                    🏢 {{ cand.setor }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            <p class="text-xs sm:text-sm text-[#6272a4] mt-2.5 line-clamp-3 leading-relaxed">
+                                {{ cand.descricao }}
+                            </p>
+                        </div>
+
+                        <!-- Vote Choice Action Button (Sim/Escolha Direta) -->
+                        <div class="pt-3 border-t border-[#6272a4]/30">
+                            <button type="button" 
+                                    id="btn-choose-{{ cand.id }}"
+                                    onclick="selectCandidate({{ cand.id }}, '{{ cand.nome_completo|e }}')"
+                                    class="w-full py-3.5 px-4 rounded-xl font-black text-sm transition-all duration-200 flex items-center justify-center space-x-2 border bg-[#282a36] border-[#6272a4]/50 text-[#f8f8f2] hover:border-[#50fa7b] hover:text-[#50fa7b] cursor-pointer">
+                                <span>🎃</span>
+                                <span class="btn-text">Votar Neste Candidato</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Sticky Bottom Confirmation Bar -->
+            <div class="sticky bottom-6 z-30 bg-[#343746]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-[#bd93f9]/40 p-5 sm:p-6 max-w-2xl mx-auto glow-card space-y-4">
+                
+                <!-- Candidate Selected Indicator -->
+                <div class="flex items-center justify-between p-3.5 bg-[#282a36] rounded-xl border border-[#6272a4]/40">
+                    <div class="text-xs text-[#6272a4] font-bold uppercase tracking-wider">
+                        Candidato Escolhido:
+                    </div>
+                    <div id="selected-summary-name" class="font-black text-sm sm:text-base text-[#ffb86c]">
+                        Nenhum candidato selecionado
+                    </div>
+                </div>
+
+                <!-- Voter Institutional Email Input -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label for="voter_email" class="block text-xs font-bold uppercase tracking-wider text-[#f8f8f2]">
+                            Seu E-mail Institucional (@ints.org.br) <span class="text-[#ff5555]">*</span>
+                        </label>
+                        <span class="text-[11px] text-[#ffb86c] font-bold">Obrigatório @ints.org.br</span>
+                    </div>
+                    <div class="relative">
+                        <input type="email" name="voter_email" id="voter_email" required
+                               value="{{ voter_email or '' }}"
+                               placeholder="nome.sobrenome@ints.org.br"
+                               autocomplete="email"
+                               oninput="checkEmailLive()"
+                               onblur="checkEmailLive()"
+                               class="w-full px-4 py-3.5 pl-11 rounded-xl bg-[#282a36] border-2 border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/30 outline-none transition font-medium text-sm text-[#f8f8f2] placeholder-[#6272a4]">
+                        <span class="absolute left-3.5 top-3.5 text-base text-[#bd93f9]">✉️</span>
+                    </div>
+
+                    <!-- MENSAGEM DE ERRO OU SUCESSO DENTRO DESTA DIV (DESTACADA, VISÍVEL E EM TEMPO REAL) -->
+                    <div id="vote-card-alert" 
+                         data-server-error="{% if error_message %}1{% else %}0{% endif %}"
+                         class="{% if error_message %}block border-2 border-[#ff5555] bg-[#ff5555]/20 text-[#ff5555] shadow-xl shadow-[#ff5555]/20 animate-shake{% else %}hidden{% endif %} rounded-xl p-4 text-xs font-bold transition-all duration-200">
+                        <div id="live-alert-content" class="{% if error_message %}flex{% else %}hidden{% endif %} items-start space-x-3">
+                            <span id="live-alert-icon" class="text-xl flex-shrink-0">{% if error_message %}🚫{% endif %}</span>
+                            <div id="live-alert-text" class="leading-relaxed">
+                                {% if error_message %}
+                                    <strong class="block text-sm mb-0.5 text-[#ff5555]">VOTO NÃO PERMITIDO!</strong>
+                                    <span>{{ error_message }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        id="submit-vote-btn"
+                        class="w-full bg-gradient-to-r from-[#50fa7b] to-[#8be9fd] hover:from-[#6bfb8f] hover:to-[#a4f0ff] text-[#282a36] font-black py-4 px-6 rounded-xl shadow-xl transition transform hover:scale-[1.01] active:scale-[0.99] text-base flex items-center justify-center space-x-2.5 cursor-pointer opacity-50 pointer-events-none"
+                        title="Selecione um candidato acima e informe um e-mail @ints.org.br">
+                    <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Votar" class="w-6 h-6 rounded-md object-cover">
+                    <span id="submit-btn-text">Selecione um Candidato Acima</span>
+                </button>
+                
+                <p class="text-center text-[11px] text-[#6272a4]">
+                    🔒 Cada colaborador vota apenas 1 vez. O voto é secreto e irrevogável.
+                </p>
+            </div>
+        </form>
+    {% endif %}
+</div>
+
+<!-- Fullscreen Photo Modal (Aspect Normal / Sem corte) -->
+<div id="photo-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-md p-4 transition-opacity duration-300">
+    <div class="absolute inset-0" onclick="closePhotoModal()"></div>
+
+    <div class="relative z-10 max-w-5xl max-h-[94vh] flex flex-col items-center modal-enter">
+        <button type="button" onclick="closePhotoModal()" 
+                class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 bg-[#ff5555] hover:bg-[#ff6e6e] text-[#f8f8f2] rounded-full p-2 shadow-2xl z-20 transition transform hover:scale-110 focus:outline-none"
+                title="Fechar (Esc)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+
+        <div class="overflow-hidden rounded-2xl border-2 border-[#bd93f9]/60 shadow-2xl bg-[#282a36] flex items-center justify-center">
+            <img id="modal-img" src="" alt="Foto em aspecto normal" 
+                 class="max-h-[82vh] max-w-[90vw] object-contain block mx-auto">
+        </div>
+
+        <div class="mt-3 text-center px-4 py-2 bg-[#343746]/90 rounded-xl border border-[#6272a4]/40 max-w-xl">
+            <h4 id="modal-title" class="font-black text-[#f8f8f2] text-base"></h4>
+            <p id="modal-desc" class="text-xs text-[#6272a4] mt-1"></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let currentSelectedId = null;
+    let currentSelectedName = '';
+    let voterHasAlreadyVoted = false;
+    let isCheckingEmail = false;
+    let emailCheckTimeout = null;
+    const emailRegex = /^[a-zA-Z0-9_.+-]+@ints\.org\.br$/i;
+
+    function isEmailValid(email) {
+        if (!email) return false;
+        return emailRegex.test(email.trim().toLowerCase());
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    function updateAlert(type, message, title) {
+        const alertBox = document.getElementById('vote-card-alert');
+        const liveContent = document.getElementById('live-alert-content');
+        const liveIcon = document.getElementById('live-alert-icon');
+        const liveText = document.getElementById('live-alert-text');
+        const emailInput = document.getElementById('voter_email');
+
+        if (!alertBox || !liveContent) return;
+
+        if (!type) {
+            liveContent.classList.add('hidden');
+            liveContent.classList.remove('flex');
+            alertBox.classList.add('hidden');
+            alertBox.classList.remove('block', 'animate-shake');
+            if (emailInput) {
+                emailInput.classList.remove('border-[#ff5555]', 'border-[#50fa7b]', 'border-[#bd93f9]', 'ring-2', 'ring-[#ff5555]/40', 'ring-[#50fa7b]/30', 'ring-[#bd93f9]/30');
+                emailInput.classList.add('border-[#6272a4]/50');
+            }
+            return;
+        }
+
+        alertBox.classList.remove('hidden');
+        alertBox.classList.add('block');
+        liveContent.classList.remove('hidden');
+        liveContent.classList.add('flex');
+
+        if (type === 'error') {
+            alertBox.className = "block rounded-xl p-4 border-2 border-[#ff5555] bg-[#ff5555]/20 text-[#ff5555] text-xs font-bold transition-all duration-200 shadow-xl shadow-[#ff5555]/20 animate-shake";
+            liveIcon.textContent = "🚫";
+            const heading = title || 'VOTO NÃO PERMITIDO!';
+            liveText.innerHTML = `<strong class="block text-sm mb-0.5 text-[#ff5555]">${heading}</strong><span>${message}</span>`;
+            if (emailInput) {
+                emailInput.classList.remove('border-[#50fa7b]', 'border-[#bd93f9]', 'border-[#6272a4]/50', 'ring-[#50fa7b]/30', 'ring-[#bd93f9]/30');
+                emailInput.classList.add('border-[#ff5555]', 'ring-2', 'ring-[#ff5555]/40');
+            }
+        } else if (type === 'success') {
+            alertBox.className = "block rounded-xl p-4 border-2 border-[#50fa7b] bg-[#50fa7b]/20 text-[#50fa7b] text-xs font-bold transition-all duration-200 shadow-xl shadow-[#50fa7b]/20";
+            liveIcon.textContent = "✅";
+            const heading = title || 'COLABORADOR AUTORIZADO!';
+            liveText.innerHTML = `<strong class="block text-sm mb-0.5 text-[#50fa7b]">${heading}</strong><span>${message}</span>`;
+            if (emailInput) {
+                emailInput.classList.remove('border-[#ff5555]', 'border-[#bd93f9]', 'border-[#6272a4]/50', 'ring-[#ff5555]/40', 'ring-[#bd93f9]/30');
+                emailInput.classList.add('border-[#50fa7b]', 'ring-2', 'ring-[#50fa7b]/30');
+            }
+        } else if (type === 'checking') {
+            alertBox.className = "block rounded-xl p-4 border-2 border-[#bd93f9] bg-[#bd93f9]/20 text-[#bd93f9] text-xs font-bold transition-all duration-200 shadow-lg shadow-[#bd93f9]/20";
+            liveIcon.textContent = "🔍";
+            liveText.innerHTML = `<strong class="block text-sm mb-0.5 text-[#bd93f9]">CONSULTANDO ELEITOR...</strong><span class="animate-pulse">${message}</span>`;
+            if (emailInput) {
+                emailInput.classList.remove('border-[#ff5555]', 'border-[#50fa7b]', 'border-[#6272a4]/50', 'ring-[#ff5555]/40', 'ring-[#50fa7b]/30');
+                emailInput.classList.add('border-[#bd93f9]', 'ring-2', 'ring-[#bd93f9]/30');
+            }
+        }
+    }
+
+    function syncButtonState() {
+        const emailInput = document.getElementById('voter_email');
+        const submitBtn = document.getElementById('submit-vote-btn');
+        const submitBtnText = document.getElementById('submit-btn-text');
+        if (!submitBtn || !submitBtnText) return;
+
+        const emailVal = emailInput ? emailInput.value.trim() : '';
+        const emailOk = isEmailValid(emailVal);
+
+        if (!currentSelectedId) {
+            submitBtn.classList.add('opacity-50', 'pointer-events-none');
+            submitBtnText.textContent = "Selecione um Candidato Acima";
+            return;
+        }
+
+        if (!emailVal) {
+            submitBtn.classList.add('opacity-50', 'pointer-events-none');
+            submitBtnText.textContent = `Digite seu e-mail @ints.org.br para votar`;
+            return;
+        }
+
+        if (!emailOk) {
+            submitBtn.classList.add('opacity-50', 'pointer-events-none');
+            submitBtnText.textContent = `⚠️ E-mail inválido (use @ints.org.br)`;
+            return;
+        }
+
+        if (isCheckingEmail) {
+            submitBtn.classList.add('opacity-50', 'pointer-events-none');
+            submitBtnText.textContent = "🔍 Verificando autorização do e-mail...";
+            return;
+        }
+
+        if (voterHasAlreadyVoted) {
+            submitBtn.classList.add('opacity-50', 'pointer-events-none');
+            submitBtnText.textContent = "⛔ Voto Não Permitido: Colaborador Já Votou";
+            return;
+        }
+
+        // Tudo preenchido, válido e eleitor não votou ainda!
+        submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+        submitBtnText.textContent = `Confirmar Voto em ${currentSelectedName}`;
+    }
+
+    function checkEmailLive(immediate = false) {
+        clearTimeout(emailCheckTimeout);
+        const emailInput = document.getElementById('voter_email');
+        if (!emailInput) return;
+        const val = emailInput.value.trim();
+
+        if (!val) {
+            voterHasAlreadyVoted = false;
+            updateAlert(null, '');
+            syncButtonState();
+            return;
+        }
+
+        if (!isEmailValid(val)) {
+            voterHasAlreadyVoted = false;
+            updateAlert('error', `O e-mail deve terminar obrigatoriamente com <u>@ints.org.br</u>. Você informou: <span class="underline">${escapeHtml(val)}</span>`, 'E-MAIL NÃO AUTORIZADO!');
+            syncButtonState();
+            return;
+        }
+
+        const performCheck = async () => {
+            isCheckingEmail = true;
+            syncButtonState();
+            try {
+                const res = await fetch('/api/check-voter?email=' + encodeURIComponent(val));
+                const data = await res.json();
+                isCheckingEmail = false;
+
+                // Checa se o usuário não alterou o campo enquanto a requisição rodava
+                if (emailInput.value.trim().toLowerCase() !== val.toLowerCase()) return;
+
+                if (data.has_voted) {
+                    voterHasAlreadyVoted = true;
+                    updateAlert('error', data.message || `O colaborador <u>${escapeHtml(val)}</u> já votou anteriormente. É permitido apenas 1 voto por colaborador.`, 'VOTO JÁ REGISTRADO!');
+                } else if (data.valid) {
+                    voterHasAlreadyVoted = false;
+                    updateAlert('success', `Colaborador apto para votar: <u>${escapeHtml(val)}</u>`, 'COLABORADOR AUTORIZADO!');
+                } else {
+                    voterHasAlreadyVoted = false;
+                    updateAlert('error', data.message || 'E-mail inválido.', 'ERRO NA VALIDAÇÃO');
+                }
+            } catch (err) {
+                isCheckingEmail = false;
+                console.error(err);
+            }
+            syncButtonState();
+        };
+
+        if (immediate) {
+            performCheck();
+        } else {
+            updateAlert('checking', `Consultando histórico para ${escapeHtml(val)}...`);
+            emailCheckTimeout = setTimeout(performCheck, 350);
+        }
+    }
+
+    // Função de seleção de candidato (Escolha Única)
+    function selectCandidate(candidateId, candidateName) {
+        currentSelectedId = candidateId;
+        currentSelectedName = candidateName;
+        
+        // Atualiza input oculto
+        const hiddenInput = document.getElementById('selected-candidate-input');
+        if (hiddenInput) hiddenInput.value = candidateId;
+
+        // Atualiza texto resumo
+        const summaryName = document.getElementById('selected-summary-name');
+        if (summaryName) {
+            summaryName.innerHTML = `<span class="text-[#50fa7b]">✓ ${candidateName} (#${candidateId})</span>`;
+        }
+
+        syncButtonState();
+
+        // Reseta todos os cards e destaca apenas o selecionado
+        const allCards = document.querySelectorAll('.candidate-card');
+        allCards.forEach(card => {
+            const cid = card.id.replace('card-cand-', '');
+            const badge = document.getElementById('badge-selected-' + cid);
+            const btn = document.getElementById('btn-choose-' + cid);
+
+            if (parseInt(cid) === candidateId) {
+                // Card Selecionado
+                card.classList.add('ring-4', 'ring-[#50fa7b]', 'border-[#50fa7b]', 'shadow-2xl');
+                if (badge) badge.classList.remove('hidden');
+                if (btn) {
+                    btn.classList.remove('bg-[#282a36]', 'border-[#6272a4]/50', 'text-[#f8f8f2]');
+                    btn.classList.add('bg-[#50fa7b]', 'border-[#50fa7b]', 'text-[#282a36]');
+                    btn.querySelector('.btn-text').textContent = 'VOTO SELECIONADO ✓';
+                }
+            } else {
+                // Outros cards
+                card.classList.remove('ring-4', 'ring-[#50fa7b]', 'border-[#50fa7b]', 'shadow-2xl');
+                if (badge) badge.classList.add('hidden');
+                if (btn) {
+                    btn.classList.remove('bg-[#50fa7b]', 'border-[#50fa7b]', 'text-[#282a36]');
+                    btn.classList.add('bg-[#282a36]', 'border-[#6272a4]/50', 'text-[#f8f8f2]');
+                    btn.querySelector('.btn-text').textContent = 'Votar Neste Candidato';
+                }
+            }
+        });
+    }
+
+    // Inicialização ao carregar o DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('candidate-search');
+        const cards = document.querySelectorAll('.candidate-card');
+        const visibleCountSpan = document.getElementById('visible-count');
+
+        function normalizeText(str) {
+            return (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = normalizeText(searchInput.value);
+                let count = 0;
+
+                cards.forEach(card => {
+                    const name = normalizeText(card.getAttribute('data-name'));
+                    const desc = normalizeText(card.getAttribute('data-desc'));
+                    const funcao = normalizeText(card.getAttribute('data-funcao'));
+                    const setor = normalizeText(card.getAttribute('data-setor'));
+                    if (name.includes(query) || desc.includes(query) || funcao.includes(query) || setor.includes(query)) {
+                        card.style.display = '';
+                        count++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (visibleCountSpan) {
+                    visibleCountSpan.textContent = count;
+                }
+            });
+        }
+
+        // Se já havia um candidato selecionado previamente (ex: recarregamento pós erro)
+        const initialSelected = document.getElementById('selected-candidate-input')?.value;
+        if (initialSelected) {
+            const card = document.getElementById('card-cand-' + initialSelected);
+            const nameEl = card ? card.querySelector('.card-cand-name') : null;
+            if (card && nameEl) {
+                selectCandidate(parseInt(initialSelected), nameEl.textContent.trim());
+            }
+        }
+
+        // Submissão do formulário via AJAX para feedback imediato e sem perda de estado
+        const votingForm = document.getElementById('voting-form');
+        if (votingForm) {
+            votingForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const emailInput = document.getElementById('voter_email');
+                const emailVal = emailInput ? emailInput.value.trim() : '';
+
+                if (!currentSelectedId) {
+                    updateAlert('error', 'Clique no botão "Votar Neste Candidato" do seu concorrente favorito acima antes de confirmar.', 'SELECIONE UM CANDIDATO!');
+                    return;
+                }
+
+                if (!emailVal || !isEmailValid(emailVal)) {
+                    updateAlert('error', 'É estritamente necessário usar seu e-mail corporativo terminado em <u>@ints.org.br</u> para computar seu voto.', 'E-MAIL NÃO AUTORIZADO!');
+                    if (emailInput) emailInput.focus();
+                    return;
+                }
+
+                if (voterHasAlreadyVoted) {
+                    updateAlert('error', `Este colaborador (${escapeHtml(emailVal)}) já registrou seu voto anteriormente. Cada colaborador pode votar apenas uma vez.`, 'VOTO JÁ REGISTRADO!');
+                    return;
+                }
+
+                const submitBtn = document.getElementById('submit-vote-btn');
+                const submitBtnText = document.getElementById('submit-btn-text');
+                if (submitBtn) {
+                    submitBtn.classList.add('opacity-50', 'pointer-events-none');
+                }
+                if (submitBtnText) {
+                    submitBtnText.textContent = "⏳ Registrando seu voto...";
+                }
+
+                try {
+                    const response = await fetch("{{ url_for('public.vote') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            voter_email: emailVal,
+                            selected_candidate: currentSelectedId
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.status === 'success') {
+                        updateAlert('success', result.message || 'Voto computado com sucesso! Redirecionando...', 'VOTO CONFIRMADO! 🎉');
+                        setTimeout(() => {
+                            window.location.href = result.redirect_url || ("{{ url_for('public.vote_success') }}?candidate=" + encodeURIComponent(currentSelectedName) + "&email=" + encodeURIComponent(emailVal));
+                        }, 500);
+                    } else {
+                        // Resposta com erro do servidor (ex: 400 Duplicado)
+                        const errorMsg = result.message || result.error || 'Erro ao processar votação.';
+                        voterHasAlreadyVoted = true;
+                        updateAlert('error', errorMsg, 'NÃO FOI POSSÍVEL VOTAR!');
+                        if (submitBtn) {
+                            submitBtn.classList.add('opacity-50', 'pointer-events-none');
+                        }
+                        if (submitBtnText) {
+                            submitBtnText.textContent = "⛔ Voto Não Aceito (Já Votou)";
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    updateAlert('error', 'Ocorreu uma falha de comunicação com o servidor. Verifique sua conexão e tente novamente.', 'ERRO DE CONEXÃO');
+                    if (submitBtn) submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+                    if (submitBtnText) submitBtnText.textContent = "Tentar Novamente";
+                }
+            });
+        }
+
+        // Se a página carregou com um erro do servidor pré-existente
+        const alertBox = document.getElementById('vote-card-alert');
+        const hasServerError = alertBox && alertBox.getAttribute('data-server-error') === '1';
+        if (hasServerError) {
+            voterHasAlreadyVoted = true;
+            syncButtonState();
+        } else {
+            // Se já havia e-mail preenchido, valida de imediato
+            const emailInput = document.getElementById('voter_email');
+            if (emailInput && emailInput.value.trim()) {
+                checkEmailLive(true);
+            }
+        }
+    });
+
+    // Fullscreen Photo Modal Functions
+    function openPhotoModal(imageUrl, candidateName, candidateDesc) {
+        const modal = document.getElementById('photo-modal');
+        const modalImg = document.getElementById('modal-img');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDesc = document.getElementById('modal-desc');
+
+        if (modal && modalImg) {
+            modalImg.src = imageUrl;
+            if (modalTitle) modalTitle.textContent = candidateName || '';
+            if (modalDesc) modalDesc.textContent = candidateDesc || '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closePhotoModal() {
+        const modal = document.getElementById('photo-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closePhotoModal();
+    });
+</script>
+{% endblock %}

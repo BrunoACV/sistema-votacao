@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Auditoria de Votantes Institucionais - INTS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+  <!-- Admin Header Bar (Dracula Dark) -->
+  <div class="bg-[#343746] rounded-3xl shadow-xl border border-[#6272a4]/40 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <nav class="flex items-center gap-2 text-xs text-[#6272a4] mb-1.5">
+        <a href="{{ url_for('admin.dashboard') }}" class="hover:text-[#bd93f9] transition">Painel de Moderação</a>
+        <span>/</span>
+        <span class="text-[#8be9fd] font-semibold">Auditoria de Eleitores</span>
+      </nav>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-bold bg-[#8be9fd]/20 text-[#8be9fd] border border-[#8be9fd]/30">
+          Auditoria & Controle
+        </span>
+        <span class="text-xs text-[#6272a4]">|</span>
+        <span class="text-xs text-[#50fa7b]">Voto Único @ints.org.br</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-[#f8f8f2] tracking-tight">Registro de Auditoria de Eleitores</h1>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{{ url_for('admin.dashboard') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#bd93f9]/40 rounded-xl text-xs font-bold text-[#bd93f9] bg-[#282a36] hover:bg-[#bd93f9] hover:text-[#282a36] transition shadow"
+         title="Ir para o Painel Geral de Candidatos">
+        <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Painel" class="w-4 h-4 rounded object-cover">
+        <span>Painel Geral</span>
+      </a>
+      <a href="{{ url_for('public.vote') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#50fa7b]/40 rounded-xl text-xs font-bold text-[#50fa7b] bg-[#282a36] hover:bg-[#50fa7b] hover:text-[#282a36] transition shadow"
+         title="Acessar Urna Secreta de Votação">
+        <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Urna" class="w-4 h-4 rounded object-cover">
+        <span>Urna de Votação</span>
+      </a>
+      <a href="{{ url_for('public.register') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#ff79c6]/40 rounded-xl text-xs font-bold text-[#ff79c6] bg-[#282a36] hover:bg-[#ff79c6] hover:text-[#282a36] transition shadow"
+         title="Acessar Tela de Inscrição">
+        <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrição" class="w-4 h-4 rounded object-cover">
+        <span>Inscrição</span>
+      </a>
+      <a href="{{ url_for('public.results') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#f1fa8c]/40 rounded-xl text-xs font-bold text-[#f1fa8c] bg-[#282a36] hover:bg-[#f1fa8c] hover:text-[#282a36] transition shadow"
+         title="Ver Placar e Pódio Oficial">
+        <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Troféu" class="w-4 h-4 rounded object-cover">
+        <span>Placar & Pódio</span>
+      </a>
+      <a href="{{ url_for('admin.voters_audit') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#8be9fd]/50 rounded-xl text-xs font-bold text-[#282a36] bg-[#8be9fd] shadow-lg shadow-[#8be9fd]/20"
+         title="Auditoria de Eleitores (Tela Atual)">
+        <span>📋</span>
+        <span>Auditoria</span>
+      </a>
+      {% if voters %}
+      <form method="POST" action="{{ url_for('admin.reset_votes') }}" class="inline"
+            onsubmit="return confirm('ATENÇÃO CRÍTICA: Deseja realmente ZERAR TODOS OS VOTOS? Todos os votos computados serão apagados permanentemente.');">
+        <button type="submit" 
+                class="inline-flex items-center gap-1.5 px-3 py-2 border border-[#ff5555]/50 rounded-xl text-xs font-bold text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] transition shadow cursor-pointer"
+                title="Zerar Todos os Votos Computados">
+          <span>⚠️</span>
+          <span>Zerar Votos</span>
+        </button>
+      </form>
+      {% endif %}
+      <a href="{{ url_for('admin.logout') }}" 
+         class="inline-flex items-center gap-1.5 px-3 py-2 bg-[#ff5555]/20 text-[#ff5555] border border-[#ff5555]/40 rounded-xl text-xs font-bold hover:bg-[#ff5555] hover:text-[#282a36] transition shadow"
+         title="Encerrar Sessão">
+        <span>🚪</span>
+        <span>Sair</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Central de Acesso Rápido - Navegação Completa do Moderador -->
+  <div class="bg-[#1e1f29] rounded-3xl p-6 border border-[#6272a4]/40 shadow-xl space-y-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-[#8be9fd]/20 border border-[#8be9fd]/40 flex items-center justify-center text-[#8be9fd] text-base">
+          🧭
+        </div>
+        <div>
+          <h2 class="text-base sm:text-lg font-black text-[#f8f8f2] tracking-wide">
+            Central de Acesso Rápido - Telas do Sistema
+          </h2>
+          <p class="text-xs text-[#6272a4]">Navegue diretamente para qualquer tela do concurso a partir da auditoria</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-[#8be9fd]/15 text-[#8be9fd] border border-[#8be9fd]/30">
+        5 Telas Conectadas
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pt-1">
+      <!-- Card 1: Painel de Moderação -->
+      <a href="{{ url_for('admin.dashboard') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#bd93f9]/30 hover:border-[#bd93f9] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#bd93f9]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Painel" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#bd93f9]/40">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+              Painel
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#bd93f9] transition">
+            🛡️ Painel de Moderação
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Gestão de candidatos cadastrados, desclassificação e métricas do concurso.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#bd93f9]">
+          <span>Ir ao Painel</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 2: Urna de Votação -->
+      <a href="{{ url_for('public.vote') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#50fa7b]/30 hover:border-[#50fa7b] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#50fa7b]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Urna" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#50fa7b]/40">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+              Urna Secreta
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#50fa7b] transition">
+            🗳️ Urna de Votação
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Votação institucional com busca por candidato e validação restrita @ints.org.br.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#50fa7b]">
+          <span>Acessar Votação</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 3: Formulário de Inscrição -->
+      <a href="{{ url_for('public.register') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#ff79c6]/30 hover:border-[#ff79c6] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#ff79c6]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrição" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#ff79c6]/40">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#ff79c6]/20 text-[#ff79c6] border border-[#ff79c6]/30">
+              Inscrições
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#ff79c6] transition">
+            📝 Inscrição de Candidato
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Formulário institucional de cadastro de fantasias, setor, função e envio de foto.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#ff79c6]">
+          <span>Abrir Inscrição</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 4: Placar e Pódio -->
+      <a href="{{ url_for('public.results') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#f1fa8c]/30 hover:border-[#f1fa8c] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#f1fa8c]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#f1fa8c]/40">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#f1fa8c]/20 text-[#f1fa8c] border border-[#f1fa8c]/30">
+              Classificação
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#f1fa8c] transition">
+            🏆 Placar & Pódio Olímpico
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Pódio do 1º, 2º e 3º lugares, contagem de votos e classificação oficial.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#f1fa8c]">
+          <span>Ver Placar</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 5: Auditoria de Eleitores (Tela Atual) -->
+      <a href="{{ url_for('admin.voters_audit') }}" 
+         class="group bg-[#44475a]/70 border-2 border-[#8be9fd] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg shadow-[#8be9fd]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-[#8be9fd] text-[#282a36] flex items-center justify-center text-xl font-bold">
+              📋
+            </div>
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#8be9fd] text-[#282a36]">
+              Tela Atual
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#8be9fd] transition">
+            📋 Auditoria de Eleitores
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Lista completa de votantes com opção de excluir votos individualmente ou zerar.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#8be9fd]">
+          <span>Auditoria Ativa</span>
+          <span>●</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Banner (Dracula Dark) -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-[#343746] p-5 rounded-2xl border border-[#6272a4]/30 shadow-lg">
+      <p class="text-[11px] font-bold text-[#6272a4] uppercase">Colaboradores Votantes</p>
+      <p class="text-2xl font-black text-[#50fa7b] mt-1">{{ summary.total_voters }}</p>
+    </div>
+    <div class="bg-[#343746] p-5 rounded-2xl border border-[#6272a4]/30 shadow-lg">
+      <p class="text-[11px] font-bold text-[#6272a4] uppercase">Total de Avaliações Registradas</p>
+      <p class="text-2xl font-black text-[#ff79c6] mt-1">{{ summary.total_votes }}</p>
+    </div>
+    <div class="bg-[#343746] p-5 rounded-2xl border border-[#6272a4]/30 shadow-lg">
+      <p class="text-[11px] font-bold text-[#6272a4] uppercase">Média Geral Computada</p>
+      <p class="text-2xl font-black text-[#ffb86c] mt-1">{{ "%.2f"|format(summary.overall_average) }} / 10</p>
+    </div>
+  </div>
+
+  <!-- Search Filter (Dracula Dark) -->
+  <div class="bg-[#343746] p-4 rounded-2xl border border-[#6272a4]/40 shadow-sm flex items-center gap-3">
+    <span class="text-base text-[#bd93f9]">🔍</span>
+    <input type="text" id="voter-search" placeholder="Filtrar por e-mail institucional..."
+           class="w-full text-sm text-[#f8f8f2] placeholder-[#6272a4] focus:outline-none bg-transparent font-medium">
+  </div>
+
+  <!-- Table -->
+  <div class="bg-[#343746] rounded-3xl shadow-xl border border-[#6272a4]/30 overflow-hidden">
+    {% if voters %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-[#6272a4]/20 text-left text-sm" id="audit-table">
+          <thead class="bg-[#282a36] text-[#6272a4] font-bold uppercase text-[11px] tracking-wider">
+            <tr>
+              <th class="px-6 py-3.5">Colaborador Votante (@ints.org.br)</th>
+              <th class="px-6 py-3.5">Data / Hora</th>
+              <th class="px-6 py-3.5">Voto Concedido</th>
+              <th class="px-6 py-3.5 text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#6272a4]/20">
+            {% for v in voters %}
+              <tr class="hover:bg-[#44475a]/40 transition-colors voter-row">
+                <td class="px-6 py-4 whitespace-nowrap text-xs font-mono text-[#8be9fd] voter-email">
+                  {{ v.voter_email }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs text-[#6272a4]">
+                  {{ v.voted_at }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap font-black text-[#50fa7b] text-sm">
+                  🎃 {{ v.participant_name }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <form method="POST" action="{{ url_for('admin.delete_voter', voter_id=v.voter_id) }}" class="inline"
+                        onsubmit="return confirm('Confirma a remoção do voto de {{ v.voter_email|e }}? O colaborador será liberado para votar novamente.');">
+                    <button type="submit" 
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#ff5555]/40 text-xs font-bold rounded-lg text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] transition shadow cursor-pointer">
+                      <span>🗑️</span>
+                      <span>Remover Voto</span>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-12 text-center text-[#6272a4]">
+        <p class="text-sm">Nenhum registro de voto encontrado até o momento.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('voter-search');
+    const rows = document.querySelectorAll('.voter-row');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        const query = searchInput.value.toLowerCase().trim();
+        rows.forEach(row => {
+          const email = row.querySelector('.voter-email')?.textContent.toLowerCase() || '';
+          if (email.includes(query)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    }
+  });
+</script>
+{% endblock %}

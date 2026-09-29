@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ status_code }} - {{ title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full bg-[#343746] p-8 sm:p-10 rounded-3xl shadow-2xl border border-[#6272a4]/40 text-center space-y-6">
+    
+    <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-2xl bg-[#282a36] border border-[#ff5555]/40 text-[#ff5555] text-4xl shadow-inner animate-float">
+      {% if status_code == 404 %}
+        🎃
+      {% elif status_code == 401 or status_code == 403 %}
+        🦇
+      {% elif status_code == 413 %}
+        📦
+      {% else %}
+        ⚠️
+      {% endif %}
+    </div>
+
+    <div>
+      <span class="inline-block bg-[#282a36] text-[#ffb86c] border border-[#ffb86c]/30 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
+        Status {{ status_code }}
+      </span>
+      <h1 class="text-2xl font-black text-[#f8f8f2] tracking-tight">
+        {{ title }}
+      </h1>
+      <p class="text-xs sm:text-sm text-[#6272a4] mt-2 leading-relaxed">
+        {{ message }}
+      </p>
+    </div>
+
+    <div class="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+      {% if session.get('is_admin') %}
+      <a href="{{ url_for('admin.dashboard') }}" 
+         class="px-5 py-2.5 rounded-xl bg-[#bd93f9] text-[#282a36] font-bold text-xs sm:text-sm hover:opacity-90 transition shadow">
+        Painel de Moderação
+      </a>
+      <a href="{{ url_for('public.vote') }}" 
+         class="px-5 py-2.5 rounded-xl bg-[#50fa7b] text-[#282a36] font-bold text-xs sm:text-sm hover:opacity-90 transition shadow">
+        Urna de Votação
+      </a>
+      {% endif %}
+      <a href="{{ url_for('public.results') }}" 
+         class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#f1fa8c] to-[#ffb86c] text-[#282a36] font-bold text-xs sm:text-sm hover:opacity-90 transition shadow">
+        Ver Resultados
+      </a>
+      <a href="{{ url_for('public.register') }}" 
+         class="px-5 py-2.5 rounded-xl bg-[#282a36] text-[#8be9fd] border border-[#8be9fd]/30 font-bold text-xs sm:text-sm hover:bg-[#44475a] transition">
+        Inscrição
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}Painel de Moderação - INTS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+  <!-- Admin Header Bar (Dracula Dark) -->
+  <div class="bg-[#343746] rounded-3xl shadow-xl border border-[#6272a4]/40 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+          Modo Administrador Ativo
+        </span>
+        <span class="text-xs text-[#6272a4]">|</span>
+        <span class="text-xs text-[#ffb86c]">Moderação e Desclassificação</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-[#f8f8f2] tracking-tight">Painel de Moderação de Halloween</h1>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{{ url_for('admin.dashboard') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#bd93f9]/50 rounded-xl text-xs font-bold text-[#282a36] bg-[#bd93f9] shadow-lg shadow-[#bd93f9]/20"
+         title="Painel de Moderação (Tela Atual)">
+        <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Painel" class="w-4 h-4 rounded object-cover">
+        <span>Painel Geral</span>
+      </a>
+      <a href="{{ url_for('public.vote') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#50fa7b]/40 rounded-xl text-xs font-bold text-[#50fa7b] bg-[#282a36] hover:bg-[#50fa7b] hover:text-[#282a36] transition shadow"
+         title="Acessar Urna Secreta de Votação">
+        <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Urna" class="w-4 h-4 rounded object-cover">
+        <span>Urna de Votação</span>
+      </a>
+      <a href="{{ url_for('public.register') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#ff79c6]/40 rounded-xl text-xs font-bold text-[#ff79c6] bg-[#282a36] hover:bg-[#ff79c6] hover:text-[#282a36] transition shadow"
+         title="Acessar Tela de Inscrição">
+        <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrição" class="w-4 h-4 rounded object-cover">
+        <span>Inscrição</span>
+      </a>
+      <a href="{{ url_for('public.results') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#f1fa8c]/40 rounded-xl text-xs font-bold text-[#f1fa8c] bg-[#282a36] hover:bg-[#f1fa8c] hover:text-[#282a36] transition shadow"
+         title="Ver Placar e Pódio Oficial">
+        <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Troféu" class="w-4 h-4 rounded object-cover">
+        <span>Placar & Pódio</span>
+      </a>
+      <a href="{{ url_for('admin.voters_audit') }}" 
+         class="inline-flex items-center gap-1.5 px-3.5 py-2 border border-[#8be9fd]/40 rounded-xl text-xs font-bold text-[#8be9fd] bg-[#282a36] hover:bg-[#8be9fd] hover:text-[#282a36] transition shadow"
+         title="Auditoria de Eleitores e Remoção de Votos">
+        <span>📋</span>
+        <span>Auditoria de Eleitores</span>
+      </a>
+      <a href="{{ url_for('admin.logout') }}" 
+         class="inline-flex items-center gap-1.5 px-3 py-2 bg-[#ff5555]/20 text-[#ff5555] border border-[#ff5555]/40 rounded-xl text-xs font-bold hover:bg-[#ff5555] hover:text-[#282a36] transition shadow"
+         title="Encerrar Sessão">
+        <span>🚪</span>
+        <span>Sair</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Central de Acesso Rápido - Navegação Completa do Moderador -->
+  <div class="bg-[#1e1f29] rounded-3xl p-6 border border-[#6272a4]/40 shadow-xl space-y-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-[#bd93f9]/20 border border-[#bd93f9]/40 flex items-center justify-center text-[#bd93f9] text-base">
+          🧭
+        </div>
+        <div>
+          <h2 class="text-base sm:text-lg font-black text-[#f8f8f2] tracking-wide">
+            Central de Acesso Rápido - Telas do Sistema
+          </h2>
+          <p class="text-xs text-[#6272a4]">Acesse diretamente qualquer tela do concurso como moderador autenticado</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-[#bd93f9]/15 text-[#bd93f9] border border-[#bd93f9]/30">
+        5 Telas Conectadas
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pt-1">
+      <!-- Card 1: Painel de Moderação (Tela Atual) -->
+      <a href="{{ url_for('admin.dashboard') }}" 
+         class="group bg-[#44475a]/70 border-2 border-[#bd93f9] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg shadow-[#bd93f9]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Painel" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#bd93f9]/50">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#bd93f9] text-[#282a36]">
+              Tela Atual
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#bd93f9] transition">
+            🛡️ Painel de Moderação
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Gestão de candidatos, desclassificação e métricas gerais do concurso.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#bd93f9]">
+          <span>Painel Ativo</span>
+          <span>●</span>
+        </div>
+      </a>
+
+      <!-- Card 2: Urna de Votação -->
+      <a href="{{ url_for('public.vote') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#50fa7b]/30 hover:border-[#50fa7b] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#50fa7b]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Urna" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#50fa7b]/40">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+              Urna Secreta
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#50fa7b] transition">
+            🗳️ Urna de Votação
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Votação institucional com busca por candidato e validação restrita @ints.org.br.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#50fa7b]">
+          <span>Acessar Votação</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 3: Formulário de Inscrição -->
+      <a href="{{ url_for('public.register') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#ff79c6]/30 hover:border-[#ff79c6] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#ff79c6]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrição" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#ff79c6]/40">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#ff79c6]/20 text-[#ff79c6] border border-[#ff79c6]/30">
+              Inscrições
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#ff79c6] transition">
+            📝 Inscrição de Candidato
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Formulário institucional de cadastro de fantasias, setor, função e envio de foto.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#ff79c6]">
+          <span>Abrir Inscrição</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 4: Placar e Pódio -->
+      <a href="{{ url_for('public.results') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#f1fa8c]/30 hover:border-[#f1fa8c] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#f1fa8c]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#f1fa8c]/40">
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#f1fa8c]/20 text-[#f1fa8c] border border-[#f1fa8c]/30">
+              Classificação
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#f1fa8c] transition">
+            🏆 Placar & Pódio Olímpico
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Pódio do 1º, 2º e 3º lugares, contagem de votos e classificação oficial.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#f1fa8c]">
+          <span>Ver Placar</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Card 5: Auditoria de Eleitores -->
+      <a href="{{ url_for('admin.voters_audit') }}" 
+         class="group bg-[#343746] hover:bg-[#44475a] border border-[#8be9fd]/30 hover:border-[#8be9fd] p-4 rounded-2xl transition duration-200 flex flex-col justify-between shadow-lg hover:shadow-[#8be9fd]/10">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-[#8be9fd]/20 border border-[#8be9fd]/40 flex items-center justify-center text-xl">
+              📋
+            </div>
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#8be9fd]/20 text-[#8be9fd] border border-[#8be9fd]/30">
+              Auditoria
+            </span>
+          </div>
+          <h3 class="font-extrabold text-sm text-[#f8f8f2] group-hover:text-[#8be9fd] transition">
+            📋 Auditoria de Eleitores
+          </h3>
+          <p class="text-xs text-[#6272a4] mt-1 line-clamp-2">
+            Lista completa de votantes com opção de excluir votos individualmente ou zerar.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[#6272a4]/20 flex items-center justify-between text-xs font-bold text-[#8be9fd]">
+          <span>Auditar Votos</span>
+          <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Grid (Dracula Dark) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <!-- Total Participants -->
+    <div class="bg-[#343746] p-5 rounded-2xl border border-[#6272a4]/30 shadow-lg flex items-center gap-4">
+      <div class="p-3 bg-[#bd93f9]/20 text-[#bd93f9] rounded-xl border border-[#bd93f9]/30">
+        <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Candidatos" class="w-7 h-7 rounded-lg object-cover">
+      </div>
+      <div>
+        <p class="text-[11px] font-bold text-[#6272a4] uppercase tracking-wider">Candidatos Cadastrados</p>
+        <p class="text-2xl font-black text-[#f8f8f2] mt-0.5">{{ summary.total_participants }}</p>
+      </div>
+    </div>
+
+    <!-- Total Voters -->
+    <div class="bg-[#343746] p-5 rounded-2xl border border-[#6272a4]/30 shadow-lg flex items-center gap-4">
+      <div class="p-3 bg-[#50fa7b]/20 text-[#50fa7b] rounded-xl border border-[#50fa7b]/30">
+        <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Votos" class="w-7 h-7 rounded-lg object-cover">
+      </div>
+      <div>
+        <p class="text-[11px] font-bold text-[#6272a4] uppercase tracking-wider">Votantes Únicos (@ints)</p>
+        <p class="text-2xl font-black text-[#50fa7b] mt-0.5">{{ summary.total_voters }}</p>
+      </div>
+    </div>
+
+    <!-- Total Votes -->
+    <div class="bg-[#343746] p-5 rounded-2xl border border-[#6272a4]/30 shadow-lg flex items-center gap-4">
+      <div class="p-3 bg-[#ff79c6]/20 text-[#ff79c6] rounded-xl border border-[#ff79c6]/30">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-[11px] font-bold text-[#6272a4] uppercase tracking-wider">Notas Registradas</p>
+        <p class="text-2xl font-black text-[#ff79c6] mt-0.5">{{ summary.total_votes }}</p>
+      </div>
+    </div>
+
+    <!-- Overall Average -->
+    <div class="bg-[#343746] p-5 rounded-2xl border border-[#6272a4]/30 shadow-lg flex items-center gap-4">
+      <div class="p-3 bg-[#ffb86c]/20 text-[#ffb86c] rounded-xl border border-[#ffb86c]/30">
+        <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Média" class="w-7 h-7 rounded-lg object-cover">
+      </div>
+      <div>
+        <p class="text-[11px] font-bold text-[#6272a4] uppercase tracking-wider">Média Geral das Notas</p>
+        <p class="text-2xl font-black text-[#ffb86c] mt-0.5">{{ "%.2f"|format(summary.overall_average) }} <span class="text-xs text-[#6272a4]">/ 10</span></p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Section 1: Moderation of Registered Participants -->
+  <div class="bg-[#343746] rounded-3xl shadow-xl border border-[#6272a4]/30 overflow-hidden">
+    <div class="p-6 border-b border-[#6272a4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-lg font-black text-[#f8f8f2]">Gerenciamento de Participantes</h2>
+        <p class="text-xs text-[#6272a4] mt-0.5">Revise inscrições e desclassifique/exclua candidatos se necessário.</p>
+      </div>
+      <div class="text-xs text-[#6272a4]">
+        Total: <span class="font-bold text-[#bd93f9]">{{ participants|length }}</span> participante(s)
+      </div>
+    </div>
+
+    {% if participants %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-[#6272a4]/20 text-left text-sm">
+          <thead class="bg-[#282a36] text-[#6272a4] font-bold uppercase text-[11px] tracking-wider">
+            <tr>
+              <th scope="col" class="px-5 py-3.5">Foto</th>
+              <th scope="col" class="px-5 py-3.5">Participante</th>
+              <th scope="col" class="px-5 py-3.5">Função / Setor</th>
+              <th scope="col" class="px-5 py-3.5">E-mail</th>
+              <th scope="col" class="px-5 py-3.5">Data Inscrição</th>
+              <th scope="col" class="px-5 py-3.5 text-center">Votos Recebidos</th>
+              <th scope="col" class="px-5 py-3.5 text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#6272a4]/20">
+            {% for p in participants %}
+              <tr class="hover:bg-[#44475a]/50 transition-colors">
+                
+                <!-- Photo Thumbnail -->
+                <td class="px-5 py-4 whitespace-nowrap">
+                  <div class="h-12 w-12 rounded-xl overflow-hidden bg-[#282a36] border border-[#6272a4]/40">
+                    <img src="{{ url_for('static', filename='uploads/' + p.foto_filename) }}" 
+                         alt="{{ p.nome_completo }}"
+                         class="h-full w-full object-cover">
+                  </div>
+                </td>
+
+                <!-- Name & Description -->
+                <td class="px-5 py-4">
+                  <div class="font-bold text-[#f8f8f2] text-sm">{{ p.nome_completo }}</div>
+                  <div class="text-xs text-[#6272a4] max-w-xs truncate mt-0.5">{{ p.descricao }}</div>
+                </td>
+
+                <!-- Função / Setor -->
+                <td class="px-5 py-4 whitespace-nowrap text-xs">
+                  <div class="font-bold text-[#bd93f9]">💼 {{ p.funcao or 'Não informado' }}</div>
+                  <div class="text-[#8be9fd] mt-0.5">🏢 {{ p.setor or 'Não informado' }}</div>
+                </td>
+
+                <!-- Email -->
+                <td class="px-5 py-4 whitespace-nowrap text-xs text-[#8be9fd] font-mono">
+                  {{ p.email }}
+                </td>
+
+                <!-- Date -->
+                <td class="px-5 py-4 whitespace-nowrap text-xs text-[#6272a4]">
+                  {{ p.created_at }}
+                </td>
+
+                <!-- Votes count -->
+                <td class="px-5 py-4 whitespace-nowrap text-center">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-black bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                    {{ p.total_votos }} voto(s)
+                  </span>
+                </td>
+
+                <!-- Delete Action -->
+                <td class="px-5 py-4 whitespace-nowrap text-right">
+                  <form method="POST" action="{{ url_for('admin.delete_participant', participant_id=p.id) }}"
+                        onsubmit="return confirm('Confirma a exclusão de {{ p.nome_completo|e }}? Todos os votos deste participante serão excluídos.');">
+                    <button type="submit" 
+                            class="inline-flex items-center px-3 py-1.5 border border-[#ff5555]/40 text-xs font-bold rounded-lg text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] transition shadow">
+                      Excluir
+                    </button>
+                  </form>
+                </td>
+
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-12 text-center text-[#6272a4]">
+        <p class="text-sm">Nenhum participante cadastrado no momento.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Section 2: Moderation & Deletion of Cast Votes -->
+  <div class="bg-[#343746] rounded-3xl shadow-xl border border-[#6272a4]/30 overflow-hidden">
+    <div class="p-6 border-b border-[#6272a4]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-lg font-black text-[#f8f8f2]">Registro de Votos dos Colaboradores</h2>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#50fa7b]/20 text-[#50fa7b]">
+            {{ voters|length }} voto(s)
+          </span>
+        </div>
+        <p class="text-xs text-[#6272a4] mt-0.5">Auditoria e remoção de votos registrados por colaboradores (@ints.org.br).</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        {% if voters %}
+        <form method="POST" action="{{ url_for('admin.reset_votes') }}"
+              onsubmit="return confirm('ATENÇÃO: Deseja realmente ZERAR TODOS OS VOTOS? Esta ação não pode ser desfeita.');">
+          <button type="submit" 
+                  class="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-[#ff5555]/50 rounded-xl text-xs font-bold text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] transition shadow cursor-pointer">
+            <span>⚠️</span>
+            <span>Zerar Todos os Votos</span>
+          </button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('admin.voters_audit') }}" 
+           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-[#8be9fd]/40 rounded-xl text-xs font-bold text-[#8be9fd] bg-[#282a36] hover:bg-[#44475a] transition">
+          <span>📋</span>
+          <span>Tela Completa de Auditoria</span>
+        </a>
+      </div>
+    </div>
+
+    {% if voters %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-[#6272a4]/20 text-left text-sm">
+          <thead class="bg-[#282a36] text-[#6272a4] font-bold uppercase text-[11px] tracking-wider">
+            <tr>
+              <th scope="col" class="px-5 py-3.5">Colaborador Votante (@ints.org.br)</th>
+              <th scope="col" class="px-5 py-3.5">Data / Hora</th>
+              <th scope="col" class="px-5 py-3.5">Candidato Escolhido</th>
+              <th scope="col" class="px-5 py-3.5 text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#6272a4]/20">
+            {% for v in voters %}
+              <tr class="hover:bg-[#44475a]/50 transition-colors">
+                <td class="px-5 py-4 whitespace-nowrap text-xs font-mono text-[#8be9fd]">
+                  {{ v.voter_email }}
+                </td>
+                <td class="px-5 py-4 whitespace-nowrap text-xs text-[#6272a4]">
+                  {{ v.voted_at }}
+                </td>
+                <td class="px-5 py-4 whitespace-nowrap font-black text-[#50fa7b] text-sm">
+                  🎃 {{ v.participant_name }}
+                </td>
+                <td class="px-5 py-4 whitespace-nowrap text-right">
+                  <form method="POST" action="{{ url_for('admin.delete_voter', voter_id=v.voter_id) }}" class="inline"
+                        onsubmit="return confirm('Confirma a remoção do voto de {{ v.voter_email|e }}? O colaborador será liberado para votar novamente.');">
+                    <button type="submit" 
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#ff5555]/40 text-xs font-bold rounded-lg text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] transition shadow cursor-pointer">
+                      <span>🗑️</span>
+                      <span>Remover Voto</span>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-12 text-center text-[#6272a4]">
+        <p class="text-sm">Nenhum voto registrado no momento.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

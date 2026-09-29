@@ -1,0 +1,157 @@
+/*
+ * static/css/custom.css - Dracula Theme & Halloween Aesthetics for INTS Voting System
+ */
+
+:root {
+    --dracula-bg: #282a36;
+    --dracula-current: #44475a;
+    --dracula-card: #343746;
+    --dracula-card-hover: #3d4052;
+    --dracula-fg: #f8f8f2;
+    --dracula-comment: #6272a4;
+    --dracula-cyan: #8be9fd;
+    --dracula-green: #50fa7b;
+    --dracula-orange: #ffb86c;
+    --dracula-pink: #ff79c6;
+    --dracula-purple: #bd93f9;
+    --dracula-red: #ff5555;
+    --dracula-yellow: #f1fa8c;
+}
+
+html {
+    scroll-behavior: smooth;
+    background-color: #282a36;
+    color: #f8f8f2;
+}
+
+body {
+    background-color: #282a36;
+    color: #f8f8f2;
+}
+
+/* Custom Scrollbar Dracula */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #282a36;
+}
+::-webkit-scrollbar-thumb {
+    background: #44475a;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #bd93f9;
+}
+
+/* Range Slider Styling - Halloween / Dracula Slicer */
+input[type=range].dracula-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 10px;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #44475a, #6272a4);
+    outline: none;
+    transition: all 0.2s ease-in-out;
+}
+
+input[type=range].dracula-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffb86c 0%, #ff79c6 60%, #bd93f9 100%);
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(255, 184, 108, 0.7), 0 2px 6px rgba(0, 0, 0, 0.5);
+    border: 2px solid #f8f8f2;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type=range].dracula-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.22);
+    box-shadow: 0 0 18px rgba(189, 147, 249, 0.9), 0 0 8px rgba(255, 184, 108, 0.9);
+}
+
+input[type=range].dracula-slider::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffb86c 0%, #ff79c6 60%, #bd93f9 100%);
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(255, 184, 108, 0.7), 0 2px 6px rgba(0, 0, 0, 0.5);
+    border: 2px solid #f8f8f2;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type=range].dracula-slider::-moz-range-thumb:hover {
+    transform: scale(1.22);
+    box-shadow: 0 0 18px rgba(189, 147, 249, 0.9), 0 0 8px rgba(255, 184, 108, 0.9);
+}
+
+/* Animations */
+@keyframes floatSlow {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-6px) rotate(1deg);
+    }
+}
+
+.animate-float {
+    animation: floatSlow 4s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(189, 147, 249, 0.25);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 184, 108, 0.45);
+    }
+}
+
+.glow-card {
+    animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-enter {
+    animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Card Hover micro-interaction */
+.dracula-card {
+    background-color: #343746;
+    border: 1px solid rgba(98, 114, 164, 0.35);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dracula-card:hover {
+    border-color: rgba(189, 147, 249, 0.6);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.6), 0 0 16px rgba(189, 147, 249, 0.2);
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+
+.animate-shake {
+    animation: shake 0.35s ease-in-out;
+}
+

@@ -1,0 +1,38 @@
+# O que NÃO vai para dentro da imagem Docker.
+
+# Credenciais: chegam na hora de rodar, pelo env_file do docker-compose.yml.
+.env
+.env.*
+!.env.example
+
+# Ambiente virtual local e caches do Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Dados persistentes e fotos: são volumes do host, não entram na imagem
+data/
+static/uploads/
+
+# Logs e controle de versão
+*.log
+.git/
+.gitignore
+.gitattributes
+
+# Arranque do Windows (não servem no contêiner)
+*.bat
+
+# Rascunhos de testes, documentações temporárias e auditoria
+.agents/
+ORIGINAL_REQUEST.md
+
+# Os próprios arquivos do Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
