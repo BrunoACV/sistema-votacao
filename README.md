@@ -11,8 +11,8 @@ Permite cadastro público de participantes com upload de fotos, votação única
 - **Tema Dracula Dark Exclusivo:** Interface imersiva e moderna com paleta Dracula Dark (`#282a36`), sem opção de tema claro.
 - **Validação Estrita de E-mail:** Apenas contas corporativas `@ints.org.br` são aceitas para votar.
 - **Voto Único por Colaborador:** Verificação em tempo real via API e trava transacional no banco SQLite.
-- **Urna de Votação com Busca:** Campo de busca em tempo real por nome do participante ou descrição da fantasia.
-- **Rota Secreta de Votação (`/vote`):** Oculta na tela pública de cadastro para evitar vazamento antecipado do link de votos.
+- **Votação com Busca:** Campo de busca em tempo real por nome do participante ou descrição da fantasia.
+- **Votação Restrita (`/vote`):** Oculta na navegação pública para evitar acesso antecipado antes da liberação oficial.
 - **Painel de Moderação (`/admin`):**
   - Métricas e KPIs (total de candidatos, votantes únicos, votos e média geral).
   - Central de Acesso Rápido conectando todas as **5 telas do sistema** para o moderador autenticado.
@@ -33,14 +33,14 @@ Seguindo o padrão dos sistemas institucionais do INTS:
 
 ```bash
 # 1. Clonar o repositório
-git clone https://github.com/BrunoACV/ints_voting_system.git
-cd ints_voting_system
+git clone https://github.com/BrunoACV/sistema-votacao-ints.git
+cd sistema-votacao-ints
 
 # 2. Subir o contêiner
 docker compose up -d --build
 
 # 3. Acompanhar os logs
-docker compose logs -f voting
+docker compose logs -f votacao
 ```
 
 O sistema estará acessível em: `http://localhost:8080`.
@@ -73,7 +73,7 @@ Ou simplesmente execute o script `iniciar.bat` (Windows) ou `./iniciar.sh` (Linu
 |---|---|---|
 | **Placar & Pódio** | `/results` | Classificação oficial dos mais votados e pódio de Halloween. |
 | **Inscrição de Candidato** | `/register` | Cadastro institucional de fantasias, setor e função. |
-| **Urna de Votação** | `/vote` | Tela secreta de votação restrita a e-mails `@ints.org.br`. |
+| **Votação** | `/vote` | Tela de votação restrita a e-mails `@ints.org.br`. |
 | **Painel de Moderação** | `/admin` | Dashboard administrativo com métricas e gestão de candidatos. |
 | **Auditoria de Eleitores** | `/admin/voters` | Lista de votantes com opção de exclusão e zeramento de votos. |
 | **Health Check** | `/health` | Monitoramento de disponibilidade (HTTP 200 OK). |

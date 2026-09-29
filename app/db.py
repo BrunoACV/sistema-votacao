@@ -1,6 +1,6 @@
 """
 app/db.py - SQLite persistence, schema initialization, and transactional queries.
-INTS Institutional Voting System.
+Sistema de Votação Institucional INTS.
 """
 
 import math
@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
     def has_app_context():
         return False
 
-# Base directory is the project root (ints_voting_system)
+# Base directory is the project root (sistema-votacao-ints)
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_DB_PATH = str(BASE_DIR / "data" / "voting.db")
 

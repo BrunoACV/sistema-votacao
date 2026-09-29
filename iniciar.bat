@@ -22,7 +22,7 @@ if %ERRORLEVEL% equ 0 (
     echo.
     echo [SUCESSO] Sistema rodando no Docker na porta 8080!
     echo Acesse: http://localhost:8080
-    echo Para ver os logs: docker compose logs -f voting
+    echo Para ver os logs: docker compose logs -f votacao
     goto :FIM
   )
 )

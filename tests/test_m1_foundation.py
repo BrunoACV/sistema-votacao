@@ -694,7 +694,7 @@ class TestM1Foundation(unittest.TestCase):
 
             # 4. Insecure secret key containing 'dev-secret' must be rejected
             ProductionConfig.ADMIN_PASSWORD = "SecureProductionAdminPassword2026!"
-            ProductionConfig.SECRET_KEY = "ints-voting-dev-secret-key-e7b8c2d1-secure"
+            ProductionConfig.SECRET_KEY = "sistema-votacao-ints-dev-secret-key-e7b8c2d1-secure"
             with self.assertRaises(ValueError, msg="ProductionConfig.validate() must reject dev secret key"):
                 ProductionConfig.validate()
 

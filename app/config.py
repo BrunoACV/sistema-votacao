@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Set
 from dotenv import load_dotenv
 
-# Base directory is the project root (ints_voting_system)
+# Base directory is the project root (sistema-votacao-ints)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env if present (without overriding existing environment)
@@ -30,7 +30,7 @@ class Config:
 
     # Security: Session Secret Key
     SECRET_KEY: str = os.getenv(
-        "SECRET_KEY", "ints-voting-dev-secret-key-e7b8c2d1-secure"
+        "SECRET_KEY", "sistema-votacao-ints-dev-secret-key-e7b8c2d1-secure"
     )
 
     # SQLite Database Path

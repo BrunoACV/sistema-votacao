@@ -19,7 +19,9 @@ O projeto segue rigorosamente o mesmo padrão de containerização, organizaçã
 
 O sistema foi desenvolvido especificamente para o concurso institucional de fantasias de Halloween do INTS:
 
-- **Frontend:** HTML5 semântico com Tailwind CSS configurado no tema **Dracula Dark** (fundo escuro `#282a36`, cards `#343746`, acentos `#bd93f9`, `#50fa7b`, `#ff79c6`, `#ffb86c`, `#8be9fd`, `#f1fa8c`, `#ff5555`). Não possui tema claro por especificação de identidade visual.
+- **Repositório Git**: `https://github.com/BrunoACV/sistema-votacao-ints.git` (Privado)
+- **Diretório Local**: `C:\Trabalho\IA\Projetos\Aplicações web\sistema-votacao-ints`
+- **Frontend:** HTML5 semântico com Tailwind CSS configurado no tema **Dracula Dark** (fundo escuro `#282a36`, cards `#343746`, superfícies `#1e1f29` e acentos Dracula: `#bd93f9`, `#50fa7b`, `#ff79c6`, `#ffb86c`, `#8be9fd`, `#f1fa8c`, `#ff5555`). Não possui tema claro por especificação de identidade visual.
 - **Backend:** Python 3.11+, Flask modular estruturado com Blueprints (`public` e `admin`), servido em produção por servidor WSGI **Gunicorn** (2 workers, 4 threads assíncronas).
 - **Banco de Dados:** SQLite 3 em modo WAL (`data/voting.db`), garantindo alta concorrência de leitura e escrita com transações ACID.
 - **Fotos:** Armazenamento local persistente em `static/uploads/`, com sanitização de nomes UUID, compressão e validação segura de tipos MIME (Pillow).
@@ -30,7 +32,7 @@ O sistema foi desenvolvido especificamente para o concurso institucional de fant
 
 | Recurso | Status | Descrição |
 |---|---|---|
-| **Tema Dracula Dark** | 100% | Aplicado em todas as 10 telas e componentes. |
+| **Tema Dracula Dark** | 100% | Aplicado em todas as telas e componentes (sem tema claro). |
 | **Inscrição de Candidatos** | 100% | Cadastro com nome, fantasia, foto, setor e função institucional. |
 | **Urna de Votação Secreta** | 100% | Rota `/vote` separada, oculta da tela pública de cadastro. |
 | **Busca de Candidatos** | 100% | Campo de busca interativo em tempo real por nome/fantasia na votação. |
@@ -39,6 +41,7 @@ O sistema foi desenvolvido especificamente para o concurso institucional de fant
 | **Painel de Moderação** | 100% | Protegido por senha (`ADMIN_PASSWORD`), com KPIs de votos e desclassificação. |
 | **Navegação do Moderador** | 100% | Central de Acesso Rápido e Navbar conectando as **5 telas do sistema**. |
 | **Auditoria e Remoção de Votos** | 100% | Tela `/admin/voters` para exclusão de votos individuais ou reset geral. |
+| **Ocultação de Resultados Pública** | 100% | Nenhum botão para `/results` existe quando o usuário não está autenticado. |
 | **Placar e Pódio Olímpico** | 100% | Pódio estilizado do 1º ao 3º lugar com ranking geral dos candidatos. |
 | **Docker e Compose** | 100% | Imagem Debian Bookworm, usuário não-root, volumes mapeados e healthcheck. |
 | **Testes Automatizados** | 100% | 43 testes unitários e de integração cobrindo todas as rotas e regras. |
@@ -56,7 +59,7 @@ O sistema foi desenvolvido especificamente para o concurso institucional de fant
 | `/admin` | `admin.dashboard` | Moderador | Painel administrativo com KPIs, desclassificação e acesso rápido. |
 | `/admin/voters` | `admin.voters_audit` | Moderador | Auditoria detalhada de votantes com remoção de votos. |
 | `/admin/login` | `admin.login` | Moderador | Tela de autenticação por senha do moderador. |
-| `/health` | Core | Pública / Infra | Healthcheck (retorna JSON `{"status": "ok", "app": "ints_voting"}`). |
+| `/health` | Core | Pública / Infra | Healthcheck (retorna JSON `{"status": "ok", "app": "sistema_votacao_ints"}`). |
 | `/api/check-voter` | `public.api_check_voter` | API Interna | Verificação em tempo real de elegibilidade do e-mail. |
 
 ---
@@ -67,7 +70,7 @@ Seguindo o padrão do **Portal de Dashboards**, o deploy em produção é execut
 
 ### 5.1 Arquivos do Docker
 - **`Dockerfile`**: Base `python:3.11-slim-bookworm`, sem privilégios de root (roda com usuário `appuser` UID 1000), expõe a porta `8080` e executa via Gunicorn.
-- **`docker-compose.yml`**: Serviço `voting`, container `ints-voting`, reinicialização `unless-stopped`, política de logs limitada (`10m`, 5 arquivos).
+- **`docker-compose.yml`**: Serviço `votacao`, container `sistema-votacao-ints`, imagem `sistema-votacao-ints:latest`, reinicialização `unless-stopped`, política de logs limitada (`10m`, 5 arquivos).
 - **`.dockerignore`**: Exclui `.env`, `.git`, `.venv`, `__pycache__` e testes, mantendo a imagem leve (~250 MB).
 
 ### 5.2 Persistência de Dados (Volumes)
@@ -81,10 +84,10 @@ Dois diretórios do host são mapeados no contêiner para garantir sobrevivênci
 docker compose up -d --build
 
 # Ver logs
-docker compose logs -f voting
+docker compose logs -f votacao
 
 # Reiniciar
-docker compose restart voting
+docker compose restart votacao
 
 # Parar
 docker compose down
@@ -145,7 +148,7 @@ tar -czvf backup-halloween-$(date +%Y%m%d_%H%M%S).tar.gz data/ static/uploads/
 
 Para restaurar em caso de migração de servidor:
 1. Instale o Docker e Git no novo servidor.
-2. Clone o repositório.
+2. Clone o repositório (`git clone https://github.com/BrunoACV/sistema-votacao-ints.git`).
 3. Descompacte o arquivo de backup sobrepondo as pastas `data/` e `static/uploads/`.
 4. Execute `docker compose up -d --build`.
 
@@ -159,6 +162,6 @@ A suíte de testes cobre todas as funcionalidades críticas:
 python -m unittest discover -s tests
 
 # Ou dentro do contêiner Docker
-docker compose run --rm voting python -m unittest discover -s tests
+docker compose run --rm votacao python -m unittest discover -s tests
 ```
 Resultado esperado: **43 testes executados com 100% de aprovação (OK)**.

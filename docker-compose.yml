@@ -2,18 +2,18 @@
 # Sistema de Votação Institucional de Halloween INTS em contêiner.
 #
 #   Subir (e reconstruir a imagem):  docker compose up -d --build
-#   Ver o log:                       docker compose logs -f voting
+#   Ver o log:                       docker compose logs -f votacao
 #   Parar:                           docker compose down
-#   Reiniciar:                       docker compose restart voting
+#   Reiniciar:                       docker compose restart votacao
 #
 # A porta de fora é HALLOWEEN_PORTA (padrão 8080); dentro do contêiner é sempre
 # 8080. Para outra porta:  HALLOWEEN_PORTA=8081 docker compose up -d
 # ---------------------------------------------------------------------------
 services:
-  voting:
+  votacao:
     build: .
-    image: ints-voting-system:latest
-    container_name: ints-voting
+    image: sistema-votacao-ints:latest
+    container_name: sistema-votacao-ints
     restart: unless-stopped
 
     # O .env do repositório entra como variável de ambiente, e não como arquivo

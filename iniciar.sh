@@ -15,7 +15,7 @@ if command -v docker &> /dev/null && docker compose version &> /dev/null; then
     docker compose up -d --build
     echo ""
     echo "[SUCESSO] Sistema rodando no Docker!"
-    echo "Logs: docker compose logs -f voting"
+    echo "Logs: docker compose logs -f votacao"
     exit 0
 fi
 

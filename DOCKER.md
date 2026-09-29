@@ -7,7 +7,7 @@ Guia para quem instala e atualiza o sistema de votação num servidor com Docker
 ## 1 · O que o servidor precisa
 
 - **Docker Engine com Docker Compose v2** (o comando moderno é `docker compose`, com espaço).
-- **Git** e acesso de leitura ao repositório do projeto.
+- **Git** e acesso de leitura ao repositório do projeto: `https://github.com/BrunoACV/sistema-votacao-ints.git`.
 - **Memória:** o sistema consome ~100 a 150 MB de RAM em operação normal (Gunicorn + Flask). Reserve **512 MB** (1 GB para folga ampla em picos de votação).
 - **Disco:** ~50 MB para banco de dados e imagens em `data/` e `static/uploads/`, mais a imagem Docker (~250 MB).
 - **Rede de SAÍDA:**
@@ -20,8 +20,8 @@ Guia para quem instala e atualiza o sistema de votação num servidor com Docker
 ## 2 · Primeira instalação
 
 ```bash
-git clone https://github.com/BrunoACV/ints_voting_system.git
-cd ints_voting_system
+git clone https://github.com/BrunoACV/sistema-votacao-ints.git
+cd sistema-votacao-ints
 docker compose up -d --build
 ```
 
@@ -30,8 +30,8 @@ docker compose up -d --build
   HALLOWEEN_PORTA=8081 docker compose up -d --build
   ```
 - **Conferir funcionamento:**
-  - `docker compose ps` deve mostrar o contêiner `ints-voting` como `Up` e `(healthy)`.
-  - `docker compose logs -f voting` deve exibir a inicialização do Gunicorn com os workers ativos.
+  - `docker compose ps` deve mostrar o contêiner `sistema-votacao-ints` como `Up` e `(healthy)`.
+  - `docker compose logs -f votacao` deve exibir a inicialização do Gunicorn com os workers ativos.
 - **Persistência de Dados e Fotos:**
   - O banco de dados SQLite (`data/voting.db`) e as fotos dos candidatos (`static/uploads/`) são mapeados diretamente como volumes do host no `docker-compose.yml`.
   - Eles sobrevivem a qualquer reinicialização, atualização de versão ou rebuild do contêiner.
@@ -43,7 +43,7 @@ docker compose up -d --build
 Quando houver novos commits e melhorias no Git:
 
 ```bash
-cd ints_voting_system
+cd sistema-votacao-ints
 git pull
 docker compose up -d --build
 docker image prune -f
@@ -57,8 +57,8 @@ O comando `up --build` reconstrói a imagem com o código novo e recria o contê
 
 | O quê | Comando |
 |---|---|
-| **Ver logs em tempo real** | `docker compose logs -f voting` |
-| **Reiniciar aplicação** | `docker compose restart voting` |
+| **Ver logs em tempo real** | `docker compose logs -f votacao` |
+| **Reiniciar aplicação** | `docker compose restart votacao` |
 | **Parar contêiner** | `docker compose down` |
 | **Verificar status e saúde** | `docker compose ps` |
 | **Testar endpoint de saúde** | `curl -s http://localhost:8080/health` |
@@ -88,7 +88,7 @@ Para restaurar num servidor novo, basta extrair as pastas `data/` e `static/uplo
 - **O repositório Git deve permanecer PRIVADO.**
 - **A imagem Docker é para uso interno institucional**, não devendo ser enviada para registros públicos.
 - **A imagem em si não embute o `.env`**: ele é excluído pelo `.dockerignore` e injetado em tempo de execução via diretiva `env_file` do Docker Compose.
-- **Senha do Painel de Moderação (`ADMIN_PASSWORD`):** pode ser alterada diretamente no arquivo `.env` do servidor e aplicada com `docker compose restart voting`.
+- **Senha do Painel de Moderação (`ADMIN_PASSWORD`):** pode ser alterada diretamente no arquivo `.env` do servidor e aplicada com `docker compose restart votacao`.
 - **Integração com Nginx (Proxy Reverso):**
   Se o servidor utilizar Nginx na porta 80/443 apontando para o sistema, utilize o seguinte bloco de proxy:
   ```nginx

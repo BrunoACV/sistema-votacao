@@ -152,7 +152,7 @@ def create_app(config_input: Optional[Union[str, Type[Config], Config]] = None) 
     def health_check():
         return jsonify({
             "status": "ok",
-            "app": "ints_voting_system",
+            "app": "sistema_votacao_ints",
             "env": app.config.get("APP_ENV", "unknown"),
         }), 200
 

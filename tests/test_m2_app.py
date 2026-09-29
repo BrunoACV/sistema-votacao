@@ -127,7 +127,7 @@ class M2AppIntegrationTestCase(unittest.TestCase):
         self.assertTrue(response.is_json)
         data = response.get_json()
         self.assertEqual(data.get("status"), "ok")
-        self.assertEqual(data.get("app"), "ints_voting_system")
+        self.assertEqual(data.get("app"), "sistema_votacao_ints")
 
     def test_root_endpoint_redirects_to_results(self):
         """GET / must redirect to /results."""
