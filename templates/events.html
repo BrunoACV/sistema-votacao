@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Concursos e Votações Oficiais - INTS{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+
+  <!-- Header Section -->
+  <div class="text-center space-y-3">
+    <div class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+      Portal Institucional INTS
+    </div>
+    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-[#f8f8f2] tracking-tight">
+      Concursos e Eventos de Votação
+    </h1>
+    <p class="max-w-2xl mx-auto text-sm sm:text-base text-[#6272a4]">
+      Selecione abaixo o concurso ativo que deseja acompanhar, inscrever seu projeto/fantasia ou registrar seu voto institucional exclusivo.
+    </p>
+  </div>
+
+  <!-- Events Grid -->
+  {% if events %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for ev in events %}
+    <div class="bg-[#343746] rounded-3xl p-6 border border-[#6272a4]/40 shadow-xl flex flex-col justify-between hover:border-[#bd93f9] transition duration-200 group">
+      <div class="space-y-4">
+        <!-- Status & Badge -->
+        <div class="flex items-center justify-between">
+          {% if ev.ativo %}
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+            Votação Aberta
+          </span>
+          {% else %}
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#ff5555]/20 text-[#ff5555] border border-[#ff5555]/30">
+            Encerrado
+          </span>
+          {% endif %}
+          <span class="text-xs font-mono text-[#6272a4]">/e/{{ ev.slug }}</span>
+        </div>
+
+        <!-- Title & Description -->
+        <div>
+          <h2 class="text-xl font-black text-[#f8f8f2] group-hover:text-[#bd93f9] transition">
+            {{ ev.nome }}
+          </h2>
+          <p class="text-xs sm:text-sm text-[#6272a4] mt-2 line-clamp-3">
+            {{ ev.descricao or 'Concurso institucional oficial do Instituto Nacional de Tecnologia e Saúde.' }}
+          </p>
+        </div>
+
+        <!-- Statistics Badges -->
+        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-[#6272a4]/20 text-center">
+          <div class="p-2 rounded-xl bg-[#282a36]">
+            <span class="block text-base font-extrabold text-[#bd93f9]">{{ ev.total_candidatos or 0 }}</span>
+            <span class="text-[10px] uppercase font-bold text-[#6272a4]">Candidatos</span>
+          </div>
+          <div class="p-2 rounded-xl bg-[#282a36]">
+            <span class="block text-base font-extrabold text-[#50fa7b]">{{ ev.total_votantes or 0 }}</span>
+            <span class="text-[10px] uppercase font-bold text-[#6272a4]">Votantes</span>
+          </div>
+          <div class="p-2 rounded-xl bg-[#282a36]">
+            <span class="block text-base font-extrabold text-[#f1fa8c]">{{ ev.total_votos or 0 }}</span>
+            <span class="text-[10px] uppercase font-bold text-[#6272a4]">Votos</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-6 pt-4 border-t border-[#6272a4]/30 space-y-2">
+        {% if ev.ativo %}
+        <a href="{{ url_for('public.vote', slug=ev.slug) }}" 
+           class="block w-full py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider text-center text-[#282a36] bg-[#50fa7b] hover:bg-[#50fa7b]/90 shadow-md shadow-[#50fa7b]/20 transition">
+          Acessar Votação
+        </a>
+        {% endif %}
+        <div class="grid grid-cols-2 gap-2">
+          <a href="{{ url_for('public.register', slug=ev.slug) }}" 
+             class="py-2 px-3 rounded-xl text-xs font-bold text-center text-[#ff79c6] bg-[#282a36] hover:bg-[#ff79c6] hover:text-[#282a36] border border-[#ff79c6]/40 transition">
+            Inscrição
+          </a>
+          <a href="{{ url_for('public.results', slug=ev.slug) }}" 
+             class="py-2 px-3 rounded-xl text-xs font-bold text-center text-[#f1fa8c] bg-[#282a36] hover:bg-[#f1fa8c] hover:text-[#282a36] border border-[#f1fa8c]/40 transition">
+            Resultados
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-16 bg-[#343746] rounded-3xl border border-[#6272a4]/30 space-y-4">
+    <p class="text-base text-[#6272a4]">Nenhum concurso ou evento de votação ativo no momento.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

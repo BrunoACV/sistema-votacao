@@ -1,20 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Voto Confirmado - Concurso de Halloween INTS{% endblock %}
+{% block title %}Voto Confirmado - {{ current_event.nome if current_event else 'INTS' }}{% endblock %}
 
 {% block content %}
 <div class="max-w-xl mx-auto space-y-8 py-6">
     <!-- Header -->
     <div class="text-center">
         <div class="inline-flex items-center space-x-2 bg-[#343746] border border-[#50fa7b]/40 text-[#50fa7b] text-xs uppercase font-extrabold px-4 py-1.5 rounded-full tracking-wider mb-4 shadow-lg shadow-[#50fa7b]/10 animate-pulse">
-            <span>🎉</span>
             <span>Voto Computado com Sucesso</span>
         </div>
         <h1 class="text-3xl sm:text-5xl font-black text-[#f8f8f2] tracking-tight">
             Voto <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#50fa7b] via-[#8be9fd] to-[#bd93f9]">Registrado!</span>
         </h1>
         <p class="text-[#6272a4] text-xs sm:text-sm mt-3 max-w-md mx-auto leading-relaxed">
-            Seu voto no Concurso de Halloween foi gravado na base de dados oficial do INTS.
+            Seu voto no evento <strong>{{ current_event.nome if current_event else 'institucional' }}</strong> foi gravado na base de dados oficial do INTS.
         </p>
     </div>
 
@@ -28,7 +27,6 @@
             <div class="p-5 bg-[#282a36] rounded-2xl border border-[#50fa7b]/30 text-center space-y-2">
                 <span class="text-xs font-bold uppercase tracking-wider text-[#6272a4]">Candidato Escolhido</span>
                 <div class="text-xl sm:text-2xl font-black text-[#50fa7b] flex items-center justify-center space-x-2">
-                    <span>🎃</span>
                     <span>{{ candidate_name or 'Candidato Selecionado' }}</span>
                 </div>
                 {% if voter_email %}
@@ -41,12 +39,11 @@
             <!-- MANDATORY RULE NOTICE: Apenas 1 voto por colaborador -->
             <div class="bg-[#282a36] rounded-2xl border-2 border-[#ffb86c] p-5 space-y-3 shadow-lg shadow-[#ffb86c]/10">
                 <div class="flex items-center space-x-2.5 text-[#ffb86c]">
-                    <span class="text-2xl flex-shrink-0">🔒</span>
                     <h3 class="font-extrabold text-sm sm:text-base leading-snug">
                         ATENÇÃO: É PERMITIDO APENAS 1 VOTO POR COLABORADOR
                     </h3>
                 </div>
-                <div class="text-xs sm:text-sm text-[#f8f8f2]/90 leading-relaxed space-y-2 pl-8">
+                <div class="text-xs sm:text-sm text-[#f8f8f2]/90 leading-relaxed space-y-2">
                     <p>
                         Seu e-mail institucional <strong class="text-[#ffb86c]">{% if voter_email %}{{ voter_email }}{% else %}@ints.org.br{% endif %}</strong> já foi vinculado a este voto no registro oficial.
                     </p>
@@ -58,14 +55,14 @@
 
             <!-- Gratitude Notice -->
             <div class="text-center text-xs text-[#6272a4] pt-2">
-                <p>Obrigado por celebrar o Halloween conosco! 🦇</p>
+                <p>Obrigado por participar da votação institucional!</p>
                 <p class="mt-1 text-[#bd93f9]">Seu voto foi registrado com sucesso.</p>
             </div>
 
             {% if session.get('is_admin') %}
             <!-- Action Button: Ver Placar & Pódio (Apenas Moderador Autenticado) -->
             <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                <a href="{{ url_for('public.results') }}" 
+                <a href="{{ url_for('public.results', slug=current_event.slug) if current_event else url_for('public.results') }}" 
                    class="flex-1 bg-gradient-to-r from-[#f1fa8c] to-[#ffb86c] hover:from-[#f5fb9d] hover:to-[#ffc485] text-[#282a36] font-black py-3.5 px-6 rounded-xl shadow-xl transition transform hover:scale-[1.01] active:scale-[0.99] text-sm flex items-center justify-center space-x-2 text-center">
                     <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-5 h-5 rounded-md object-cover">
                     <span>Acompanhar Placar e Pódio dos Vencedores</span>

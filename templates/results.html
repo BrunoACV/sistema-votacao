@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Classificação e Pódio de Halloween - INTS{% endblock %}
+{% block title %}Classificação e Pódio - {{ current_event.nome if current_event else 'INTS' }}{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-10">
@@ -9,15 +9,30 @@
     <div class="text-center max-w-3xl mx-auto pt-2">
         <div class="inline-flex items-center space-x-2 bg-[#343746] border border-[#f1fa8c]/40 text-[#f1fa8c] text-xs uppercase font-extrabold px-4 py-1.5 rounded-full tracking-wider mb-3 shadow-lg shadow-[#f1fa8c]/10">
             <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Troféu" class="w-5 h-5 rounded-full object-cover">
-            <span>Classificação Oficial de Halloween</span>
+            <span>Classificação Oficial - {{ current_event.nome if current_event else 'Evento de Votação' }}</span>
         </div>
         <h1 class="text-3xl sm:text-5xl font-black text-[#f8f8f2] tracking-tight">
-            Pódio do <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#f1fa8c] via-[#ffb86c] to-[#ff79c6]">Halloween</span>
+            Pódio do <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#f1fa8c] via-[#ffb86c] to-[#ff79c6]">{{ current_event.nome if current_event else 'Evento' }}</span>
         </h1>
         <p class="text-[#6272a4] text-xs sm:text-sm mt-2 max-w-md mx-auto">
             Resultado oficial apurado com base no voto único dos colaboradores do INTS.
         </p>
     </div>
+
+    <!-- Event Switcher (Quando múltiplos eventos existem) -->
+    {% if all_events and all_events|length > 1 %}
+    <div class="bg-[#343746] rounded-2xl p-3 border border-[#6272a4]/40 flex flex-wrap items-center justify-between gap-3 max-w-4xl mx-auto">
+        <div class="text-xs font-bold text-[#6272a4] uppercase px-2">Visualizar Evento:</div>
+        <div class="flex flex-wrap gap-2">
+            {% for ev in all_events %}
+            <a href="{{ url_for('public.results', slug=ev.slug) }}" 
+               class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition {% if current_event and current_event.id == ev.id %}bg-[#f1fa8c] text-[#282a36] shadow-md shadow-[#f1fa8c]/20{% else %}bg-[#282a36] text-[#f8f8f2] hover:bg-[#44475a] border border-[#6272a4]/30{% endif %}">
+                {{ ev.nome }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Summary Statistics Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
@@ -43,7 +58,7 @@
                 <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Troféu" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover ring-1 ring-[#f1fa8c]/50">
                 <span>Pódio dos Vencedores</span>
             </h2>
-            <p class="text-xs text-[#6272a4] mt-1">Os concorrentes mais votados da festa institucional</p>
+            <p class="text-xs text-[#6272a4] mt-1">Os concorrentes mais votados do evento</p>
         </div>
 
         <!-- PODIUM CONTAINER: Sempre flex-row (lado a lado no mobile e desktop) -->
@@ -54,7 +69,7 @@
                 {% if second_place %}
                     <div class="relative mb-2 text-center w-full px-1">
                         <span class="inline-block bg-[#44475a] text-[#8be9fd] border border-[#8be9fd]/40 font-black text-[10px] sm:text-xs px-2 py-0.5 rounded-full mb-1">
-                            🥈 2º Lugar
+                            2º Lugar (Prata)
                         </span>
                         <div class="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full border-2 sm:border-4 border-[#8be9fd] shadow-lg shadow-[#8be9fd]/20 overflow-hidden mx-auto bg-[#282a36]">
                             <img src="{{ url_for('static', filename='uploads/' + second_place.foto_filename) }}" 
@@ -83,9 +98,8 @@
             <!-- 1º LUGAR - OURO (CAMPEÃO) - CENTRO & ELEVADO -->
             <div class="flex-1 min-w-0 flex flex-col items-center">
                 <div class="relative mb-2 text-center w-full px-1">
-                    <div class="text-xl sm:text-2xl animate-bounce">👑</div>
                     <span class="inline-block bg-[#f1fa8c]/20 text-[#f1fa8c] border border-[#f1fa8c]/60 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full mb-1 shadow-lg shadow-[#f1fa8c]/20">
-                        🥇 Campeão
+                        1º Lugar (Campeão)
                     </span>
                     <div class="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full border-2 sm:border-4 border-[#f1fa8c] shadow-2xl shadow-[#f1fa8c]/30 overflow-hidden mx-auto ring-2 sm:ring-4 ring-[#ffb86c]/40 bg-[#282a36]">
                         <img src="{{ url_for('static', filename='uploads/' + first_place.foto_filename) }}" 
@@ -111,7 +125,7 @@
                 {% if third_place %}
                     <div class="relative mb-2 text-center w-full px-1">
                         <span class="inline-block bg-[#44475a] text-[#ffb86c] border border-[#ffb86c]/40 font-black text-[10px] sm:text-xs px-2 py-0.5 rounded-full mb-1">
-                            🥉 3º Lugar
+                            3º Lugar (Bronze)
                         </span>
                         <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-2 sm:border-4 border-[#ffb86c] shadow-lg shadow-[#ffb86c]/20 overflow-hidden mx-auto bg-[#282a36]">
                             <img src="{{ url_for('static', filename='uploads/' + third_place.foto_filename) }}" 

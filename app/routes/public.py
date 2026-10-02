@@ -1,6 +1,7 @@
 """
 app/routes/public.py - Public routes for INTS Institutional Voting System.
-Handles candidate registration, institutional voting, and leaderboard results.
+Handles candidate registration, institutional voting, events catalog, and leaderboard results.
+Supports multiple distinct voting events operating concurrently.
 """
 
 import re
@@ -14,22 +15,31 @@ from flask import (
     flash,
     jsonify,
     current_app,
+    abort,
 )
 
 from app.db import (
     add_participant,
     list_participants,
     get_participant_by_email,
+    get_participant_by_id,
     has_voter_voted,
     record_votes,
+    record_single_vote,
     get_leaderboard,
     get_voting_summary,
+    list_events,
+    get_event_by_id,
+    get_event_by_slug,
+    get_default_event,
     DuplicateParticipantEmailError,
     VoterAlreadyVotedError,
     InvalidVoterEmailError,
     InvalidScoreError,
     MissingParticipantRatingError,
     ParticipantNotFoundError,
+    EventNotFoundError,
+    EventInactiveError,
     DatabaseError,
 )
 from app.storage import (
@@ -45,21 +55,63 @@ public_bp = Blueprint("public", __name__)
 EMAIL_DOMAIN_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@ints\.org\.br$", re.IGNORECASE)
 
 
+def resolve_event(slug: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Resolves the targeted voting event from route slug, query param, or system default.
+    Raises 404 if a specific event is requested but does not exist.
+    """
+    target = slug or request.args.get("evento") or request.args.get("event")
+    if target:
+        target_str = str(target).strip()
+        ev = get_event_by_slug(target_str)
+        if not ev and target_str.isdigit():
+            ev = get_event_by_id(int(target_str))
+        if not ev:
+            abort(404, description=f"Evento de votação '{target}' não foi encontrado.")
+        return ev
+    return get_default_event()
+
+
 @public_bp.route("/", methods=["GET"])
 def index():
     """
-    Entrypoint route. Redirects to /results.
+    Entrypoint route. Redirects to /results of the active event.
     """
     return redirect(url_for("public.results"))
 
 
+@public_bp.route("/eventos", methods=["GET"])
+def events_catalog():
+    """
+    Public catalog listing all active and past voting events.
+    Allows institutional users to select and participate in different events.
+    """
+    all_events = list_events()
+
+    if request.is_json or request.headers.get("Accept") == "application/json":
+        return jsonify({"events": all_events}), 200
+
+    return render_template("events.html", events=all_events)
+
+
 @public_bp.route("/register", methods=["GET", "POST"])
-def register():
+@public_bp.route("/e/<slug>/register", methods=["GET", "POST"])
+def register(slug: Optional[str] = None):
     """
-    Participant registration endpoint. Handles multipart form upload and validation.
+    Participant registration endpoint for a specific event. Handles multipart form upload and validation.
     """
+    event = resolve_event(slug)
+
     if request.method in ["GET", "HEAD"]:
-        return render_template("register.html")
+        return render_template("register.html", event=event, current_event=event)
+
+    # Check if event is active
+    if not event.get("ativo", 1):
+        msg = f"As inscrições para o evento '{event['nome']}' estão encerradas no momento."
+        if request.is_json or request.headers.get("Accept") == "application/json":
+            return jsonify({"status": "error", "error": "Evento Encerrado", "message": msg}), 400
+        flash(msg, "warning")
+        return render_template("register.html", event=event, current_event=event), 400
 
     # Extract input fields (handling both multipart form and JSON payloads)
     if request.is_json:
@@ -85,6 +137,8 @@ def register():
         return (
             render_template(
                 "register.html",
+                event=event,
+                current_event=event,
                 nome_completo=nome_completo,
                 email=email,
                 funcao=funcao,
@@ -110,10 +164,10 @@ def register():
     if not descricao or len(descricao) > 500:
         return bad_request("A descrição da inscrição é obrigatória (máximo 500 caracteres).")
 
-    # 2. Check for Duplicate Participant Email
-    existing = get_participant_by_email(email)
+    # 2. Check for Duplicate Participant Email in this specific event
+    existing = get_participant_by_email(email, event_id=event["id"])
     if existing:
-        return bad_request(f"O e-mail '{email}' já está cadastrado como participante.")
+        return bad_request(f"O e-mail '{email}' já está cadastrado como participante neste evento.")
 
     # 3. Validate Photo Presence
     if not foto_file or not getattr(foto_file, "filename", ""):
@@ -138,8 +192,13 @@ def register():
             foto_filename=foto_filename,
             funcao=funcao,
             setor=setor,
+            event_id=event["id"],
         )
     except DuplicateParticipantEmailError as exc:
+        if foto_filename:
+            delete_photo(foto_filename, upload_folder=upload_folder)
+        return bad_request(str(exc))
+    except (EventNotFoundError, EventInactiveError) as exc:
         if foto_filename:
             delete_photo(foto_filename, upload_folder=upload_folder)
         return bad_request(str(exc))
@@ -152,6 +211,8 @@ def register():
         return (
             render_template(
                 "register.html",
+                event=event,
+                current_event=event,
                 nome_completo=nome_completo,
                 email=email,
                 funcao=funcao,
@@ -161,27 +222,32 @@ def register():
             500,
         )
 
-    # 6. Response Handling - Tela de conclusão de cadastro (não redireciona para candidatos)
+    # 6. Response Handling
     if request.is_json:
         return (
             jsonify({
                 "status": "success",
                 "message": "Participante cadastrado com sucesso!",
                 "id": participant_id,
+                "event_id": event["id"],
+                "event_slug": event["slug"],
                 "foto_filename": foto_filename,
             }),
             201,
         )
 
-    return redirect(url_for("public.register_success", id=participant_id))
+    if slug:
+        return redirect(url_for("public.register_success", slug=event["slug"], id=participant_id))
+    return redirect(url_for("public.register_success", id=participant_id, evento=event["slug"]))
 
 
 @public_bp.route("/register/success", methods=["GET"])
-def register_success():
+@public_bp.route("/e/<slug>/register/success", methods=["GET"])
+def register_success(slug: Optional[str] = None):
     """
     Registration completion confirmation screen.
     """
-    from app.db import get_participant_by_id
+    event = resolve_event(slug)
     participant_id = request.args.get("id")
     participant = None
     if participant_id:
@@ -189,18 +255,29 @@ def register_success():
             participant = get_participant_by_id(int(participant_id))
         except (ValueError, TypeError):
             pass
-    return render_template("register_success.html", participant=participant)
+    return render_template("register_success.html", participant=participant, event=event, current_event=event)
 
 
 @public_bp.route("/vote", methods=["GET", "POST"])
-def vote():
+@public_bp.route("/e/<slug>/vote", methods=["GET", "POST"])
+def vote(slug: Optional[str] = None):
     """
-    Public voting endpoint. Displays candidates and processes consolidated institutional evaluations.
+    Public voting endpoint scoped to an event.
+    Displays candidates and processes consolidated institutional evaluations.
     """
-    candidates = list_participants()
+    event = resolve_event(slug)
+    candidates = list_participants(event_id=event["id"])
 
     if request.method in ["GET", "HEAD"]:
-        return render_template("vote.html", candidates=candidates)
+        return render_template("vote.html", candidates=candidates, event=event, current_event=event)
+
+    # Check if event is active
+    if not event.get("ativo", 1):
+        msg = f"A votação para o evento '{event['nome']}' está encerrada no momento."
+        if request.is_json or request.headers.get("Accept") == "application/json":
+            return jsonify({"status": "error", "error": "Votação Encerrada", "message": msg}), 400
+        flash(msg, "warning")
+        return render_template("vote.html", candidates=candidates, event=event, current_event=event, error_message=msg), 400
 
     # Extract voter email and candidate choice or ratings
     voter_email = ""
@@ -230,6 +307,8 @@ def vote():
             render_template(
                 "vote.html",
                 candidates=candidates,
+                event=event,
+                current_event=event,
                 voter_email=voter_email,
                 selected_candidate=candidate_id,
                 error_message=msg,
@@ -248,16 +327,16 @@ def vote():
             400,
         )
 
-    # 2. Duplicate Voter Check
-    if has_voter_voted(clean_email):
+    # 2. Duplicate Voter Check for this specific event
+    if has_voter_voted(clean_email, event_id=event["id"]):
         return vote_error(
-            f"O colaborador '{clean_email}' já registrou seu voto anteriormente. Cada colaborador pode votar apenas uma vez.",
+            f"O colaborador '{clean_email}' já registrou seu voto neste evento. Cada colaborador pode votar apenas uma vez por concurso.",
             400,
         )
 
-    # 3. Check for Active Candidates
+    # 3. Check for Active Candidates in this event
     if not candidates:
-        return vote_error("Não há participantes cadastrados para votação no momento.", 400)
+        return vote_error(f"Não há participantes cadastrados para votação no evento '{event['nome']}' no momento.", 400)
 
     # 4. Check for Candidate Selection or Ratings
     if not candidate_id and not ratings_payload:
@@ -266,15 +345,14 @@ def vote():
     # 5. Record Vote in SQLite Atomic Transaction
     try:
         if ratings_payload:
-            result = record_votes(clean_email, ratings_payload)
+            result = record_votes(clean_email, ratings_payload, event_id=event["id"])
             cand_name = "os candidatos avaliados"
         else:
-            from app.db import record_single_vote
-            result = record_single_vote(clean_email, candidate_id)
-            cand_name = result.get('participant_name', '')
+            result = record_single_vote(clean_email, candidate_id, event_id=event["id"])
+            cand_name = result.get("participant_name", "")
     except (InvalidVoterEmailError, VoterAlreadyVotedError, InvalidScoreError, MissingParticipantRatingError) as exc:
         return vote_error(str(exc), 400)
-    except ParticipantNotFoundError as exc:
+    except (ParticipantNotFoundError, EventNotFoundError, EventInactiveError) as exc:
         return vote_error(str(exc), 400)
     except DatabaseError as exc:
         return vote_error(f"Erro ao processar votação: {str(exc)}", 400)
@@ -282,28 +360,40 @@ def vote():
         return vote_error(f"Erro inesperado no servidor: {str(exc)}", 500)
 
     # 6. Response
-    cand_name = result.get('participant_name') or cand_name or "Candidato Selecionado"
+    cand_name = result.get("participant_name") or cand_name or "Candidato Selecionado"
     if request.is_json or request.headers.get("Accept") == "application/json":
+        redir_url = (
+            url_for("public.vote_success", slug=event["slug"], candidate=cand_name, email=clean_email)
+            if slug
+            else url_for("public.vote_success", candidate=cand_name, email=clean_email, evento=event["slug"])
+        )
         return (
             jsonify({
                 "status": "success",
                 "message": f"Voto computado com sucesso para {cand_name}!",
                 "voter_email": clean_email,
                 "candidate_id": candidate_id,
-                "redirect_url": url_for("public.vote_success", candidate=cand_name, email=clean_email),
+                "event_id": event["id"],
+                "event_slug": event["slug"],
+                "redirect_url": redir_url,
             }),
             200,
         )
 
-    return redirect(url_for("public.vote_success", candidate=cand_name, email=clean_email))
+    if slug:
+        return redirect(url_for("public.vote_success", slug=event["slug"], candidate=cand_name, email=clean_email))
+    return redirect(url_for("public.vote_success", candidate=cand_name, email=clean_email, evento=event["slug"]))
 
 
 @public_bp.route("/api/check-voter", methods=["GET"])
-def check_voter():
+@public_bp.route("/e/<slug>/api/check-voter", methods=["GET"])
+def check_voter(slug: Optional[str] = None):
     """
-    Real-time API endpoint to verify voter institutional email status and previous votes.
+    Real-time API endpoint to verify voter institutional email status and previous votes in the event.
     """
+    event = resolve_event(slug)
     email = request.args.get("email", "").strip().lower()
+
     if not email:
         return jsonify({"valid": False, "has_voted": False, "message": "Informe seu e-mail institucional."}), 200
 
@@ -314,46 +404,61 @@ def check_voter():
             "message": "E-mail não autorizado! Deve terminar obrigatoriamente com @ints.org.br."
         }), 200
 
-    already_voted = has_voter_voted(email)
+    already_voted = has_voter_voted(email, event_id=event["id"])
     if already_voted:
         return jsonify({
             "valid": True,
             "has_voted": True,
-            "message": f"🚫 Voto já registrado! O colaborador '{email}' já registrou seu voto anteriormente e não pode votar novamente."
+            "event_id": event["id"],
+            "event_name": event["nome"],
+            "message": f"🚫 Voto já registrado! O colaborador '{email}' já votou no evento '{event['nome']}' e não pode votar novamente."
         }), 200
 
     return jsonify({
         "valid": True,
         "has_voted": False,
-        "message": f"E-mail institucional reconhecido e apto para votar: {email}"
+        "event_id": event["id"],
+        "event_name": event["nome"],
+        "message": f"E-mail institucional reconhecido e apto para votar em {event['nome']}: {email}"
     }), 200
 
 
 @public_bp.route("/vote/success", methods=["GET"])
-def vote_success():
+@public_bp.route("/e/<slug>/vote/success", methods=["GET"])
+def vote_success(slug: Optional[str] = None):
     """
     Dedicated post-voting confirmation screen showing vote receipt
     and strict rule that only 1 vote per collaborator is permitted.
     """
+    event = resolve_event(slug)
     candidate_name = request.args.get("candidate", "").strip()
     voter_email = request.args.get("email", "").strip()
     return render_template(
         "vote_success.html",
         candidate_name=candidate_name,
-        voter_email=voter_email
+        voter_email=voter_email,
+        event=event,
+        current_event=event,
     )
 
 
 @public_bp.route("/results", methods=["GET"])
-def results():
+@public_bp.route("/e/<slug>/results", methods=["GET"])
+def results(slug: Optional[str] = None):
     """
-    Public leaderboard and Olympic podium results endpoint.
+    Public leaderboard and Olympic podium results endpoint scoped to an event.
     """
-    leaderboard = get_leaderboard()
-    summary = get_voting_summary()
+    event = resolve_event(slug)
+    leaderboard = get_leaderboard(event_id=event["id"])
+    summary = get_voting_summary(event_id=event["id"])
+    all_events = list_events()
 
     if request.is_json or request.headers.get("Accept") == "application/json":
-        return jsonify({"leaderboard": leaderboard, "summary": summary}), 200
+        return jsonify({
+            "event": event,
+            "leaderboard": leaderboard,
+            "summary": summary
+        }), 200
 
     # Extract Olympic Podium candidates (only if votes have been cast)
     first_place = None
@@ -375,4 +480,7 @@ def results():
         first_place=first_place,
         second_place=second_place,
         third_place=third_place,
+        event=event,
+        current_event=event,
+        all_events=all_events,
     )

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Concurso de Halloween{% endblock %} - INTS</title>
+    <title>{% block title %}{{ current_event.nome if current_event else 'Sistema de Votação' }}{% endblock %} - INTS</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon-32.png') }}">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -42,13 +42,13 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <!-- Brand / Logo Real do INTS -->
-                <a href="{{ url_for('admin.dashboard') if session.get('is_admin') else url_for('public.register') }}" class="flex items-center space-x-3.5 group">
+                <a href="{{ url_for('admin.dashboard') if session.get('is_admin') else url_for('public.events_catalog') }}" class="flex items-center space-x-3.5 group">
                     <img src="{{ url_for('static', filename='img/ints-horizontal.png') }}" 
                          alt="INTS - Instituto Nacional de Tecnologia e Saúde" 
                          class="h-9 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105 duration-200">
                     <div class="hidden sm:flex flex-col pl-2 border-l border-[#6272a4]/40">
                         <span class="font-extrabold text-sm sm:text-base leading-tight tracking-wide text-[#ffb86c]">
-                            Concurso de Halloween
+                            {{ current_event.nome if current_event else 'Sistema de Votação' }}
                         </span>
                         <span class="text-xs text-[#bd93f9] font-medium tracking-wide">
                             INTS Institucional
@@ -60,46 +60,54 @@
                 <!-- Admin Desktop Navigation: Acesso a TODAS as telas do sistema -->
                 <nav class="hidden md:flex items-center space-x-2">
                     <a href="{{ url_for('admin.dashboard') }}" 
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 {% if request.endpoint == 'admin.dashboard' %}bg-[#bd93f9] text-[#282a36] shadow-md shadow-[#bd93f9]/20{% else %}bg-[#343746] hover:bg-[#44475a] text-[#bd93f9]{% endif %}">
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 {% if request.endpoint in ['admin.dashboard', 'admin.event_new'] %}bg-[#bd93f9] text-[#282a36] shadow-md shadow-[#bd93f9]/20{% else %}bg-[#343746] hover:bg-[#44475a] text-[#bd93f9]{% endif %}">
                         <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Painel" class="w-4 h-4 rounded-md object-cover">
                         <span>Painel</span>
                     </a>
 
-                    <a href="{{ url_for('public.vote') }}" 
+                    <a href="{{ url_for('public.events_catalog') }}" 
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 {% if request.endpoint == 'public.events_catalog' %}bg-[#ffb86c] text-[#282a36] shadow-md shadow-[#ffb86c]/20{% else %}bg-[#343746] hover:bg-[#44475a] text-[#ffb86c]{% endif %}">
+                        <span>Eventos</span>
+                    </a>
+
+                    <a href="{{ url_for('public.vote', slug=current_event.slug) if current_event else url_for('public.vote') }}" 
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 {% if request.endpoint in ['public.vote', 'public.vote_success'] %}bg-[#50fa7b] text-[#282a36] shadow-md shadow-[#50fa7b]/20{% else %}bg-[#343746] hover:bg-[#44475a] text-[#50fa7b]{% endif %}">
                         <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Votar" class="w-4 h-4 rounded-md object-cover">
                         <span>Votação</span>
                     </a>
 
-                    <a href="{{ url_for('public.register') }}" 
+                    <a href="{{ url_for('public.register', slug=current_event.slug) if current_event else url_for('public.register') }}" 
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 {% if request.endpoint in ['public.register', 'public.register_success'] %}bg-[#ff79c6] text-[#282a36] shadow-md shadow-[#ff79c6]/20{% else %}bg-[#343746] hover:bg-[#44475a] text-[#ff79c6]{% endif %}">
                         <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-4 h-4 rounded-md object-cover">
                         <span>Inscrição</span>
                     </a>
 
-                    <a href="{{ url_for('public.results') }}" 
+                    <a href="{{ url_for('public.results', slug=current_event.slug) if current_event else url_for('public.results') }}" 
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 {% if request.endpoint == 'public.results' %}bg-[#f1fa8c] text-[#282a36] shadow-md shadow-[#f1fa8c]/20{% else %}bg-[#343746] hover:bg-[#44475a] text-[#f1fa8c]{% endif %}">
                         <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-4 h-4 rounded-md object-cover">
                         <span>Resultados</span>
                     </a>
 
-                    <a href="{{ url_for('admin.voters_audit') }}" 
+                    <a href="{{ url_for('admin.voters_audit', evento=current_event.slug) if current_event else url_for('admin.voters_audit') }}" 
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 {% if request.endpoint == 'admin.voters_audit' %}bg-[#8be9fd] text-[#282a36] shadow-md shadow-[#8be9fd]/20{% else %}bg-[#343746] hover:bg-[#44475a] text-[#8be9fd]{% endif %}">
-                        <span>📋</span>
                         <span>Auditoria</span>
                     </a>
 
                     <a href="{{ url_for('admin.logout') }}" 
                        class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#ff5555]/10 hover:bg-[#ff5555] text-[#ff5555] hover:text-[#282a36] border border-[#ff5555]/30 transition flex items-center space-x-1"
                        title="Encerrar Sessão">
-                        <span>🚪</span>
                         <span>Sair</span>
                     </a>
                 </nav>
                 {% else %}
-                <!-- Public Desktop Navigation Links (Apenas Inscrição e Moderação quando não autenticado) -->
+                <!-- Public Desktop Navigation Links -->
                 <nav class="hidden md:flex items-center space-x-3">
-                    <a href="{{ url_for('public.register') }}" 
+                    <a href="{{ url_for('public.events_catalog') }}" 
+                       class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#282a36] hover:bg-[#44475a] text-[#ffb86c] border border-[#6272a4]/40 transition flex items-center space-x-1.5">
+                        <span>Catálogo de Eventos</span>
+                    </a>
+
+                    <a href="{{ url_for('public.register', slug=current_event.slug) if current_event else url_for('public.register') }}" 
                        class="px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center space-x-2.5 {% if request.endpoint in ['public.register', 'public.register_success'] %}bg-[#ff79c6] text-[#282a36] shadow-lg shadow-[#ff79c6]/30{% else %}bg-[#44475a]/70 hover:bg-[#44475a] text-[#f8f8f2] hover:text-[#ff79c6]{% endif %}">
                         <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-6 h-6 rounded-lg object-cover ring-1 ring-[#ff79c6]/50">
                         <span>Inscrição</span>
@@ -116,9 +124,7 @@
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden flex items-center">
                     <button id="mobile-menu-btn" type="button" class="p-2.5 rounded-xl bg-[#44475a] text-[#f8f8f2] hover:bg-[#6272a4] focus:outline-none transition" aria-label="Abrir menu">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
+                        <span class="text-xs font-bold">MENU</span>
                     </button>
                 </div>
             </div>
@@ -134,28 +140,32 @@
                 <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Admin" class="w-6 h-6 rounded-lg object-cover">
                 <span>Painel de Moderação</span>
             </a>
-            <a href="{{ url_for('public.vote') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#50fa7b] hover:bg-[#50fa7b] hover:text-[#282a36] transition">
+            <a href="{{ url_for('public.events_catalog') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#ffb86c] hover:bg-[#ffb86c] hover:text-[#282a36] transition">
+                <span>Catálogo de Eventos</span>
+            </a>
+            <a href="{{ url_for('public.vote', slug=current_event.slug) if current_event else url_for('public.vote') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#50fa7b] hover:bg-[#50fa7b] hover:text-[#282a36] transition">
                 <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Votar" class="w-6 h-6 rounded-lg object-cover">
                 <span>Tela de Votação</span>
             </a>
-            <a href="{{ url_for('public.register') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#ff79c6] hover:bg-[#ff79c6] hover:text-[#282a36] transition">
+            <a href="{{ url_for('public.register', slug=current_event.slug) if current_event else url_for('public.register') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#ff79c6] hover:bg-[#ff79c6] hover:text-[#282a36] transition">
                 <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-6 h-6 rounded-lg object-cover">
                 <span>Inscrição de Candidato</span>
             </a>
-            <a href="{{ url_for('public.results') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#f1fa8c] hover:bg-[#f1fa8c] hover:text-[#282a36] transition">
+            <a href="{{ url_for('public.results', slug=current_event.slug) if current_event else url_for('public.results') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#f1fa8c] hover:bg-[#f1fa8c] hover:text-[#282a36] transition">
                 <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-6 h-6 rounded-lg object-cover">
-                <span>Placar e Pódio do Halloween</span>
+                <span>Placar e Pódio</span>
             </a>
-            <a href="{{ url_for('admin.voters_audit') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#8be9fd] hover:bg-[#8be9fd] hover:text-[#282a36] transition">
-                <span>📋</span>
+            <a href="{{ url_for('admin.voters_audit', evento=current_event.slug) if current_event else url_for('admin.voters_audit') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#8be9fd] hover:bg-[#8be9fd] hover:text-[#282a36] transition">
                 <span>Auditoria de Eleitores</span>
             </a>
             <a href="{{ url_for('admin.logout') }}" class="flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs font-bold text-[#ff5555] hover:bg-[#ff5555]/20 transition">
-                <span>🚪</span>
                 <span>Sair do Painel</span>
             </a>
             {% else %}
-            <a href="{{ url_for('public.register') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#ff79c6] text-[#282a36] transition">
+            <a href="{{ url_for('public.events_catalog') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#44475a] text-[#ffb86c] transition">
+                <span>Catálogo de Eventos</span>
+            </a>
+            <a href="{{ url_for('public.register', slug=current_event.slug) if current_event else url_for('public.register') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-bold bg-[#ff79c6] text-[#282a36] transition">
                 <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-6 h-6 rounded-lg object-cover">
                 <span>Inscrição de Candidato</span>
             </a>
@@ -209,7 +219,7 @@
                 <span>© {{ now_year or '2026' }} Instituto Nacional de Tecnologia e Saúde (INTS). Todos os direitos reservados.</span>
             </div>
             <div class="flex items-center space-x-4">
-                <span class="text-[#ffb86c]">🎃 Especial de Halloween</span>
+                <a href="{{ url_for('public.events_catalog') }}" class="text-[#ffb86c] hover:underline font-bold transition">Eventos de Votação</a>
                 <span class="text-[#6272a4]">•</span>
                 <span class="text-[#bd93f9]">Voto Único @ints.org.br</span>
             </div>

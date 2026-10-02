@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Novo Evento de Votação - INTS{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+  <!-- Breadcrumb & Top Action -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2 text-xs font-semibold text-[#6272a4]">
+      <a href="{{ url_for('admin.dashboard') }}" class="hover:text-[#bd93f9] transition">Painel de Moderação</a>
+      <span>/</span>
+      <span class="text-[#f8f8f2]">Novo Evento</span>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" 
+       class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#f8f8f2] bg-[#343746] hover:bg-[#44475a] border border-[#6272a4]/40 transition">
+      Voltar ao Painel
+    </a>
+  </div>
+
+  <!-- Form Card (Dracula Dark) -->
+  <div class="bg-[#343746] rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#6272a4]/40 space-y-6">
+    <div class="border-b border-[#6272a4]/30 pb-4">
+      <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30 mb-2">
+        Múltiplos Concursos em Paralelo
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-black text-[#f8f8f2] tracking-tight">Criar Novo Evento de Votação</h1>
+      <p class="text-xs sm:text-sm text-[#6272a4] mt-1">
+        Configure um novo concurso independente. Cada evento opera em paralelo com seus próprios candidatos, votos e regras de voto único por colaborador.
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.create_event') }}" class="space-y-6">
+      <!-- Nome do Evento -->
+      <div class="space-y-2">
+        <label for="nome" class="block text-sm font-bold text-[#f8f8f2]">
+          Nome do Evento <span class="text-[#ff5555]">*</span>
+        </label>
+        <input type="text" 
+               id="nome" 
+               name="nome" 
+               required 
+               maxlength="150"
+               value="{{ nome or '' }}"
+               placeholder="Ex: Concurso de Fantasias 2026, Prêmio Inovação INTS" 
+               class="w-full px-4 py-3 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/40 focus:outline-none transition placeholder-[#6272a4]">
+        <p class="text-xs text-[#6272a4]">O nome oficial do concurso exibido para os colaboradores.</p>
+      </div>
+
+      <!-- Slug na URL -->
+      <div class="space-y-2">
+        <label for="slug" class="block text-sm font-bold text-[#f8f8f2]">
+          Identificador na URL (Slug)
+        </label>
+        <div class="flex items-center rounded-xl bg-[#282a36] border border-[#6272a4]/50 focus-within:border-[#bd93f9] focus-within:ring-2 focus-within:ring-[#bd93f9]/40 transition overflow-hidden">
+          <span class="px-4 py-3 text-xs font-mono text-[#6272a4] bg-[#1e1f29] border-r border-[#6272a4]/40 select-none">
+            /e/
+          </span>
+          <input type="text" 
+                 id="slug" 
+                 name="slug" 
+                 maxlength="80"
+                 value="{{ slug or '' }}"
+                 placeholder="Ex: premio-inovacao-2026 (opcional)" 
+                 class="w-full px-4 py-3 bg-transparent text-[#f8f8f2] text-sm focus:outline-none placeholder-[#6272a4]">
+        </div>
+        <p class="text-xs text-[#6272a4]">Identificador amigável na URL. Se não for preenchido, será gerado automaticamente a partir do nome.</p>
+      </div>
+
+      <!-- Descrição -->
+      <div class="space-y-2">
+        <label for="descricao" class="block text-sm font-bold text-[#f8f8f2]">
+          Descrição do Evento
+        </label>
+        <textarea id="descricao" 
+                  name="descricao" 
+                  rows="3" 
+                  maxlength="500"
+                  placeholder="Ex: Votação anual institucional para escolha dos melhores projetos de tecnologia do INTS." 
+                  class="w-full px-4 py-3 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/40 focus:outline-none transition placeholder-[#6272a4]">{{ descricao or '' }}</textarea>
+        <p class="text-xs text-[#6272a4]">Breve explicação sobre os objetivos do concurso e regras gerais.</p>
+      </div>
+
+      <!-- Status Ativo -->
+      <div class="p-4 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 flex items-start gap-3">
+        <input type="checkbox" 
+               id="ativo" 
+               name="ativo" 
+               value="1" 
+               {% if ativo is not defined or ativo %}checked{% endif %}
+               class="mt-1 w-4 h-4 rounded text-[#bd93f9] bg-[#1e1f29] border-[#6272a4] focus:ring-[#bd93f9]">
+        <div>
+          <label for="ativo" class="text-sm font-bold text-[#f8f8f2] cursor-pointer">
+            Evento Ativo Imediatamente
+          </label>
+          <p class="text-xs text-[#6272a4] mt-0.5">
+            Quando ativo, o evento fica aberto para inscrições e recebimento de votos. Caso desmarcado, o evento nasce pausado.
+          </p>
+        </div>
+      </div>
+
+      <!-- Ações do Formulário -->
+      <div class="pt-4 border-t border-[#6272a4]/30 flex flex-col sm:flex-row items-center justify-end gap-3">
+        <a href="{{ url_for('admin.dashboard') }}" 
+           class="w-full sm:w-auto px-5 py-3 rounded-xl text-xs font-bold text-center text-[#f8f8f2] bg-[#282a36] hover:bg-[#44475a] border border-[#6272a4]/40 transition">
+          Cancelar
+        </a>
+        <button type="submit" 
+                class="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider text-[#282a36] bg-[#bd93f9] hover:bg-[#ff79c6] shadow-lg shadow-[#bd93f9]/20 transition duration-200">
+          Salvar e Criar Evento
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Lista de Eventos Existentes -->
+  {% if events %}
+  <div class="bg-[#1e1f29] rounded-3xl p-6 border border-[#6272a4]/30 space-y-3">
+    <h3 class="text-sm font-bold uppercase tracking-wider text-[#6272a4]">Eventos Já Cadastrados no Sistema ({{ events|length }})</h3>
+    <div class="divide-y divide-[#6272a4]/20">
+      {% for ev in events %}
+      <div class="py-2.5 flex items-center justify-between text-xs">
+        <div>
+          <span class="font-bold text-[#f8f8f2]">{{ ev.nome }}</span>
+          <span class="text-[#6272a4] font-mono ml-2">/e/{{ ev.slug }}</span>
+        </div>
+        <div>
+          {% if ev.ativo %}
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">Ativo</span>
+          {% else %}
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ff5555]/20 text-[#ff5555] border border-[#ff5555]/30">Pausado</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

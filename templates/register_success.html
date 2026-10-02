@@ -1,20 +1,19 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Inscrição Concluída - Concurso de Halloween INTS{% endblock %}
+{% block title %}Inscrição Concluída - {{ current_event.nome if current_event else 'INTS' }}{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-8 py-4">
     <!-- Header Card -->
     <div class="text-center">
         <div class="inline-flex items-center space-x-2 bg-[#343746] border border-[#50fa7b]/40 text-[#50fa7b] text-xs uppercase font-extrabold px-4 py-1.5 rounded-full tracking-wider mb-4 shadow-lg shadow-[#50fa7b]/10 animate-pulse">
-            <span>✨</span>
             <span>Inscrição Confirmada</span>
         </div>
         <h1 class="text-3xl sm:text-5xl font-black text-[#f8f8f2] tracking-tight">
             Cadastro <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#50fa7b] via-[#8be9fd] to-[#bd93f9]">Concluído!</span>
         </h1>
         <p class="text-[#6272a4] text-xs sm:text-sm mt-3 max-w-md mx-auto leading-relaxed">
-            Sua participação no Concurso de Halloween do INTS foi registrada no sistema com sucesso.
+            Sua participação no evento <strong>{{ current_event.nome if current_event else 'institucional' }}</strong> do INTS foi registrada no sistema com sucesso.
         </p>
     </div>
 
@@ -47,19 +46,19 @@
                     <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
                         {% if participant.funcao %}
                         <span class="inline-flex items-center text-xs font-bold px-3 py-1 rounded-xl bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
-                            💼 {{ participant.funcao }}
+                            Função: {{ participant.funcao }}
                         </span>
                         {% endif %}
                         {% if participant.setor %}
                         <span class="inline-flex items-center text-xs font-bold px-3 py-1 rounded-xl bg-[#8be9fd]/20 text-[#8be9fd] border border-[#8be9fd]/30">
-                            🏢 {{ participant.setor }}
+                            Setor: {{ participant.setor }}
                         </span>
                         {% endif %}
                     </div>
 
                     <!-- E-mail -->
                     <p class="text-xs text-[#6272a4] font-mono">
-                        ✉️ {{ participant.email }}
+                        E-mail: {{ participant.email }}
                     </p>
 
                     <!-- Descrição -->
@@ -75,11 +74,10 @@
             <!-- Institutional Notice Box -->
             <div class="bg-[#282a36] rounded-2xl border border-[#ffb86c]/30 p-5 space-y-2">
                 <div class="flex items-center space-x-2 text-sm font-bold text-[#ffb86c]">
-                    <span>🎃</span>
                     <span>Informações Importantes</span>
                 </div>
                 <ul class="text-xs text-[#6272a4] space-y-1.5 list-disc list-inside">
-                    <li>Sua caracterização foi arquivada com segurança e está em processo de moderação.</li>
+                    <li>Sua inscrição foi arquivada com segurança e está em processo de moderação.</li>
                     <li>A votação institucional ocorrerá em link exclusivo divulgado pela organização.</li>
                     <li>Cada colaborador terá direito a 1 voto único com seu e-mail corporativo <strong class="text-[#f8f8f2]">@ints.org.br</strong>.</li>
                 </ul>
@@ -87,7 +85,7 @@
 
             <!-- Action Buttons -->
             <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                <a href="{{ url_for('public.register') }}" 
+                <a href="{{ url_for('public.register', slug=current_event.slug) if current_event else url_for('public.register') }}" 
                    class="flex-1 bg-gradient-to-r from-[#ff79c6] to-[#bd93f9] hover:from-[#ff8fd1] hover:to-[#caa6fa] text-[#282a36] font-black py-4 px-6 rounded-xl shadow-xl transition transform hover:scale-[1.01] active:scale-[0.99] text-sm flex items-center justify-center space-x-2 text-center">
                     <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrever" class="w-5 h-5 rounded-md object-cover">
                     <span>Cadastrar Outro Participante</span>
