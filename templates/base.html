@@ -110,35 +110,36 @@
                 <span>Resultados e Pódio</span>
             </a>
             <div class="pt-3 border-t border-[#6272a4]/20 space-y-2">
-                <div class="flex items-center space-x-2.5 p-2 rounded-xl bg-[#282a36]">
-                    <img src="{{ url_for('static', filename='img/avatars/' + (session.avatar_filename or 'avatar_default.jpg')) }}" 
-                         alt="{{ session.user_name or 'Admin' }}" class="w-8 h-8 rounded-lg object-cover ring-1 ring-[#bd93f9]/40">
-                    <div class="flex-1 min-w-0">
-                        <div class="text-xs font-bold text-[#f8f8f2] truncate">{{ session.user_name or session.username or 'Administrador' }}</div>
-                        <div class="text-[10px] text-[#8be9fd]">@{{ session.username or 'admin' }}</div>
+                <div class="p-2.5 rounded-xl bg-[#282a36] border border-[#6272a4]/25 admin-user-card">
+                    <div class="flex items-center justify-between">
+                        <div class="text-xs font-black text-[#f8f8f2] truncate">{{ session.user_name or session.username or 'Administrador' }}</div>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#bd93f9]/20 text-[#bd93f9]">Admin</span>
                     </div>
+                    <div class="text-[10px] text-[#8be9fd] font-mono mt-0.5">@{{ session.username or 'admin' }}</div>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5">
-                    <a href="{{ url_for('admin.change_password') }}" class="p-2 rounded-xl text-[11px] font-bold text-[#f8f8f2] bg-[#343746] text-center">Senha</a>
-                    <a href="{{ url_for('admin.logout') }}" class="p-2 rounded-xl text-[11px] font-bold text-[#ff5555] bg-[#ff5555]/10 text-center hover:bg-[#ff5555] hover:text-[#282a36]">Sair</a>
+                    <a href="{{ url_for('admin.change_password') }}" class="btn-change-password p-2 rounded-xl text-[11px] font-bold text-center">Senha</a>
+                    <a href="{{ url_for('admin.logout') }}" class="btn-admin-logout p-2 rounded-xl text-[11px] font-bold text-center">Sair</a>
                 </div>
             </div>
         </div>
 
         <!-- Desktop Sidebar (Barrinha Fixa na Esquerda) -->
-        <aside id="admin-sidebar" class="hidden md:flex flex-col w-64 lg:w-72 bg-[#1e1f29] border-r border-[#6272a4]/25 h-screen sticky top-0 shrink-0 z-30 shadow-2xl p-5 justify-between">
-            <div class="space-y-6">
+        <aside id="admin-sidebar" class="hidden md:flex flex-col w-64 lg:w-72 bg-[#1e1f29] border-r border-[#6272a4]/25 h-screen max-h-screen sticky top-0 shrink-0 z-30 shadow-2xl justify-between">
+            
+            <!-- Top Area: Brand & Context (Fixed Top) -->
+            <div class="p-4 pb-3 border-b border-[#6272a4]/20 space-y-2.5 shrink-0">
                 <!-- Brand Header -->
-                <div class="pb-4 border-b border-[#6272a4]/25">
+                <div>
                     <a href="{{ url_for('admin.dashboard') }}" class="block group">
                         <img src="{{ url_for('static', filename='img/ints-horizontal.png') }}" 
                              alt="INTS" 
-                             class="h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200 logo-for-dark">
+                             class="h-8 w-auto object-contain transition-transform group-hover:scale-105 duration-200 logo-for-dark">
                         <img src="{{ url_for('static', filename='img/ints-horizontal-escuro.png') }}" 
                              alt="INTS" 
-                             class="h-9 w-auto object-contain transition-transform group-hover:scale-105 duration-200 logo-for-light">
+                             class="h-8 w-auto object-contain transition-transform group-hover:scale-105 duration-200 logo-for-light">
                     </a>
-                    <div class="mt-3 flex items-center justify-between">
+                    <div class="mt-2 flex items-center justify-between">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
                             Modo Moderador
                         </span>
@@ -148,8 +149,8 @@
 
                 <!-- Event Context Badge (se disponível) -->
                 {% if current_event %}
-                <div class="p-3 rounded-2xl bg-[#282a36] border border-[#6272a4]/30 space-y-1">
-                    <span class="text-[10px] font-black uppercase text-[#6272a4] tracking-wider block">Evento Ativo:</span>
+                <div class="p-2.5 rounded-2xl bg-[#282a36] border border-[#6272a4]/30 space-y-1">
+                    <span class="text-[9px] font-black uppercase text-[#6272a4] tracking-wider block">Evento Ativo:</span>
                     <div class="text-xs font-bold text-[#f8f8f2] truncate" title="{{ current_event.nome }}">
                         {{ current_event.nome }}
                     </div>
@@ -165,91 +166,96 @@
                     </div>
                 </div>
                 {% endif %}
+            </div>
 
-                <!-- Navigation Links Vertical (Navegação na Esquerda) -->
+            <!-- Middle Area: Navigation (Scrollable smoothly if window is compact) -->
+            <div class="flex-1 overflow-y-auto px-3.5 py-2.5 space-y-3 custom-sidebar-scroll">
+                <!-- Gestão & Moderação -->
                 <nav class="space-y-1">
                     <div class="px-2 pb-1 text-[10px] font-black uppercase tracking-wider text-[#bd93f9]">
                         Gestão & Moderação
                     </div>
 
                     <a href="{{ url_for('admin.dashboard', evento=current_event.slug) if current_event else url_for('admin.dashboard') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.dashboard' %}bg-[#bd93f9] text-[#282a36] shadow-md shadow-[#bd93f9]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#bd93f9]{% endif %}">
-                        <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Painel" class="w-6 h-6 rounded-lg object-cover ring-1 ring-[#6272a4]/30 shadow-sm">
-                        <span>Painel Geral</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.dashboard' %}bg-[#bd93f9] text-[#282a36] shadow-md shadow-[#bd93f9]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#bd93f9]{% endif %}">
+                        <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Painel" class="w-5 h-5 rounded-md object-cover ring-1 ring-[#6272a4]/30 shadow-sm shrink-0">
+                        <span class="truncate">Painel Geral</span>
                     </a>
 
                     <a href="{{ url_for('admin.create_event') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.create_event' %}bg-[#bd93f9] text-[#282a36] shadow-md shadow-[#bd93f9]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#bd93f9]{% endif %}">
-                        <span class="w-6 h-6 rounded-lg bg-[#bd93f9]/20 text-[#bd93f9] flex items-center justify-center font-black text-sm ring-1 ring-[#bd93f9]/30">+</span>
-                        <span>Criar Novo Evento</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.create_event' %}bg-[#bd93f9] text-[#282a36] shadow-md shadow-[#bd93f9]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#bd93f9]{% endif %}">
+                        <span class="w-5 h-5 rounded-md bg-[#bd93f9]/20 text-[#bd93f9] flex items-center justify-center font-black text-xs ring-1 ring-[#bd93f9]/30 shrink-0">+</span>
+                        <span class="truncate">Criar Novo Evento</span>
                     </a>
 
                     <a href="{{ url_for('admin.voters_audit', evento=current_event.slug) if current_event else url_for('admin.voters_audit') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.voters_audit' %}bg-[#8be9fd] text-[#282a36] shadow-md shadow-[#8be9fd]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#8be9fd]{% endif %}">
-                        <span class="w-6 h-6 rounded-lg bg-[#8be9fd]/20 text-[#8be9fd] flex items-center justify-center font-bold text-xs ring-1 ring-[#8be9fd]/30">@</span>
-                        <span>Auditoria de Eleitores</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.voters_audit' %}bg-[#8be9fd] text-[#282a36] shadow-md shadow-[#8be9fd]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#8be9fd]{% endif %}">
+                        <span class="w-5 h-5 rounded-md bg-[#8be9fd]/20 text-[#8be9fd] flex items-center justify-center font-bold text-xs ring-1 ring-[#8be9fd]/30 shrink-0">@</span>
+                        <span class="truncate">Auditoria de Eleitores</span>
                     </a>
 
                     <a href="{{ url_for('admin.list_users') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.list_users' %}bg-[#50fa7b] text-[#282a36] shadow-md shadow-[#50fa7b]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#50fa7b]{% endif %}">
-                        <span class="w-6 h-6 rounded-lg bg-[#50fa7b]/20 text-[#50fa7b] flex items-center justify-center font-bold text-xs ring-1 ring-[#50fa7b]/30">&bull;</span>
-                        <span>Usuários & Acesso</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'admin.list_users' %}bg-[#50fa7b] text-[#282a36] shadow-md shadow-[#50fa7b]/25 font-black{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#50fa7b]{% endif %}">
+                        <span class="w-5 h-5 rounded-md bg-[#50fa7b]/20 text-[#50fa7b] flex items-center justify-center font-bold text-xs ring-1 ring-[#50fa7b]/30 shrink-0">&bull;</span>
+                        <span class="truncate">Usuários & Acesso</span>
                     </a>
+                </nav>
 
-                    <div class="px-2 pt-4 pb-1 text-[10px] font-black uppercase tracking-wider text-[#ffb86c]">
+                <!-- Telas do Concurso -->
+                <nav class="space-y-1">
+                    <div class="px-2 pt-2 pb-1 text-[10px] font-black uppercase tracking-wider text-[#ffb86c]">
                         Telas do Concurso
                     </div>
 
                     <a href="{{ url_for('public.events_catalog') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'public.events_catalog' %}bg-[#ffb86c] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#ffb86c]{% endif %}">
-                        <span class="w-6 h-6 rounded-lg bg-[#ffb86c]/20 text-[#ffb86c] flex items-center justify-center font-bold text-[10px] ring-1 ring-[#ffb86c]/30">ALL</span>
-                        <span>Catálogo de Eventos</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'public.events_catalog' %}bg-[#ffb86c] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#ffb86c]{% endif %}">
+                        <span class="w-5 h-5 rounded-md bg-[#ffb86c]/20 text-[#ffb86c] flex items-center justify-center font-bold text-[9px] ring-1 ring-[#ffb86c]/30 shrink-0">ALL</span>
+                        <span class="truncate">Catálogo de Eventos</span>
                     </a>
 
                     <a href="{{ url_for('public.vote', slug=current_event.slug) if current_event else url_for('public.vote') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint in ['public.vote', 'public.vote_success'] %}bg-[#50fa7b] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#50fa7b]{% endif %}">
-                        <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Voto" class="w-6 h-6 rounded-lg object-cover ring-1 ring-[#6272a4]/30 shadow-sm">
-                        <span>Tela de Votação</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint in ['public.vote', 'public.vote_success'] %}bg-[#50fa7b] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#50fa7b]{% endif %}">
+                        <img src="{{ url_for('static', filename='img/icon_vote.jpg') }}" alt="Voto" class="w-5 h-5 rounded-md object-cover ring-1 ring-[#6272a4]/30 shadow-sm shrink-0">
+                        <span class="truncate">Tela de Votação</span>
                     </a>
 
                     <a href="{{ url_for('public.register', slug=current_event.slug) if current_event else url_for('public.register') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint in ['public.register', 'public.register_success'] %}bg-[#ff79c6] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#ff79c6]{% endif %}">
-                        <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrição" class="w-6 h-6 rounded-lg object-cover ring-1 ring-[#6272a4]/30 shadow-sm">
-                        <span>Inscrição de Candidato</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint in ['public.register', 'public.register_success'] %}bg-[#ff79c6] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#ff79c6]{% endif %}">
+                        <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Inscrição" class="w-5 h-5 rounded-md object-cover ring-1 ring-[#6272a4]/30 shadow-sm shrink-0">
+                        <span class="truncate">Inscrição de Candidato</span>
                     </a>
 
                     <a href="{{ url_for('public.results', slug=current_event.slug) if current_event else url_for('public.results') }}" 
-                       class="flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'public.results' %}bg-[#f1fa8c] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#f1fa8c]{% endif %}">
-                        <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-6 h-6 rounded-lg object-cover ring-1 ring-[#6272a4]/30 shadow-sm">
-                        <span>Placar e Resultados</span>
+                       class="flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all {% if request.endpoint == 'public.results' %}bg-[#f1fa8c] text-[#282a36]{% else %}text-[#f8f8f2] hover:bg-[#343746] hover:text-[#f1fa8c]{% endif %}">
+                        <img src="{{ url_for('static', filename='img/icon_trophy.jpg') }}" alt="Resultados" class="w-5 h-5 rounded-md object-cover ring-1 ring-[#6272a4]/30 shadow-sm shrink-0">
+                        <span class="truncate">Placar e Resultados</span>
                     </a>
                 </nav>
             </div>
 
-            <!-- Sidebar Footer (Usuário Logado, Avatar & Ações) -->
-            <div class="pt-4 border-t border-[#6272a4]/25 space-y-3">
-                <div class="flex items-center space-x-3 p-2.5 rounded-2xl bg-[#282a36] border border-[#6272a4]/25 shadow-md">
-                    <img src="{{ url_for('static', filename='img/avatars/' + (session.avatar_filename or 'avatar_default.jpg')) }}" 
-                         alt="{{ session.user_name or 'Administrador' }}" 
-                         class="w-10 h-10 rounded-xl object-cover ring-2 ring-[#bd93f9]/50 shadow">
-                    <div class="flex-1 min-w-0">
+            <!-- Bottom Area: User Session & Actions (Fixed Bottom, Always Visible) -->
+            <div class="p-3.5 pt-2.5 pb-4 border-t border-[#6272a4]/20 shrink-0 space-y-2 admin-sidebar-footer">
+                <div class="p-2 rounded-xl bg-[#282a36] border border-[#6272a4]/25 shadow-sm admin-user-card">
+                    <div class="flex items-center justify-between">
                         <div class="text-xs font-black text-[#f8f8f2] truncate">
                             {{ session.user_name or session.username or 'Administrador' }}
                         </div>
-                        <div class="flex items-center gap-1.5 mt-0.5">
-                            <span class="text-[10px] text-[#8be9fd] font-mono">@{{ session.username or 'admin' }}</span>
-                            <span class="text-[9px] px-1 rounded bg-[#bd93f9]/20 text-[#bd93f9] font-bold">Admin</span>
-                        </div>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#bd93f9]/20 text-[#bd93f9] uppercase tracking-wider">
+                            Admin
+                        </span>
+                    </div>
+                    <div class="text-[10px] text-[#8be9fd] font-mono mt-0.5 truncate">
+                        @{{ session.username or 'admin' }}
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <a href="{{ url_for('admin.change_password') }}" 
-                       class="flex items-center justify-center p-2 rounded-xl text-[11px] font-bold text-[#f8f8f2] bg-[#343746] hover:bg-[#44475a] border border-[#6272a4]/30 transition text-center"
+                       class="btn-change-password flex items-center justify-center py-2 px-1 rounded-xl text-[11px] font-bold transition text-center shadow-sm"
                        title="Alterar minha senha">
                         <span>Trocar Senha</span>
                     </a>
                     <a href="{{ url_for('admin.logout') }}" 
-                       class="flex items-center justify-center p-2 rounded-xl text-[11px] font-bold text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] border border-[#ff5555]/30 transition text-center"
+                       class="btn-admin-logout flex items-center justify-center py-2 px-1 rounded-xl text-[11px] font-bold transition text-center shadow-sm"
                        title="Encerrar Sessão">
                         <span>Sair</span>
                     </a>

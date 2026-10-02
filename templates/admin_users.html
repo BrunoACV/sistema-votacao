@@ -15,7 +15,7 @@
         Usuários & Acesso Administrativo
       </h1>
       <p class="text-sm text-[#6272a4] mt-1">
-        Gerenciamento de moderadores institucionais credenciados com fotos de perfil reais
+        Gerenciamento de moderadores institucionais credenciados com credenciais individuais
       </p>
     </div>
 
@@ -28,7 +28,7 @@
     </div>
   </div>
 
-  <!-- KPI Cards (Tipografia forte e badges, sem bibliotecas de ícones) -->
+  <!-- KPI Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
     <div class="p-5 rounded-3xl bg-[#343746] border border-[#6272a4]/30 shadow-xl">
       <div class="text-[11px] font-black uppercase tracking-wider text-[#6272a4]">Total de Administradores</div>
@@ -65,7 +65,7 @@
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="border-b border-[#6272a4]/20 text-[10px] uppercase font-black tracking-wider text-[#6272a4] bg-[#282a36]/60">
-            <th class="py-4 px-6">Foto & Administrador</th>
+            <th class="py-4 px-6">Administrador</th>
             <th class="py-4 px-6">Usuário</th>
             <th class="py-4 px-6">Perfil</th>
             <th class="py-4 px-6">Status da Senha</th>
@@ -77,21 +77,13 @@
           {% for u in users %}
           <tr class="hover:bg-[#44475a]/30 transition">
             
-            <!-- Foto & Nome -->
+            <!-- Administrador / Nome -->
             <td class="py-4 px-6">
-              <div class="flex items-center space-x-3.5">
-                <img src="{{ url_for('static', filename='img/avatars/' + (u.avatar_filename or 'avatar_default.jpg')) }}" 
-                     alt="{{ u.nome }}" 
-                     class="w-11 h-11 rounded-2xl object-cover ring-2 ring-[#bd93f9]/40 shadow-md">
-                <div>
-                  <div class="font-black text-sm text-[#f8f8f2] flex items-center gap-2">
-                    <span>{{ u.nome }}</span>
-                    {% if session.user_id == u.id %}
-                    <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-[#50fa7b]/20 text-[#50fa7b] font-bold">Você</span>
-                    {% endif %}
-                  </div>
-                  <div class="text-[11px] text-[#6272a4]">Foto: {{ u.avatar_filename }}</div>
-                </div>
+              <div class="font-black text-sm text-[#f8f8f2] flex items-center gap-2">
+                <span>{{ u.nome }}</span>
+                {% if session.user_id == u.id %}
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-[#50fa7b]/20 text-[#50fa7b] font-bold">Você</span>
+                {% endif %}
               </div>
             </td>
 
@@ -160,7 +152,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('admin.create_user') }}" class="space-y-6" autocomplete="off">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <!-- Nome Completo -->
         <div>
@@ -168,7 +160,7 @@
             Nome Completo do Colaborador *
           </label>
           <input type="text" id="nome" name="nome" required
-                 placeholder="Ex: Amanda Silva, Bruno Henrique"
+                 placeholder="Ex: Carlos Oliveira, Bruno Henrique"
                  class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#50fa7b]/40 focus:border-[#50fa7b] outline-none text-sm font-medium">
         </div>
 
@@ -178,7 +170,7 @@
             Nome de Usuário (Login Único) *
           </label>
           <input type="text" id="username" name="username" required
-                 placeholder="Ex: amanda, bruno, carlos"
+                 placeholder="Ex: carlos, bruno"
                  class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#8be9fd]/40 focus:border-[#8be9fd] outline-none text-sm font-medium">
         </div>
 
@@ -195,49 +187,6 @@
           <p class="text-[11px] text-[#6272a4] mt-1.5">
             O usuário será forçado a definir uma nova senha no momento em que fizer o login.
           </p>
-        </div>
-
-        <!-- Seletor de Foto de Perfil / Avatar Real -->
-        <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-[#bd93f9] mb-2">
-            Selecione a Imagem de Perfil
-          </label>
-          <div class="grid grid-cols-3 gap-3">
-            
-            <!-- Opção Homem -->
-            <label class="cursor-pointer">
-              <input type="radio" name="avatar_filename" value="avatar_bruno.jpg" class="peer sr-only">
-              <div class="p-3 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 peer-checked:border-[#bd93f9] peer-checked:ring-2 peer-checked:ring-[#bd93f9] text-center hover:border-[#6272a4] transition">
-                <img src="{{ url_for('static', filename='img/avatars/avatar_bruno.jpg') }}" 
-                     alt="Homem" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 shadow">
-                <span class="text-xs font-bold text-[#f8f8f2] block">Homem</span>
-                <span class="text-[9px] text-[#6272a4] block">Avatar Bruno</span>
-              </div>
-            </label>
-
-            <!-- Opção Mulher -->
-            <label class="cursor-pointer">
-              <input type="radio" name="avatar_filename" value="avatar_amanda.jpg" class="peer sr-only">
-              <div class="p-3 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 peer-checked:border-[#ff79c6] peer-checked:ring-2 peer-checked:ring-[#ff79c6] text-center hover:border-[#6272a4] transition">
-                <img src="{{ url_for('static', filename='img/avatars/avatar_amanda.jpg') }}" 
-                     alt="Mulher" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 shadow">
-                <span class="text-xs font-bold text-[#f8f8f2] block">Mulher</span>
-                <span class="text-[9px] text-[#6272a4] block">Avatar Amanda</span>
-              </div>
-            </label>
-
-            <!-- Opção Padrão -->
-            <label class="cursor-pointer">
-              <input type="radio" name="avatar_filename" value="avatar_default.jpg" checked class="peer sr-only">
-              <div class="p-3 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 peer-checked:border-[#50fa7b] peer-checked:ring-2 peer-checked:ring-[#50fa7b] text-center hover:border-[#6272a4] transition">
-                <img src="{{ url_for('static', filename='img/avatars/avatar_default.jpg') }}" 
-                     alt="Padrão" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 shadow">
-                <span class="text-xs font-bold text-[#f8f8f2] block">Padrão</span>
-                <span class="text-[9px] text-[#6272a4] block">Corporativo</span>
-              </div>
-            </label>
-
-          </div>
         </div>
 
       </div>

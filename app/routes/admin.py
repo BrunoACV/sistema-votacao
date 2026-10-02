@@ -231,7 +231,6 @@ def login() -> Any:
         session["user_id"] = auth_user["id"]
         session["username"] = auth_user["username"]
         session["user_name"] = auth_user.get("nome") or auth_user["username"].capitalize()
-        session["avatar_filename"] = auth_user.get("avatar_filename") or "avatar_default.jpg"
         session["must_change_password"] = bool(auth_user.get("must_change_password", 0))
         session.permanent = True
         logger.info("Login realizado com sucesso pelo usuário '%s' (ID %d). IP: %s", auth_user["username"], auth_user["id"], request.remote_addr)
@@ -269,7 +268,6 @@ def login() -> Any:
         session["user_id"] = None
         session["username"] = "admin"
         session["user_name"] = "Administrador Geral"
-        session["avatar_filename"] = "avatar_default.jpg"
         session["must_change_password"] = False
         session.permanent = True
         logger.info("Login administrativo mestre bem-sucedido. IP: %s", request.remote_addr)
@@ -368,7 +366,6 @@ def logout() -> Any:
     session.pop("user_id", None)
     session.pop("username", None)
     session.pop("user_name", None)
-    session.pop("avatar_filename", None)
     session.pop("must_change_password", None)
     logger.info("Sessão administrativa encerrada.")
 
@@ -758,12 +755,10 @@ def create_user() -> Any:
         username = str(payload.get("username") or "").strip().lower()
         nome = str(payload.get("nome") or "").strip()
         password = str(payload.get("password") or "trocar").strip()
-        avatar_filename = str(payload.get("avatar_filename") or "avatar_default.jpg").strip()
     else:
         username = str(request.form.get("username") or "").strip().lower()
         nome = str(request.form.get("nome") or "").strip()
         password = str(request.form.get("password") or "trocar").strip()
-        avatar_filename = str(request.form.get("avatar_filename") or "avatar_default.jpg").strip()
 
     if not username:
         msg = "O nome de usuário é obrigatório."
@@ -783,7 +778,6 @@ def create_user() -> Any:
             username=username,
             password=password,
             nome=nome,
-            avatar_filename=avatar_filename,
             is_admin=1,
             must_change_password=1
         )

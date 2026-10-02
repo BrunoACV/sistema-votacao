@@ -460,37 +460,18 @@ def init_db(db_path: Optional[Union[str, Path]] = None) -> None:
         if "nome" not in user_cols:
             cur.execute("ALTER TABLE users ADD COLUMN nome TEXT DEFAULT ''")
 
-        # Seed initial user 'bruno' with initial password 'trocar' and avatar_bruno.jpg
+        # Seed initial user 'bruno' with initial password 'trocar'
         cur.execute("SELECT id FROM users WHERE username = 'bruno'")
         if not cur.fetchone():
             from werkzeug.security import generate_password_hash
             pwd_hash = generate_password_hash("trocar")
             cur.execute("""
                 INSERT INTO users (username, nome, password_hash, avatar_filename, is_admin, must_change_password)
-                VALUES ('bruno', 'Bruno', ?, 'avatar_bruno.jpg', 1, 1)
+                VALUES ('bruno', 'Bruno', ?, '', 1, 1)
             """, (pwd_hash,))
-        else:
-            # Ensure avatar is avatar_bruno.jpg
-            cur.execute("""
-                UPDATE users SET avatar_filename = 'avatar_bruno.jpg'
-                WHERE username = 'bruno' AND (avatar_filename IS NULL OR avatar_filename = 'avatar_default.jpg' OR avatar_filename = '')
-            """)
 
-        # Seed initial user 'amanda' with initial password 'trocar' and avatar_amanda.jpg
-        cur.execute("SELECT id FROM users WHERE username = 'amanda'")
-        if not cur.fetchone():
-            from werkzeug.security import generate_password_hash
-            pwd_hash = generate_password_hash("trocar")
-            cur.execute("""
-                INSERT INTO users (username, nome, password_hash, avatar_filename, is_admin, must_change_password)
-                VALUES ('amanda', 'Amanda', ?, 'avatar_amanda.jpg', 1, 1)
-            """, (pwd_hash,))
-        else:
-            # Ensure avatar is avatar_amanda.jpg
-            cur.execute("""
-                UPDATE users SET avatar_filename = 'avatar_amanda.jpg'
-                WHERE username = 'amanda' AND (avatar_filename IS NULL OR avatar_filename = 'avatar_default.jpg' OR avatar_filename = '')
-            """)
+        # Delete user 'amanda' if present (user requested removal)
+        cur.execute("DELETE FROM users WHERE username = 'amanda'")
 
         # 6. Create performance indexes
         cur.execute("CREATE INDEX IF NOT EXISTS idx_participants_event ON participants(event_id);")
@@ -1335,15 +1316,7 @@ def create_user(
     if not clean_password or len(clean_password) < 4:
         raise ValueError("A senha inicial deve conter pelo menos 4 caracteres.")
 
-    # Determine avatar
-    if avatar_filename:
-        chosen_avatar = str(avatar_filename).strip()
-    elif clean_username == "bruno":
-        chosen_avatar = "avatar_bruno.jpg"
-    elif clean_username == "amanda":
-        chosen_avatar = "avatar_amanda.jpg"
-    else:
-        chosen_avatar = "avatar_default.jpg"
+    chosen_avatar = ""
 
     from werkzeug.security import generate_password_hash
     pwd_hash = generate_password_hash(clean_password)

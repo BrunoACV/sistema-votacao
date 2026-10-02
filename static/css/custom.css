@@ -278,6 +278,54 @@ body {
     background-image: var(--theme-gradient) !important;
 }
 
+/* Custom Sidebar Scrollbar */
+.custom-sidebar-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(98, 114, 164, 0.25);
+    border-radius: 4px;
+}
+.custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--theme-primary);
+}
+
+/* Sidebar footer buttons & card - Dark Mode (Default) */
+.admin-sidebar-footer {
+    background-color: #1e1f29;
+    border-top: 1px solid rgba(98, 114, 164, 0.25);
+}
+
+.admin-user-card {
+    background-color: #282a36;
+    border: 1px solid rgba(98, 114, 164, 0.3);
+}
+
+.btn-change-password {
+    background-color: #343746;
+    color: #f8f8f2;
+    border: 1px solid rgba(98, 114, 164, 0.4);
+}
+.btn-change-password:hover {
+    background-color: #44475a;
+    color: #bd93f9;
+    border-color: #bd93f9;
+}
+
+.btn-admin-logout {
+    background-color: rgba(255, 85, 85, 0.12);
+    color: #ff5555;
+    border: 1px solid rgba(255, 85, 85, 0.3);
+}
+.btn-admin-logout:hover {
+    background-color: #ff5555;
+    color: #ffffff;
+    border-color: #ff5555;
+}
+
 /* ==========================================================================
    5. LIGHT MODE COMPONENT & UTILITY OVERRIDES (ALL THEMES)
    ========================================================================== */
@@ -350,6 +398,44 @@ body {
     #admin-mobile-drawer {
         background-color: var(--theme-header) !important;
         border-color: var(--theme-border) !important;
+    }
+
+    .admin-sidebar-footer {
+        background-color: var(--theme-header) !important;
+        border-top: 1px solid var(--theme-border) !important;
+    }
+
+    .admin-user-card {
+        background-color: var(--theme-card-hover) !important;
+        border: 1px solid var(--theme-border) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    }
+    .admin-user-card .text-\[\#f8f8f2\] {
+        color: var(--theme-text) !important;
+    }
+
+    .btn-change-password {
+        background-color: #ffffff !important;
+        color: var(--theme-text) !important;
+        border: 1px solid var(--theme-border) !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+    .btn-change-password:hover {
+        background-color: var(--theme-card-hover) !important;
+        color: var(--theme-primary) !important;
+        border-color: var(--theme-primary) !important;
+    }
+
+    .btn-admin-logout {
+        background-color: #fef2f2 !important;
+        color: #dc2626 !important;
+        border: 1px solid #fecaca !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    }
+    .btn-admin-logout:hover {
+        background-color: #dc2626 !important;
+        color: #ffffff !important;
+        border-color: #dc2626 !important;
     }
 
     header {

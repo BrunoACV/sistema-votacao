@@ -2,7 +2,7 @@
 """
 tests/test_m4_users.py
 Comprehensive test suite for institutional administrator users, authentication,
-passwords, first-access mandatory password reset, and avatars in INTS Voting System.
+passwords, and first-access mandatory password reset in INTS Voting System.
 """
 
 import shutil
@@ -37,30 +37,22 @@ class UsersAuthTestCase(unittest.TestCase):
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_default_seeded_users(self):
-        """Verifies that bruno and amanda are automatically seeded as admins on database initialization."""
+        """Verifies that bruno is automatically seeded as admin on database initialization and amanda does not exist."""
         with self.app.app_context():
             bruno = db.get_user_by_username("bruno")
             self.assertIsNotNone(bruno)
             self.assertEqual(bruno["username"], "bruno")
             self.assertEqual(bruno["is_admin"], 1)
             self.assertEqual(bruno["must_change_password"], 1)
-            self.assertEqual(bruno["avatar_filename"], "avatar_bruno.jpg")
 
+            # Amanda must NOT exist
             amanda = db.get_user_by_username("amanda")
-            self.assertIsNotNone(amanda)
-            self.assertEqual(amanda["username"], "amanda")
-            self.assertEqual(amanda["is_admin"], 1)
-            self.assertEqual(amanda["must_change_password"], 1)
-            self.assertEqual(amanda["avatar_filename"], "avatar_amanda.jpg")
+            self.assertIsNone(amanda)
 
             # Authenticate with initial password 'trocar'
             auth_bruno = db.authenticate_user("bruno", "trocar")
             self.assertIsNotNone(auth_bruno)
             self.assertEqual(auth_bruno["id"], bruno["id"])
-
-            auth_amanda = db.authenticate_user("amanda", "trocar")
-            self.assertIsNotNone(auth_amanda)
-            self.assertEqual(auth_amanda["id"], amanda["id"])
 
             # Incorrect password should return None
             self.assertIsNone(db.authenticate_user("bruno", "wrong_password"))
@@ -134,14 +126,12 @@ class UsersAuthTestCase(unittest.TestCase):
         body = resp.get_data(as_text=True)
         self.assertIn("Administradores do Sistema", body)
         self.assertIn("bruno", body)
-        self.assertIn("amanda", body)
 
         # Create new admin user 'roberto'
         resp_create = self.client.post("/admin/users/new", data={
             "username": "roberto",
             "nome": "Roberto Carlos",
-            "password": "trocar",
-            "avatar_filename": "avatar_bruno.jpg"
+            "password": "trocar"
         }, follow_redirects=True)
         self.assertEqual(resp_create.status_code, 200)
         self.assertIn("roberto", resp_create.get_data(as_text=True))
@@ -164,23 +154,22 @@ class UsersAuthTestCase(unittest.TestCase):
 
     def test_admin_delete_user(self):
         """Tests deleting an admin user while preventing self-deletion."""
-        # Login as amanda
-        self.client.post("/admin/login", data={"username": "amanda", "password": "trocar"})
-        # Complete first access password change for amanda
-        self.client.post("/admin/change-password", data={
-            "new_password": "SenhaAmanda@2026",
-            "confirm_password": "SenhaAmanda@2026"
-        })
+        with self.app.app_context():
+            # Create a secondary admin user 'carlos'
+            db.create_user("carlos", "trocar", "Carlos", is_admin=1, must_change_password=0)
+
+        # Login as carlos
+        self.client.post("/admin/login", data={"username": "carlos", "password": "trocar"})
 
         with self.app.app_context():
             bruno = db.get_user_by_username("bruno")
-            amanda = db.get_user_by_username("amanda")
+            carlos = db.get_user_by_username("carlos")
 
-        # Amanda cannot delete herself
-        resp_self = self.client.post(f"/admin/users/{amanda['id']}/delete", follow_redirects=True)
+        # Carlos cannot delete himself
+        resp_self = self.client.post(f"/admin/users/{carlos['id']}/delete", follow_redirects=True)
         self.assertIn("não pode excluir sua própria conta", resp_self.get_data(as_text=True))
 
-        # Amanda can delete bruno
+        # Carlos can delete bruno
         resp_del = self.client.post(f"/admin/users/{bruno['id']}/delete", follow_redirects=True)
         self.assertIn("excluído com sucesso", resp_del.get_data(as_text=True))
 
