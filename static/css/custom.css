@@ -1,12 +1,13 @@
 /*
- * static/css/custom.css - Multi-Theme & Visual Identity for INTS Photo Contest Voting System
+ * static/css/custom.css - Multi-Theme & Automatic Dark/Light Mode Architecture
+ * INTS Photo Contest & Institutional Voting System
  */
 
 /* ==========================================================================
-   5 Pre-programmed Color Themes (Concursos Fotográficos & Institucionais)
+   1. Five Pre-programmed Themes: DARK MODE PALETTES (Default & @media dark)
    ========================================================================== */
 
-/* 1. Dracula / Halloween (Padrão) */
+/* 1.1 Dracula / Halloween (Padrão Dark Gothic) */
 :root, [data-theme="dracula"] {
     --theme-bg: #282a36;
     --theme-header: #1e1f29;
@@ -19,11 +20,11 @@
     --theme-success: #50fa7b;
     --theme-cyan: #8be9fd;
     --theme-text: #f8f8f2;
-    --theme-muted: #6272a4;
+    --theme-muted: #9aa3c2;
     --theme-gradient: linear-gradient(135deg, #ffb86c, #ff79c6, #bd93f9);
 }
 
-/* 2. Carnaval Festivo (Ouro Samba, Magenta Folia & Azul Ciano) */
+/* 1.2 Carnaval Festivo (Ouro Samba, Magenta Folia & Azul Ciano) */
 [data-theme="carnaval"] {
     --theme-bg: #150d2a;
     --theme-header: #0f0720;
@@ -36,11 +37,11 @@
     --theme-success: #10b981;
     --theme-cyan: #38bdf8;
     --theme-text: #fdf4ff;
-    --theme-muted: #a78bfa;
+    --theme-muted: #c4b5fd;
     --theme-gradient: linear-gradient(135deg, #facc15, #ec4899, #06b6d4);
 }
 
-/* 3. INTS Corporativo (Azul Petróleo, Ciano & Âmbar) */
+/* 1.3 INTS Corporativo (Azul Petróleo, Ciano & Âmbar) */
 [data-theme="institucional"] {
     --theme-bg: #0b1329;
     --theme-header: #070c1a;
@@ -57,7 +58,7 @@
     --theme-gradient: linear-gradient(135deg, #38bdf8, #0284c7, #f59e0b);
 }
 
-/* 4. Pôr do Sol Dourado (Warm Sunset, Âmbar & Coral) */
+/* 1.4 Pôr do Sol Dourado (Warm Sunset, Âmbar & Coral) */
 [data-theme="sunset"] {
     --theme-bg: #1c1917;
     --theme-header: #141210;
@@ -70,11 +71,11 @@
     --theme-success: #10b981;
     --theme-cyan: #fdba74;
     --theme-text: #fafaf9;
-    --theme-muted: #a8a29e;
+    --theme-muted: #d6d3d1;
     --theme-gradient: linear-gradient(135deg, #f59e0b, #f97316, #fb7185);
 }
 
-/* 5. Esmeralda & Natureza (Verde Menta, Jade & Floresta) */
+/* 1.5 Esmeralda & Natureza (Verde Menta, Jade & Floresta) */
 [data-theme="esmeralda"] {
     --theme-bg: #061a14;
     --theme-header: #04130e;
@@ -87,9 +88,103 @@
     --theme-success: #22c55e;
     --theme-cyan: #2dd4bf;
     --theme-text: #f0fdf4;
-    --theme-muted: #6ee7b7;
+    --theme-muted: #a7f3d0;
     --theme-gradient: linear-gradient(135deg, #10b981, #34d399, #fbbf24);
 }
+
+/* ==========================================================================
+   2. AUTOMATIC LIGHT MODE PALETTES (com base no SO do usuário)
+   ========================================================================== */
+@media (prefers-color-scheme: light) {
+    /* 2.1 Dracula Light (Alabaster Gothic / Lilás Suave) */
+    :root, [data-theme="dracula"] {
+        --theme-bg: #f8f6fc;
+        --theme-header: #ffffff;
+        --theme-card: #ffffff;
+        --theme-card-hover: #f1edfa;
+        --theme-border: #d4cee4;
+        --theme-primary: #7c3aed;
+        --theme-secondary: #c026d3;
+        --theme-accent: #d97706;
+        --theme-success: #16a34a;
+        --theme-cyan: #0284c7;
+        --theme-text: #1e1b2e;
+        --theme-muted: #5e5977;
+        --theme-gradient: linear-gradient(135deg, #d97706, #c026d3, #7c3aed);
+    }
+
+    /* 2.2 Carnaval Light (Carnaval Radiante / Creme Festivo) */
+    [data-theme="carnaval"] {
+        --theme-bg: #fffdf5;
+        --theme-header: #ffffff;
+        --theme-card: #ffffff;
+        --theme-card-hover: #fef8eb;
+        --theme-border: #f2e2be;
+        --theme-primary: #b45309;
+        --theme-secondary: #db2777;
+        --theme-accent: #0284c7;
+        --theme-success: #16a34a;
+        --theme-cyan: #0284c7;
+        --theme-text: #261738;
+        --theme-muted: #6b5c7e;
+        --theme-gradient: linear-gradient(135deg, #eab308, #db2777, #0284c7);
+    }
+
+    /* 2.3 INTS Corporativo Light (Azul Institucional Cristalino) */
+    [data-theme="institucional"] {
+        --theme-bg: #f0f4f9;
+        --theme-header: #ffffff;
+        --theme-card: #ffffff;
+        --theme-card-hover: #e2ecf7;
+        --theme-border: #c8d9ea;
+        --theme-primary: #0284c7;
+        --theme-secondary: #0369a1;
+        --theme-accent: #d97706;
+        --theme-success: #16a34a;
+        --theme-cyan: #0284c7;
+        --theme-text: #0f172a;
+        --theme-muted: #475569;
+        --theme-gradient: linear-gradient(135deg, #0284c7, #0369a1, #d97706);
+    }
+
+    /* 2.4 Pôr do Sol Light (Warm Amber & Areia Suave) */
+    [data-theme="sunset"] {
+        --theme-bg: #faf7f2;
+        --theme-header: #ffffff;
+        --theme-card: #ffffff;
+        --theme-card-hover: #f4eee4;
+        --theme-border: #e8dccb;
+        --theme-primary: #d97706;
+        --theme-secondary: #ea580c;
+        --theme-accent: #e11d48;
+        --theme-success: #16a34a;
+        --theme-cyan: #c2410c;
+        --theme-text: #1c1917;
+        --theme-muted: #57534e;
+        --theme-gradient: linear-gradient(135deg, #d97706, #ea580c, #e11d48);
+    }
+
+    /* 2.5 Esmeralda Light (Botânico Suave / Menta Cristal) */
+    [data-theme="esmeralda"] {
+        --theme-bg: #f1f8f5;
+        --theme-header: #ffffff;
+        --theme-card: #ffffff;
+        --theme-card-hover: #e3f2eb;
+        --theme-border: #c4e4d5;
+        --theme-primary: #059669;
+        --theme-secondary: #047857;
+        --theme-accent: #d97706;
+        --theme-success: #16a34a;
+        --theme-cyan: #0d9488;
+        --theme-text: #064e3b;
+        --theme-muted: #335c4d;
+        --theme-gradient: linear-gradient(135deg, #059669, #047857, #d97706);
+    }
+}
+
+/* ==========================================================================
+   3. Base Document Styles & Responsive Logos
+   ========================================================================== */
 
 html {
     scroll-behavior: smooth;
@@ -100,9 +195,31 @@ html {
 body {
     background-color: var(--theme-bg);
     color: var(--theme-text);
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Dynamic theme overrides so existing utility classes adapt automatically */
+/* Dual Logo: Dark vs Light mode */
+.logo-for-light {
+    display: none !important;
+}
+.logo-for-dark {
+    display: inline-block !important;
+}
+
+@media (prefers-color-scheme: light) {
+    .logo-for-dark {
+        display: none !important;
+    }
+    .logo-for-light {
+        display: inline-block !important;
+    }
+}
+
+/* ==========================================================================
+   4. Universal Theme Utility Overrides (Dark & Light)
+   ========================================================================== */
+
+/* Dark mode overrides for alternative themes */
 [data-theme]:not([data-theme="dracula"]) .bg-\[\#282a36\],
 [data-theme]:not([data-theme="dracula"]).bg-\[\#282a36\] {
     background-color: var(--theme-bg) !important;
@@ -156,15 +273,150 @@ body {
     background-color: var(--theme-accent) !important;
 }
 
-[data-theme]:not([data-theme="dracula"]) .bg-gradient-to-r.from-\[\#ffb86c\] {
-    background-image: var(--theme-gradient) !important;
-}
-
+[data-theme]:not([data-theme="dracula"]) .bg-gradient-to-r.from-\[\#ffb86c\],
 [data-theme]:not([data-theme="dracula"]) .bg-gradient-to-r.from-\[\#f1fa8c\] {
     background-image: var(--theme-gradient) !important;
 }
 
-/* Custom Scrollbar */
+/* ==========================================================================
+   5. LIGHT MODE COMPONENT & UTILITY OVERRIDES (ALL THEMES)
+   ========================================================================== */
+@media (prefers-color-scheme: light) {
+    /* Global surface overrides in light mode */
+    .bg-\[\#282a36\], [class*="bg-[#282a36]"] {
+        background-color: var(--theme-bg) !important;
+    }
+
+    .bg-\[\#1e1f29\], [class*="bg-[#1e1f29]"] {
+        background-color: var(--theme-header) !important;
+    }
+
+    .bg-\[\#343746\], [class*="bg-[#343746]"] {
+        background-color: var(--theme-card) !important;
+        box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    .bg-\[\#44475a\], [class*="bg-[#44475a]"] {
+        background-color: var(--theme-card-hover) !important;
+    }
+
+    /* Global typography overrides in light mode */
+    .text-\[\#f8f8f2\], [class*="text-[#f8f8f2]"] {
+        color: var(--theme-text) !important;
+    }
+
+    .text-\[\#6272a4\], [class*="text-[#6272a4]"] {
+        color: var(--theme-muted) !important;
+    }
+
+    .text-\[\#bd93f9\], [class*="text-[#bd93f9]"] {
+        color: var(--theme-primary) !important;
+    }
+
+    .text-\[\#ff79c6\], [class*="text-[#ff79c6]"] {
+        color: var(--theme-secondary) !important;
+    }
+
+    .text-\[\#ffb86c\], [class*="text-[#ffb86c]"] {
+        color: var(--theme-accent) !important;
+    }
+
+    .text-\[\#8be9fd\], [class*="text-[#8be9fd]"] {
+        color: var(--theme-cyan) !important;
+    }
+
+    .text-\[\#50fa7b\], [class*="text-[#50fa7b]"] {
+        color: var(--theme-success) !important;
+    }
+
+    /* Border overrides in light mode */
+    .border-\[\#6272a4\]\/20,
+    .border-\[\#6272a4\]\/25,
+    .border-\[\#6272a4\]\/30,
+    .border-\[\#6272a4\]\/40,
+    .border-\[\#6272a4\]\/50,
+    .border-\[\#6272a4\],
+    .border-\[\#44475a\] {
+        border-color: var(--theme-border) !important;
+    }
+
+    /* Navigation Sidebar & Header in Light Mode */
+    #admin-sidebar {
+        background-color: var(--theme-header) !important;
+        border-color: var(--theme-border) !important;
+        box-shadow: 2px 0 16px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    #admin-mobile-drawer {
+        background-color: var(--theme-header) !important;
+        border-color: var(--theme-border) !important;
+    }
+
+    header {
+        background-color: var(--theme-header) !important;
+        border-color: var(--theme-border) !important;
+    }
+
+    footer {
+        background-color: var(--theme-header) !important;
+        border-color: var(--theme-border) !important;
+    }
+
+    /* Table styling in light mode */
+    table thead {
+        background-color: var(--theme-card-hover) !important;
+    }
+    table thead th {
+        color: var(--theme-muted) !important;
+        background-color: var(--theme-card-hover) !important;
+    }
+    table tbody tr:hover {
+        background-color: var(--theme-card-hover) !important;
+    }
+    table tbody tr {
+        border-color: var(--theme-border) !important;
+    }
+    table td {
+        border-color: var(--theme-border) !important;
+    }
+
+    /* Form controls in light mode */
+    input:not([type=range]), select, textarea {
+        background-color: #ffffff !important;
+        color: var(--theme-text) !important;
+        border-color: var(--theme-border) !important;
+    }
+    input::placeholder, textarea::placeholder {
+        color: var(--theme-muted) !important;
+    }
+
+    /* Modal dialog styling in light mode */
+    #vote-confirm-modal .bg-\[\#343746\],
+    .modal-dialog-content {
+        background-color: #ffffff !important;
+        color: var(--theme-text) !important;
+        border-color: var(--theme-border) !important;
+    }
+
+    /* Action buttons contrast */
+    .bg-\[\#bd93f9\].text-\[\#282a36\],
+    .bg-\[\#50fa7b\].text-\[\#282a36\],
+    .bg-\[\#ff79c6\].text-\[\#282a36\],
+    .bg-\[\#ffb86c\].text-\[\#282a36\],
+    .bg-\[\#f1fa8c\].text-\[\#282a36\] {
+        color: #ffffff !important;
+    }
+
+    /* Gradient texts in light mode */
+    .bg-gradient-to-r.from-\[\#ffb86c\],
+    .bg-gradient-to-r.from-\[\#f1fa8c\] {
+        background-image: var(--theme-gradient) !important;
+    }
+}
+
+/* ==========================================================================
+   6. Custom Scrollbar
+   ========================================================================== */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -180,14 +432,16 @@ body {
     background: var(--theme-primary);
 }
 
-/* Range Slider Styling - Halloween / Dracula Slicer */
+/* ==========================================================================
+   7. Range Slider Styling (Concurso Fotográfico / Avaliação 0-10)
+   ========================================================================== */
 input[type=range].dracula-slider {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
     height: 10px;
     border-radius: 9999px;
-    background: linear-gradient(to right, #44475a, #6272a4);
+    background: linear-gradient(to right, var(--theme-card-hover), var(--theme-border));
     outline: none;
     transition: all 0.2s ease-in-out;
 }
@@ -198,10 +452,10 @@ input[type=range].dracula-slider::-webkit-slider-thumb {
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #ffb86c 0%, #ff79c6 60%, #bd93f9 100%);
+    background: radial-gradient(circle at 35% 35%, var(--theme-accent) 0%, var(--theme-secondary) 60%, var(--theme-primary) 100%);
     cursor: pointer;
-    box-shadow: 0 0 12px rgba(255, 184, 108, 0.7), 0 2px 6px rgba(0, 0, 0, 0.5);
-    border: 2px solid #f8f8f2;
+    box-shadow: 0 0 12px rgba(255, 184, 108, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+    border: 2px solid #ffffff;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -214,10 +468,10 @@ input[type=range].dracula-slider::-moz-range-thumb {
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #ffb86c 0%, #ff79c6 60%, #bd93f9 100%);
+    background: radial-gradient(circle at 35% 35%, var(--theme-accent) 0%, var(--theme-secondary) 60%, var(--theme-primary) 100%);
     cursor: pointer;
-    box-shadow: 0 0 12px rgba(255, 184, 108, 0.7), 0 2px 6px rgba(0, 0, 0, 0.5);
-    border: 2px solid #f8f8f2;
+    box-shadow: 0 0 12px rgba(255, 184, 108, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+    border: 2px solid #ffffff;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -226,7 +480,9 @@ input[type=range].dracula-slider::-moz-range-thumb:hover {
     box-shadow: 0 0 18px rgba(189, 147, 249, 0.9), 0 0 8px rgba(255, 184, 108, 0.9);
 }
 
-/* Animations */
+/* ==========================================================================
+   8. Micro-interactions & Animations
+   ========================================================================== */
 @keyframes floatSlow {
     0%, 100% {
         transform: translateY(0px) rotate(0deg);
@@ -256,7 +512,7 @@ input[type=range].dracula-slider::-moz-range-thumb:hover {
 @keyframes modalFadeIn {
     from {
         opacity: 0;
-        transform: scale(0.92);
+        transform: scale(0.94);
     }
     to {
         opacity: 1;
@@ -270,14 +526,14 @@ input[type=range].dracula-slider::-moz-range-thumb:hover {
 
 /* Card Hover micro-interaction */
 .dracula-card {
-    background-color: #343746;
-    border: 1px solid rgba(98, 114, 164, 0.35);
+    background-color: var(--theme-card);
+    border: 1px solid var(--theme-border);
     transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .dracula-card:hover {
-    border-color: rgba(189, 147, 249, 0.6);
-    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.6), 0 0 16px rgba(189, 147, 249, 0.2);
+    border-color: var(--theme-primary);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.4), 0 0 16px rgba(189, 147, 249, 0.15);
 }
 
 @keyframes shake {
@@ -289,4 +545,3 @@ input[type=range].dracula-slider::-moz-range-thumb:hover {
 .animate-shake {
     animation: shake 0.35s ease-in-out;
 }
-

@@ -101,6 +101,7 @@ def is_admin_authenticated() -> bool:
     # 2. X-Admin-Password header check
     header_pass = request.headers.get("X-Admin-Password")
     if header_pass and hmac.compare_digest(str(header_pass).strip(), str(expected_password).strip()):
+        session["is_admin"] = True
         return True
 
     # 3. Authorization: Bearer <password> header check
@@ -110,6 +111,7 @@ def is_admin_authenticated() -> bool:
         if len(parts) == 2 and parts[0].lower() == "bearer":
             token = parts[1].strip()
             if hmac.compare_digest(str(token), str(expected_password).strip()):
+                session["is_admin"] = True
                 return True
 
     return False
