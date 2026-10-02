@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Usuários & Acesso Administrativo - INTS{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+  
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#6272a4]/20">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30 mb-2">
+        <span>Segurança & Governança</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-black text-[#f8f8f2] tracking-tight">
+        Usuários & Acesso Administrativo
+      </h1>
+      <p class="text-sm text-[#6272a4] mt-1">
+        Gerenciamento de moderadores institucionais credenciados com fotos de perfil reais
+      </p>
+    </div>
+
+    <!-- Action button to jump to new user form -->
+    <div>
+      <a href="#novo-usuario" 
+         class="inline-flex items-center space-x-2 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-wider text-[#282a36] bg-gradient-to-r from-[#50fa7b] to-[#8be9fd] hover:from-[#69ff8f] hover:to-[#a4f0ff] shadow-xl hover:shadow-[#50fa7b]/20 transition transform hover:scale-[1.02] active:scale-[0.98]">
+        <span>+ Adicionar Administrador</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Cards (Tipografia forte e badges, sem bibliotecas de ícones) -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    <div class="p-5 rounded-3xl bg-[#343746] border border-[#6272a4]/30 shadow-xl">
+      <div class="text-[11px] font-black uppercase tracking-wider text-[#6272a4]">Total de Administradores</div>
+      <div class="text-3xl font-black text-[#f8f8f2] mt-2">{{ users|length }}</div>
+      <div class="text-xs text-[#50fa7b] font-semibold mt-1">Contas cadastradas</div>
+    </div>
+    <div class="p-5 rounded-3xl bg-[#343746] border border-[#6272a4]/30 shadow-xl">
+      <div class="text-[11px] font-black uppercase tracking-wider text-[#6272a4]">Com Senha Definida</div>
+      {% set ativos = users|selectattr('must_change_password', 'equalto', 0)|list|length %}
+      <div class="text-3xl font-black text-[#50fa7b] mt-2">{{ ativos }}</div>
+      <div class="text-xs text-[#6272a4] font-semibold mt-1">Primeiro acesso concluído</div>
+    </div>
+    <div class="p-5 rounded-3xl bg-[#343746] border border-[#6272a4]/30 shadow-xl">
+      <div class="text-[11px] font-black uppercase tracking-wider text-[#6272a4]">Primeiro Acesso Pendente</div>
+      {% set pendentes = users|selectattr('must_change_password', 'equalto', 1)|list|length %}
+      <div class="text-3xl font-black text-[#ffb86c] mt-2">{{ pendentes }}</div>
+      <div class="text-xs text-[#6272a4] font-semibold mt-1">Aguardando troca de senha</div>
+    </div>
+  </div>
+
+  <!-- Users Table Card -->
+  <div class="bg-[#343746] rounded-3xl shadow-2xl border border-[#6272a4]/30 overflow-hidden">
+    <div class="p-6 border-b border-[#6272a4]/20 flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-black text-[#f8f8f2]">Administradores do Sistema</h2>
+        <p class="text-xs text-[#6272a4] mt-0.5">Todos os usuários possuem permissões completas de moderação</p>
+      </div>
+      <span class="text-xs font-mono text-[#8be9fd] px-3 py-1 rounded-xl bg-[#282a36] border border-[#6272a4]/30">
+        {{ users|length }} cadastrado(s)
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-[#6272a4]/20 text-[10px] uppercase font-black tracking-wider text-[#6272a4] bg-[#282a36]/60">
+            <th class="py-4 px-6">Foto & Administrador</th>
+            <th class="py-4 px-6">Usuário</th>
+            <th class="py-4 px-6">Perfil</th>
+            <th class="py-4 px-6">Status da Senha</th>
+            <th class="py-4 px-6">Criado Em</th>
+            <th class="py-4 px-6 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#6272a4]/15 text-xs text-[#f8f8f2]">
+          {% for u in users %}
+          <tr class="hover:bg-[#44475a]/30 transition">
+            
+            <!-- Foto & Nome -->
+            <td class="py-4 px-6">
+              <div class="flex items-center space-x-3.5">
+                <img src="{{ url_for('static', filename='img/avatars/' + (u.avatar_filename or 'avatar_default.jpg')) }}" 
+                     alt="{{ u.nome }}" 
+                     class="w-11 h-11 rounded-2xl object-cover ring-2 ring-[#bd93f9]/40 shadow-md">
+                <div>
+                  <div class="font-black text-sm text-[#f8f8f2] flex items-center gap-2">
+                    <span>{{ u.nome }}</span>
+                    {% if session.user_id == u.id %}
+                    <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-[#50fa7b]/20 text-[#50fa7b] font-bold">Você</span>
+                    {% endif %}
+                  </div>
+                  <div class="text-[11px] text-[#6272a4]">Foto: {{ u.avatar_filename }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Usuário -->
+            <td class="py-4 px-6">
+              <span class="font-mono text-xs text-[#8be9fd] bg-[#282a36] px-2.5 py-1 rounded-lg border border-[#6272a4]/30">
+                @{{ u.username }}
+              </span>
+            </td>
+
+            <!-- Perfil -->
+            <td class="py-4 px-6">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                Administrador
+              </span>
+            </td>
+
+            <!-- Status da Senha -->
+            <td class="py-4 px-6">
+              {% if u.must_change_password %}
+              <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-[#ffb86c]/20 text-[#ffb86c] border border-[#ffb86c]/30">
+                Troca Pendente
+              </span>
+              {% else %}
+              <span class="inline-flex items-center px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                Senha Ativa
+              </span>
+              {% endif %}
+            </td>
+
+            <!-- Criado Em -->
+            <td class="py-4 px-6 text-[#6272a4] font-mono text-[11px]">
+              {{ u.created_at }}
+            </td>
+
+            <!-- Ações -->
+            <td class="py-4 px-6 text-right">
+              {% if session.user_id == u.id %}
+              <span class="text-[11px] text-[#6272a4] italic">Sua Sessão</span>
+              {% else %}
+              <form method="POST" action="{{ url_for('admin.delete_user', user_id=u.id) }}" 
+                    onsubmit="return confirm('Deseja realmente remover o administrador @{{ u.username }}?');" class="inline">
+                <button type="submit" 
+                        class="px-3 py-1.5 rounded-xl text-[11px] font-bold text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] border border-[#ff5555]/30 transition">
+                  Excluir
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create New User Form Card -->
+  <div id="novo-usuario" class="bg-[#343746] p-8 sm:p-10 rounded-3xl shadow-2xl border border-[#6272a4]/30">
+    <div class="pb-6 border-b border-[#6272a4]/20 mb-6">
+      <h2 class="text-xl sm:text-2xl font-black text-[#f8f8f2] tracking-tight">
+        Cadastrar Novo Administrador
+      </h2>
+      <p class="text-xs sm:text-sm text-[#6272a4] mt-1">
+        Todo novo usuário terá privilégios plenos de administração e será solicitado a trocar a senha inicial no primeiro acesso.
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.create_user') }}" class="space-y-6" autocomplete="off">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Nome Completo -->
+        <div>
+          <label for="nome" class="block text-xs font-bold uppercase tracking-wider text-[#f8f8f2] mb-2">
+            Nome Completo do Colaborador *
+          </label>
+          <input type="text" id="nome" name="nome" required
+                 placeholder="Ex: Amanda Silva, Bruno Henrique"
+                 class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#50fa7b]/40 focus:border-[#50fa7b] outline-none text-sm font-medium">
+        </div>
+
+        <!-- Nome de Usuário (login) -->
+        <div>
+          <label for="username" class="block text-xs font-bold uppercase tracking-wider text-[#8be9fd] mb-2">
+            Nome de Usuário (Login Único) *
+          </label>
+          <input type="text" id="username" name="username" required
+                 placeholder="Ex: amanda, bruno, carlos"
+                 class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#8be9fd]/40 focus:border-[#8be9fd] outline-none text-sm font-medium">
+        </div>
+
+        <!-- Senha Inicial -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label for="password" class="block text-xs font-bold uppercase tracking-wider text-[#ffb86c]">
+              Senha Inicial Provisória
+            </label>
+            <span class="text-[10px] text-[#6272a4]">Padrão: trocar</span>
+          </div>
+          <input type="text" id="password" name="password" value="trocar" required
+                 class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#ffb86c]/40 focus:border-[#ffb86c] outline-none text-sm font-mono">
+          <p class="text-[11px] text-[#6272a4] mt-1.5">
+            O usuário será forçado a definir uma nova senha no momento em que fizer o login.
+          </p>
+        </div>
+
+        <!-- Seletor de Foto de Perfil / Avatar Real -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-[#bd93f9] mb-2">
+            Selecione a Imagem de Perfil
+          </label>
+          <div class="grid grid-cols-3 gap-3">
+            
+            <!-- Opção Homem -->
+            <label class="cursor-pointer">
+              <input type="radio" name="avatar_filename" value="avatar_bruno.jpg" class="peer sr-only">
+              <div class="p-3 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 peer-checked:border-[#bd93f9] peer-checked:ring-2 peer-checked:ring-[#bd93f9] text-center hover:border-[#6272a4] transition">
+                <img src="{{ url_for('static', filename='img/avatars/avatar_bruno.jpg') }}" 
+                     alt="Homem" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 shadow">
+                <span class="text-xs font-bold text-[#f8f8f2] block">Homem</span>
+                <span class="text-[9px] text-[#6272a4] block">Avatar Bruno</span>
+              </div>
+            </label>
+
+            <!-- Opção Mulher -->
+            <label class="cursor-pointer">
+              <input type="radio" name="avatar_filename" value="avatar_amanda.jpg" class="peer sr-only">
+              <div class="p-3 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 peer-checked:border-[#ff79c6] peer-checked:ring-2 peer-checked:ring-[#ff79c6] text-center hover:border-[#6272a4] transition">
+                <img src="{{ url_for('static', filename='img/avatars/avatar_amanda.jpg') }}" 
+                     alt="Mulher" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 shadow">
+                <span class="text-xs font-bold text-[#f8f8f2] block">Mulher</span>
+                <span class="text-[9px] text-[#6272a4] block">Avatar Amanda</span>
+              </div>
+            </label>
+
+            <!-- Opção Padrão -->
+            <label class="cursor-pointer">
+              <input type="radio" name="avatar_filename" value="avatar_default.jpg" checked class="peer sr-only">
+              <div class="p-3 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 peer-checked:border-[#50fa7b] peer-checked:ring-2 peer-checked:ring-[#50fa7b] text-center hover:border-[#6272a4] transition">
+                <img src="{{ url_for('static', filename='img/avatars/avatar_default.jpg') }}" 
+                     alt="Padrão" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 shadow">
+                <span class="text-xs font-bold text-[#f8f8f2] block">Padrão</span>
+                <span class="text-[9px] text-[#6272a4] block">Corporativo</span>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pt-4 flex justify-end">
+        <button type="submit" 
+                class="px-8 py-3.5 rounded-2xl font-black text-sm uppercase tracking-wider text-[#282a36] bg-gradient-to-r from-[#50fa7b] to-[#8be9fd] hover:from-[#69ff8f] hover:to-[#a4f0ff] shadow-xl hover:shadow-[#50fa7b]/20 transition transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer">
+          Salvar Novo Administrador
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

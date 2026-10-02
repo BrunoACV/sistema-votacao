@@ -6,33 +6,45 @@
 <div class="min-h-[65vh] flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full space-y-7 bg-[#343746] p-8 sm:p-10 rounded-3xl shadow-2xl border border-[#6272a4]/40">
     
-    <!-- Header with Custom Halloween Lock Icon -->
+    <!-- Header with Custom Admin Visual -->
     <div class="text-center">
       <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Moderação" 
            class="h-20 w-20 rounded-2xl mx-auto mb-4 object-cover shadow-xl ring-2 ring-[#8be9fd]/50 animate-float">
       <h2 class="text-2xl sm:text-3xl font-black text-[#f8f8f2] tracking-tight">Painel de Moderação</h2>
-      <p class="text-xs sm:text-sm text-[#6272a4] mt-1.5">Acesso restrito à comissão organizadora do INTS</p>
+      <p class="text-xs sm:text-sm text-[#6272a4] mt-1.5">Acesso exclusivo para administradores credenciados do INTS</p>
     </div>
 
     <!-- Login Form -->
-    <form class="mt-6 space-y-6" method="POST" action="{{ url_for('admin.login') }}" autocomplete="off">
+    <form class="mt-6 space-y-5" method="POST" action="{{ url_for('admin.login') }}" autocomplete="off">
       <input type="hidden" name="next" value="{{ next_url }}">
       
+      <!-- Usuário -->
       <div>
-        <label for="password" class="block text-xs font-bold uppercase tracking-wider text-[#ffb86c] mb-2">
-          Senha Administrativa
+        <label for="username" class="block text-xs font-bold uppercase tracking-wider text-[#8be9fd] mb-2">
+          Usuário Administrador
         </label>
+        <input id="username" name="username" type="text" required autofocus
+               value="{{ username or '' }}"
+               class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#8be9fd]/40 focus:border-[#8be9fd] outline-none transition text-sm font-medium"
+               placeholder="Ex: bruno, amanda">
+      </div>
+
+      <!-- Senha -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label for="password" class="block text-xs font-bold uppercase tracking-wider text-[#ffb86c]">
+            Senha
+          </label>
+          <span class="text-[11px] text-[#6272a4]">Primeiro acesso: senha padrão</span>
+        </div>
         <div class="relative">
-          <input id="password" name="password" type="password" required autofocus
-                 class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#bd93f9]/40 focus:border-[#bd93f9] outline-none transition pr-12 text-sm"
-                 placeholder="Digite a senha de administrador">
+          <input id="password" name="password" type="password" required
+                 class="w-full px-4 py-3.5 bg-[#282a36] border border-[#6272a4]/50 rounded-xl text-[#f8f8f2] placeholder-[#6272a4] focus:ring-2 focus:ring-[#bd93f9]/40 focus:border-[#bd93f9] outline-none transition pr-20 text-sm font-medium"
+                 placeholder="Digite sua senha de acesso">
           <button type="button" id="toggle-password" 
-                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#6272a4] hover:text-[#bd93f9] focus:outline-none"
+                  class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-xs font-bold text-[#bd93f9] hover:text-[#f8f8f2] focus:outline-none transition"
                   title="Exibir / ocultar senha">
-            <svg id="eye-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
+            <span id="toggle-label" class="px-2 py-1 rounded-md bg-[#343746] border border-[#6272a4]/40">Ver</span>
           </button>
         </div>
       </div>
@@ -41,14 +53,14 @@
         <button type="submit" 
                 class="w-full flex justify-center items-center space-x-2 py-3.5 px-4 rounded-xl shadow-xl text-base font-black text-[#282a36] bg-gradient-to-r from-[#bd93f9] to-[#8be9fd] hover:from-[#caa6fa] hover:to-[#a4f0ff] focus:outline-none transition transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer">
           <img src="{{ url_for('static', filename='img/icon_admin.jpg') }}" alt="Entrar" class="w-5 h-5 rounded-md object-cover">
-          <span>Entrar no Painel</span>
+          <span>Acessar Painel</span>
         </button>
       </div>
     </form>
 
-    <div class="text-center pt-2">
-      <a href="{{ url_for('public.register') }}" class="text-xs font-semibold text-[#6272a4] hover:text-[#bd93f9] transition flex items-center justify-center gap-1.5">
-        <span>&larr;</span> Voltar para a Inscrição
+    <div class="pt-2 text-center">
+      <a href="{{ url_for('public.register') }}" class="text-xs font-semibold text-[#6272a4] hover:text-[#bd93f9] transition inline-flex items-center gap-1.5">
+        <span>&larr;</span> Voltar para a Inscrição Pública
       </a>
     </div>
 
@@ -61,12 +73,15 @@
   document.addEventListener('DOMContentLoaded', function() {
     const pwdInput = document.getElementById('password');
     const toggleBtn = document.getElementById('toggle-password');
+    const toggleLabel = document.getElementById('toggle-label');
     if (toggleBtn && pwdInput) {
       toggleBtn.addEventListener('click', function() {
         if (pwdInput.type === 'password') {
           pwdInput.type = 'text';
+          if (toggleLabel) toggleLabel.textContent = 'Ocultar';
         } else {
           pwdInput.type = 'password';
+          if (toggleLabel) toggleLabel.textContent = 'Ver';
         }
       });
     }

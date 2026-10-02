@@ -155,10 +155,23 @@ CREATE TABLE IF NOT EXISTS votes (
     UNIQUE(voter_id, participant_id)
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    nome TEXT DEFAULT '',
+    password_hash TEXT NOT NULL,
+    avatar_filename TEXT DEFAULT 'avatar_default.jpg',
+    is_admin INTEGER NOT NULL DEFAULT 1,
+    must_change_password INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_participants_event ON participants(event_id);
 CREATE INDEX IF NOT EXISTS idx_voters_event ON voters(event_id);
 CREATE INDEX IF NOT EXISTS idx_votes_event ON votes(event_id);
 CREATE INDEX IF NOT EXISTS idx_votes_participant ON votes(participant_id);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 """
 
 
@@ -168,6 +181,16 @@ CREATE INDEX IF NOT EXISTS idx_votes_participant ON votes(participant_id);
 
 class DatabaseError(Exception):
     """Base exception for database domain errors."""
+    pass
+
+
+class DuplicateUsernameError(DatabaseError):
+    """Raised when creating a user with a username that already exists."""
+    pass
+
+
+class UserNotFoundError(DatabaseError):
+    """Raised when a user is not found."""
     pass
 
 
@@ -411,11 +434,70 @@ def init_db(db_path: Optional[Union[str, Path]] = None) -> None:
                 """)
                 cur.execute("DROP TABLE _votes_old")
 
-        # 5. Create performance indexes
+        # 5. Check and create users table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                nome TEXT DEFAULT '',
+                password_hash TEXT NOT NULL,
+                avatar_filename TEXT DEFAULT 'avatar_default.jpg',
+                is_admin INTEGER NOT NULL DEFAULT 1,
+                must_change_password INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # Migration: ensure users table columns exist
+        user_cols = [r[1] for r in cur.execute("PRAGMA table_info(users)").fetchall()]
+        if "avatar_filename" not in user_cols:
+            cur.execute("ALTER TABLE users ADD COLUMN avatar_filename TEXT DEFAULT 'avatar_default.jpg'")
+        if "must_change_password" not in user_cols:
+            cur.execute("ALTER TABLE users ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 1")
+        if "is_admin" not in user_cols:
+            cur.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 1")
+        if "nome" not in user_cols:
+            cur.execute("ALTER TABLE users ADD COLUMN nome TEXT DEFAULT ''")
+
+        # Seed initial user 'bruno' with initial password 'trocar' and avatar_bruno.jpg
+        cur.execute("SELECT id FROM users WHERE username = 'bruno'")
+        if not cur.fetchone():
+            from werkzeug.security import generate_password_hash
+            pwd_hash = generate_password_hash("trocar")
+            cur.execute("""
+                INSERT INTO users (username, nome, password_hash, avatar_filename, is_admin, must_change_password)
+                VALUES ('bruno', 'Bruno', ?, 'avatar_bruno.jpg', 1, 1)
+            """, (pwd_hash,))
+        else:
+            # Ensure avatar is avatar_bruno.jpg
+            cur.execute("""
+                UPDATE users SET avatar_filename = 'avatar_bruno.jpg'
+                WHERE username = 'bruno' AND (avatar_filename IS NULL OR avatar_filename = 'avatar_default.jpg' OR avatar_filename = '')
+            """)
+
+        # Seed initial user 'amanda' with initial password 'trocar' and avatar_amanda.jpg
+        cur.execute("SELECT id FROM users WHERE username = 'amanda'")
+        if not cur.fetchone():
+            from werkzeug.security import generate_password_hash
+            pwd_hash = generate_password_hash("trocar")
+            cur.execute("""
+                INSERT INTO users (username, nome, password_hash, avatar_filename, is_admin, must_change_password)
+                VALUES ('amanda', 'Amanda', ?, 'avatar_amanda.jpg', 1, 1)
+            """, (pwd_hash,))
+        else:
+            # Ensure avatar is avatar_amanda.jpg
+            cur.execute("""
+                UPDATE users SET avatar_filename = 'avatar_amanda.jpg'
+                WHERE username = 'amanda' AND (avatar_filename IS NULL OR avatar_filename = 'avatar_default.jpg' OR avatar_filename = '')
+            """)
+
+        # 6. Create performance indexes
         cur.execute("CREATE INDEX IF NOT EXISTS idx_participants_event ON participants(event_id);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_voters_event ON voters(event_id);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_votes_event ON votes(event_id);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_votes_participant ON votes(participant_id);")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);")
 
         cur.execute("PRAGMA foreign_keys = ON;")
     finally:
@@ -1224,3 +1306,152 @@ def get_voting_summary(
         "total_votes": total_votes,
         "overall_average": overall_avg
     }
+
+
+# ==============================================================================
+# Administrative Users & Authentication Operations
+# ==============================================================================
+
+def create_user(
+    username: str,
+    password: str,
+    nome: str = "",
+    avatar_filename: Optional[str] = None,
+    is_admin: int = 1,
+    must_change_password: int = 1,
+    conn: Optional[sqlite3.Connection] = None
+) -> Dict[str, Any]:
+    """
+    Creates a new administrative user with hashed password and must_change_password flag.
+    All created users have administrator access (is_admin=1).
+    """
+    clean_username = str(username or "").strip().lower()
+    if not clean_username:
+        raise ValueError("O nome de usuário não pode ser vazio.")
+    if not re.match(r"^[a-zA-Z0-9_.-]{3,50}$", clean_username):
+        raise ValueError("O nome de usuário deve conter de 3 a 50 caracteres (letras, números, '.', '-' ou '_').")
+    
+    clean_password = str(password or "").strip()
+    if not clean_password or len(clean_password) < 4:
+        raise ValueError("A senha inicial deve conter pelo menos 4 caracteres.")
+
+    # Determine avatar
+    if avatar_filename:
+        chosen_avatar = str(avatar_filename).strip()
+    elif clean_username == "bruno":
+        chosen_avatar = "avatar_bruno.jpg"
+    elif clean_username == "amanda":
+        chosen_avatar = "avatar_amanda.jpg"
+    else:
+        chosen_avatar = "avatar_default.jpg"
+
+    from werkzeug.security import generate_password_hash
+    pwd_hash = generate_password_hash(clean_password)
+
+    c = conn or get_db()
+    cur = c.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO users (username, nome, password_hash, avatar_filename, is_admin, must_change_password)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            clean_username,
+            str(nome or "").strip(),
+            pwd_hash,
+            chosen_avatar,
+            1 if is_admin else 0,
+            1 if must_change_password else 0
+        ))
+        user_id = cur.lastrowid
+    except sqlite3.IntegrityError as e:
+        if "UNIQUE" in str(e).upper():
+            raise DuplicateUsernameError(f"O nome de usuário '{clean_username}' já está em uso.") from e
+        raise DatabaseError(f"Erro ao criar usuário: {e}") from e
+
+    return get_user_by_id(user_id, c)
+
+
+def get_user_by_id(user_id: int, conn: Optional[sqlite3.Connection] = None) -> Optional[Dict[str, Any]]:
+    """Retrieves a user by database ID."""
+    c = conn or get_db()
+    row = c.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def get_user_by_username(username: str, conn: Optional[sqlite3.Connection] = None) -> Optional[Dict[str, Any]]:
+    """Retrieves a user by username (case-insensitive)."""
+    clean = str(username or "").strip().lower()
+    c = conn or get_db()
+    row = c.execute("SELECT * FROM users WHERE username = ?", (clean,)).fetchone()
+    return dict(row) if row else None
+
+
+def list_users(conn: Optional[sqlite3.Connection] = None) -> List[Dict[str, Any]]:
+    """Lists all administrative users sorted chronologically."""
+    c = conn or get_db()
+    rows = c.execute("""
+        SELECT id, username, nome, avatar_filename, is_admin, must_change_password, created_at, updated_at
+        FROM users
+        ORDER BY created_at ASC
+    """).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_user_password(
+    user_id: int,
+    new_password: str,
+    must_change_password: int = 0,
+    conn: Optional[sqlite3.Connection] = None
+) -> bool:
+    """Updates a user's password hash and resets must_change_password flag."""
+    clean_pwd = str(new_password or "").strip()
+    if not clean_pwd or len(clean_pwd) < 6:
+        raise ValueError("A nova senha deve ter no mínimo 6 caracteres.")
+    if clean_pwd.lower() == "trocar":
+        raise ValueError("A nova senha não pode ser a senha padrão ('trocar'). Escolha uma senha segura.")
+
+    from werkzeug.security import generate_password_hash
+    pwd_hash = generate_password_hash(clean_pwd)
+
+    c = conn or get_db()
+    cur = c.cursor()
+    cur.execute("""
+        UPDATE users 
+        SET password_hash = ?, must_change_password = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    """, (pwd_hash, 1 if must_change_password else 0, user_id))
+    if cur.rowcount == 0:
+        raise UserNotFoundError(f"Usuário id {user_id} não encontrado.")
+    return True
+
+
+def delete_user(user_id: int, conn: Optional[sqlite3.Connection] = None) -> bool:
+    """Deletes an administrative user. Prevents deleting the last admin."""
+    c = conn or get_db()
+    cur = c.cursor()
+    total = cur.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    if total <= 1:
+        raise ValueError("Não é permitido excluir o único usuário administrador do sistema.")
+    cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    if cur.rowcount == 0:
+        raise UserNotFoundError(f"Usuário id {user_id} não encontrado.")
+    return True
+
+
+def authenticate_user(
+    username: str,
+    password: str,
+    conn: Optional[sqlite3.Connection] = None
+) -> Optional[Dict[str, Any]]:
+    """
+    Validates user credentials against hashed password.
+    Returns user dict on success, None on failure.
+    """
+    user = get_user_by_username(username, conn)
+    if not user:
+        return None
+    from werkzeug.security import check_password_hash
+    if check_password_hash(user["password_hash"], str(password or "").strip()):
+        return user
+    return None
+

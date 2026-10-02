@@ -122,13 +122,26 @@ def admin_required(view_func: Callable) -> Callable:
     Decorator protecting administrative routes.
     
     Enforces:
-    - If authenticated: proceeds to view function.
+    - If authenticated:
+      - If user must change password and not on change-password/logout route, forces redirect.
+      - Otherwise proceeds to view function.
     - If unauthenticated and request is API/JSON/Header/Mutation: returns HTTP 401 Unauthorized JSON.
     - If unauthenticated and request is browser navigation (GET with text/html): redirects to /admin/login.
     """
     @functools.wraps(view_func)
     def wrapped_view(*args: Any, **kwargs: Any) -> Any:
         if is_admin_authenticated():
+            if session.get("must_change_password"):
+                if request.endpoint not in ("admin.change_password", "admin.logout"):
+                    if request.is_json or "application/json" in request.headers.get("Accept", ""):
+                        return jsonify({
+                            "status": "error",
+                            "error": "PasswordChangeRequired",
+                            "message": "Você deve alterar sua senha no primeiro acesso antes de continuar.",
+                            "redirect": url_for("admin.change_password")
+                        }), 403
+                    flash("Por motivos de segurança, você deve redefinir sua senha no primeiro acesso.", "warning")
+                    return redirect(url_for("admin.change_password"))
             return view_func(*args, **kwargs)
 
         # Detect if request is programmatic or expecting non-HTML response
@@ -150,7 +163,7 @@ def admin_required(view_func: Callable) -> Callable:
         )
 
         if is_browser_nav:
-            flash("Por favor, faça login com a senha administrativa para acessar o painel.", "warning")
+            flash("Por favor, faça login com suas credenciais de administrador para acessar o painel.", "warning")
             return redirect(url_for("admin.login", next=request.path))
 
         # Programmatic / API / Mutation unauthorized access
@@ -164,7 +177,7 @@ def admin_required(view_func: Callable) -> Callable:
 
 
 # ==============================================================================
-# Authentication Routes
+# Authentication & Password Routes
 # ==============================================================================
 
 @admin_bp.route("/login", methods=["GET", "POST"])
@@ -172,10 +185,13 @@ def login() -> Any:
     """
     Admin login route.
     GET: Displays login form (or redirects to dashboard if already authenticated).
-    POST: Validates admin password. Sets session cookie or returns 401 Unauthorized.
+    POST: Validates admin credentials (username + password, or fallback master password).
+    Sets session cookie or returns 401 Unauthorized.
     """
     if request.method == "GET":
         if is_admin_authenticated():
+            if session.get("must_change_password"):
+                return redirect(url_for("admin.change_password"))
             next_url = request.args.get("next")
             if is_safe_redirect_url(next_url):
                 return redirect(next_url)
@@ -186,40 +202,161 @@ def login() -> Any:
 
     if request.is_json:
         payload = request.get_json(silent=True) or {}
-        submitted_pass = payload.get("password", "")
+        submitted_user = str(payload.get("username") or "").strip()
+        submitted_pass = str(payload.get("password") or "").strip()
         next_url = payload.get("next")
     else:
-        submitted_pass = request.form.get("password", "")
+        submitted_user = str(request.form.get("username") or "").strip()
+        submitted_pass = str(request.form.get("password") or "").strip()
         next_url = request.form.get("next")
 
     if not is_safe_redirect_url(next_url):
         next_url = url_for("admin.dashboard")
 
-    if not submitted_pass or not hmac.compare_digest(str(submitted_pass).strip(), str(expected_password).strip()):
-        logger.warning("Tentativa de login administrativo falhou. IP: %s", request.remote_addr)
+    # Autenticação
+    if submitted_user:
+        auth_user = db.authenticate_user(submitted_user, submitted_pass)
+        if not auth_user:
+            logger.warning("Falha de autenticação para usuário '%s' do IP: %s", submitted_user, request.remote_addr)
+            if request.is_json or "application/json" in request.headers.get("Accept", ""):
+                return jsonify({
+                    "status": "error",
+                    "error": "Unauthorized",
+                    "message": "Usuário ou senha incorretos."
+                }), 401
+            flash("Usuário ou senha incorretos. Verifique suas credenciais.", "error")
+            return render_template("admin_login.html", next_url=next_url, username=submitted_user), 401
+
+        session["is_admin"] = bool(auth_user.get("is_admin", 1))
+        session["user_id"] = auth_user["id"]
+        session["username"] = auth_user["username"]
+        session["user_name"] = auth_user.get("nome") or auth_user["username"].capitalize()
+        session["avatar_filename"] = auth_user.get("avatar_filename") or "avatar_default.jpg"
+        session["must_change_password"] = bool(auth_user.get("must_change_password", 0))
+        session.permanent = True
+        logger.info("Login realizado com sucesso pelo usuário '%s' (ID %d). IP: %s", auth_user["username"], auth_user["id"], request.remote_addr)
+
+        target_redirect = url_for("admin.change_password") if session["must_change_password"] else next_url
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
             return jsonify({
-                "status": "error",
-                "error": "Unauthorized",
-                "message": "Senha administrativa incorreta."
-            }), 401
-        
-        flash("Senha administrativa incorreta. Tente novamente.", "error")
-        return render_template("admin_login.html", next_url=next_url), 401
+                "status": "ok",
+                "message": "Autenticado com sucesso.",
+                "must_change_password": session["must_change_password"],
+                "redirect": target_redirect
+            }), 200
 
-    session["is_admin"] = True
-    session.permanent = True
-    logger.info("Login administrativo bem-sucedido. IP: %s", request.remote_addr)
+        if session["must_change_password"]:
+            flash("Bem-vindo! Como este é seu primeiro acesso, defina uma nova senha para sua conta.", "info")
+            return redirect(url_for("admin.change_password"))
 
+        flash(f"Bem-vindo, {session['user_name']}!", "success")
+        return redirect(next_url)
+
+    else:
+        # Fallback para master password (compatibilidade com suíte de testes legada)
+        if not submitted_pass or not hmac.compare_digest(str(submitted_pass).strip(), str(expected_password).strip()):
+            logger.warning("Tentativa de login com senha mestra falhou. IP: %s", request.remote_addr)
+            if request.is_json or "application/json" in request.headers.get("Accept", ""):
+                return jsonify({
+                    "status": "error",
+                    "error": "Unauthorized",
+                    "message": "Senha administrativa incorreta."
+                }), 401
+            flash("Senha administrativa incorreta. Tente novamente.", "error")
+            return render_template("admin_login.html", next_url=next_url), 401
+
+        session["is_admin"] = True
+        session["user_id"] = None
+        session["username"] = "admin"
+        session["user_name"] = "Administrador Geral"
+        session["avatar_filename"] = "avatar_default.jpg"
+        session["must_change_password"] = False
+        session.permanent = True
+        logger.info("Login administrativo mestre bem-sucedido. IP: %s", request.remote_addr)
+
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({
+                "status": "ok",
+                "message": "Autenticado com sucesso.",
+                "redirect": next_url
+            }), 200
+
+        flash("Autenticação realizada com sucesso. Bem-vindo ao painel administrativo!", "success")
+        return redirect(next_url)
+
+
+@admin_bp.route("/change-password", methods=["GET", "POST"])
+@admin_required
+def change_password() -> Any:
+    """
+    Allows the logged-in administrator to change their password.
+    Mandatory on first access if must_change_password is true.
+    """
+    is_first = session.get("must_change_password", False)
+
+    if request.method == "GET":
+        return render_template("admin_change_password.html", is_first_access=is_first)
+
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+        new_password = str(payload.get("new_password") or "").strip()
+        confirm_password = str(payload.get("confirm_password") or "").strip()
+    else:
+        new_password = str(request.form.get("new_password") or "").strip()
+        confirm_password = str(request.form.get("confirm_password") or "").strip()
+
+    if not new_password:
+        msg = "A nova senha não pode estar em branco."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return render_template("admin_change_password.html", is_first_access=is_first), 400
+
+    if len(new_password) < 6:
+        msg = "A nova senha deve ter no mínimo 6 caracteres."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return render_template("admin_change_password.html", is_first_access=is_first), 400
+
+    if new_password.lower() == "trocar":
+        msg = "A nova senha não pode ser a senha padrão ('trocar'). Por favor, escolha uma senha segura."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return render_template("admin_change_password.html", is_first_access=is_first), 400
+
+    if new_password != confirm_password:
+        msg = "A confirmação de senha não confere com a nova senha digitada."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return render_template("admin_change_password.html", is_first_access=is_first), 400
+
+    user_id = session.get("user_id")
+    if user_id:
+        try:
+            db.update_user_password(user_id, new_password, must_change_password=0)
+        except Exception as exc:
+            msg = f"Erro ao atualizar senha: {str(exc)}"
+            if request.is_json or "application/json" in request.headers.get("Accept", ""):
+                return jsonify({"status": "error", "error": "Server Error", "message": msg}), 500
+            flash(msg, "error")
+            return render_template("admin_change_password.html", is_first_access=is_first), 500
+
+    session["must_change_password"] = False
+    logger.info("Senha alterada com sucesso para o usuário ID %s (%s)", str(user_id), session.get("username"))
+
+    success_msg = "Sua nova senha foi salva com sucesso! Você agora possui acesso irrestrito ao painel."
     if request.is_json or "application/json" in request.headers.get("Accept", ""):
         return jsonify({
             "status": "ok",
-            "message": "Autenticado com sucesso.",
-            "redirect": next_url
+            "message": success_msg,
+            "redirect": url_for("admin.dashboard")
         }), 200
 
-    flash("Autenticação realizada com sucesso. Bem-vindo ao painel administrativo!", "success")
-    return redirect(next_url)
+    flash(success_msg, "success")
+    return redirect(url_for("admin.dashboard"))
 
 
 @admin_bp.route("/logout", methods=["GET", "POST"])
@@ -228,6 +365,11 @@ def logout() -> Any:
     Clears administrative session and redirects to login screen.
     """
     session.pop("is_admin", None)
+    session.pop("user_id", None)
+    session.pop("username", None)
+    session.pop("user_name", None)
+    session.pop("avatar_filename", None)
+    session.pop("must_change_password", None)
     logger.info("Sessão administrativa encerrada.")
 
     if request.is_json or "application/json" in request.headers.get("Accept", ""):
@@ -573,3 +715,150 @@ def reset_votes() -> Any:
 
     flash(success_msg, "success")
     return redirect(get_safe_referrer("admin.voters_audit"))
+
+
+# ==============================================================================
+# User Management Routes (Administrators)
+# ==============================================================================
+
+@admin_bp.route("/users", methods=["GET"])
+@admin_required
+def list_users() -> Any:
+    """
+    Displays the user administration page with all registered admin users
+    and a creation form.
+    """
+    users = db.list_users()
+    events = db.list_events()
+    current_event = resolve_admin_event(request.args.get("evento") or request.args.get("event"))
+
+    if request.is_json or "application/json" in request.headers.get("Accept", ""):
+        return jsonify({
+            "status": "ok",
+            "users": users
+        }), 200
+
+    return render_template(
+        "admin_users.html",
+        users=users,
+        events=events,
+        current_event=current_event
+    )
+
+
+@admin_bp.route("/users/new", methods=["POST"])
+@admin_required
+def create_user() -> Any:
+    """
+    Creates a new administrative user.
+    All created users are admins and required to change password on first access.
+    """
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+        username = str(payload.get("username") or "").strip().lower()
+        nome = str(payload.get("nome") or "").strip()
+        password = str(payload.get("password") or "trocar").strip()
+        avatar_filename = str(payload.get("avatar_filename") or "avatar_default.jpg").strip()
+    else:
+        username = str(request.form.get("username") or "").strip().lower()
+        nome = str(request.form.get("nome") or "").strip()
+        password = str(request.form.get("password") or "trocar").strip()
+        avatar_filename = str(request.form.get("avatar_filename") or "avatar_default.jpg").strip()
+
+    if not username:
+        msg = "O nome de usuário é obrigatório."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return redirect(url_for("admin.list_users"))
+
+    if not nome:
+        nome = username.capitalize()
+
+    if not password:
+        password = "trocar"
+
+    try:
+        new_user = db.create_user(
+            username=username,
+            password=password,
+            nome=nome,
+            avatar_filename=avatar_filename,
+            is_admin=1,
+            must_change_password=1
+        )
+    except db.DuplicateUsernameError as exc:
+        msg = str(exc)
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return redirect(url_for("admin.list_users"))
+    except Exception as exc:
+        msg = f"Erro ao criar usuário: {str(exc)}"
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Server Error", "message": msg}), 500
+        flash(msg, "error")
+        return redirect(url_for("admin.list_users"))
+
+    success_msg = f"Usuário administrador @{new_user['username']} ({new_user['nome']}) cadastrado com sucesso! A senha inicial é '{password}' e deverá ser alterada no primeiro acesso."
+    logger.info("Novo usuário admin criado: ID %d (@%s)", new_user["id"], new_user["username"])
+
+    if request.is_json or "application/json" in request.headers.get("Accept", ""):
+        return jsonify({
+            "status": "ok",
+            "message": success_msg,
+            "user": new_user
+        }), 201
+
+    flash(success_msg, "success")
+    return redirect(url_for("admin.list_users"))
+
+
+@admin_bp.route("/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def delete_user(user_id: int) -> Any:
+    """
+    Deletes an administrator account. Prevents deleting self or the last administrator.
+    """
+    current_uid = session.get("user_id")
+    if current_uid and current_uid == user_id:
+        msg = "Você não pode excluir sua própria conta enquanto estiver conectado."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Forbidden", "message": msg}), 403
+        flash(msg, "error")
+        return redirect(url_for("admin.list_users"))
+
+    try:
+        db.delete_user(user_id)
+    except ValueError as exc:
+        msg = str(exc)
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Forbidden", "message": msg}), 403
+        flash(msg, "error")
+        return redirect(url_for("admin.list_users"))
+    except db.UserNotFoundError as exc:
+        msg = str(exc)
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Not Found", "message": msg}), 404
+        flash(msg, "error")
+        return redirect(url_for("admin.list_users"))
+    except Exception as exc:
+        msg = f"Erro ao excluir usuário: {str(exc)}"
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Server Error", "message": msg}), 500
+        flash(msg, "error")
+        return redirect(url_for("admin.list_users"))
+
+    success_msg = "Usuário administrador excluído com sucesso."
+    logger.info("Usuário admin ID %d excluído com sucesso.", user_id)
+
+    if request.is_json or "application/json" in request.headers.get("Accept", ""):
+        return jsonify({
+            "status": "ok",
+            "message": success_msg,
+            "deleted_user_id": user_id
+        }), 200
+
+    flash(success_msg, "success")
+    return redirect(url_for("admin.list_users"))
+
