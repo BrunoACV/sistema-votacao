@@ -169,12 +169,16 @@ def create_app(config_input: Optional[Union[str, Type[Config], Config]] = None) 
     app.register_blueprint(admin_bp, url_prefix="/admin")
 
     # 8. Institutional Context Processors
+    from app.db import AVAILABLE_THEMES, DEFAULT_THEME
+
     @app.context_processor
     def inject_institutional_metadata() -> Dict[str, Any]:
         return {
             "app_name": "Sistema de Votação Institucional INTS",
             "org_name": "Instituto Nacional de Tecnologia e Saúde",
             "org_domain": "ints.org.br",
+            "available_themes": AVAILABLE_THEMES,
+            "default_theme": DEFAULT_THEME,
         }
 
     # 9. Security Response Headers

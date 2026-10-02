@@ -1,48 +1,183 @@
 /*
- * static/css/custom.css - Dracula Theme & Halloween Aesthetics for INTS Voting System
+ * static/css/custom.css - Multi-Theme & Visual Identity for INTS Photo Contest Voting System
  */
 
-:root {
-    --dracula-bg: #282a36;
-    --dracula-current: #44475a;
-    --dracula-card: #343746;
-    --dracula-card-hover: #3d4052;
-    --dracula-fg: #f8f8f2;
-    --dracula-comment: #6272a4;
-    --dracula-cyan: #8be9fd;
-    --dracula-green: #50fa7b;
-    --dracula-orange: #ffb86c;
-    --dracula-pink: #ff79c6;
-    --dracula-purple: #bd93f9;
-    --dracula-red: #ff5555;
-    --dracula-yellow: #f1fa8c;
+/* ==========================================================================
+   5 Pre-programmed Color Themes (Concursos Fotográficos & Institucionais)
+   ========================================================================== */
+
+/* 1. Dracula / Halloween (Padrão) */
+:root, [data-theme="dracula"] {
+    --theme-bg: #282a36;
+    --theme-header: #1e1f29;
+    --theme-card: #343746;
+    --theme-card-hover: #44475a;
+    --theme-border: #6272a4;
+    --theme-primary: #bd93f9;
+    --theme-secondary: #ff79c6;
+    --theme-accent: #ffb86c;
+    --theme-success: #50fa7b;
+    --theme-cyan: #8be9fd;
+    --theme-text: #f8f8f2;
+    --theme-muted: #6272a4;
+    --theme-gradient: linear-gradient(135deg, #ffb86c, #ff79c6, #bd93f9);
+}
+
+/* 2. Carnaval Festivo (Ouro Samba, Magenta Folia & Azul Ciano) */
+[data-theme="carnaval"] {
+    --theme-bg: #150d2a;
+    --theme-header: #0f0720;
+    --theme-card: #221644;
+    --theme-card-hover: #331f62;
+    --theme-border: #7c3aed;
+    --theme-primary: #facc15;
+    --theme-secondary: #ec4899;
+    --theme-accent: #06b6d4;
+    --theme-success: #10b981;
+    --theme-cyan: #38bdf8;
+    --theme-text: #fdf4ff;
+    --theme-muted: #a78bfa;
+    --theme-gradient: linear-gradient(135deg, #facc15, #ec4899, #06b6d4);
+}
+
+/* 3. INTS Corporativo (Azul Petróleo, Ciano & Âmbar) */
+[data-theme="institucional"] {
+    --theme-bg: #0b1329;
+    --theme-header: #070c1a;
+    --theme-card: #132040;
+    --theme-card-hover: #1e305e;
+    --theme-border: #1e3a8a;
+    --theme-primary: #38bdf8;
+    --theme-secondary: #0284c7;
+    --theme-accent: #f59e0b;
+    --theme-success: #10b981;
+    --theme-cyan: #0ea5e9;
+    --theme-text: #f8fafc;
+    --theme-muted: #94a3b8;
+    --theme-gradient: linear-gradient(135deg, #38bdf8, #0284c7, #f59e0b);
+}
+
+/* 4. Pôr do Sol Dourado (Warm Sunset, Âmbar & Coral) */
+[data-theme="sunset"] {
+    --theme-bg: #1c1917;
+    --theme-header: #141210;
+    --theme-card: #292524;
+    --theme-card-hover: #44403c;
+    --theme-border: #57534e;
+    --theme-primary: #f59e0b;
+    --theme-secondary: #f97316;
+    --theme-accent: #fb7185;
+    --theme-success: #10b981;
+    --theme-cyan: #fdba74;
+    --theme-text: #fafaf9;
+    --theme-muted: #a8a29e;
+    --theme-gradient: linear-gradient(135deg, #f59e0b, #f97316, #fb7185);
+}
+
+/* 5. Esmeralda & Natureza (Verde Menta, Jade & Floresta) */
+[data-theme="esmeralda"] {
+    --theme-bg: #061a14;
+    --theme-header: #04130e;
+    --theme-card: #0d2b22;
+    --theme-card-hover: #164336;
+    --theme-border: #1e4a3c;
+    --theme-primary: #10b981;
+    --theme-secondary: #34d399;
+    --theme-accent: #fbbf24;
+    --theme-success: #22c55e;
+    --theme-cyan: #2dd4bf;
+    --theme-text: #f0fdf4;
+    --theme-muted: #6ee7b7;
+    --theme-gradient: linear-gradient(135deg, #10b981, #34d399, #fbbf24);
 }
 
 html {
     scroll-behavior: smooth;
-    background-color: #282a36;
-    color: #f8f8f2;
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
 }
 
 body {
-    background-color: #282a36;
-    color: #f8f8f2;
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
 }
 
-/* Custom Scrollbar Dracula */
+/* Dynamic theme overrides so existing utility classes adapt automatically */
+[data-theme]:not([data-theme="dracula"]) .bg-\[\#282a36\],
+[data-theme]:not([data-theme="dracula"]).bg-\[\#282a36\] {
+    background-color: var(--theme-bg) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-\[\#1e1f29\],
+[data-theme]:not([data-theme="dracula"]).bg-\[\#1e1f29\] {
+    background-color: var(--theme-header) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-\[\#343746\],
+[data-theme]:not([data-theme="dracula"]).bg-\[\#343746\] {
+    background-color: var(--theme-card) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-\[\#44475a\],
+[data-theme]:not([data-theme="dracula"]).bg-\[\#44475a\] {
+    background-color: var(--theme-card-hover) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .border-\[\#6272a4\]\/20,
+[data-theme]:not([data-theme="dracula"]) .border-\[\#6272a4\]\/25,
+[data-theme]:not([data-theme="dracula"]) .border-\[\#6272a4\]\/30,
+[data-theme]:not([data-theme="dracula"]) .border-\[\#6272a4\]\/40,
+[data-theme]:not([data-theme="dracula"]) .border-\[\#6272a4\]\/50,
+[data-theme]:not([data-theme="dracula"]) .border-\[\#6272a4\] {
+    border-color: color-mix(in srgb, var(--theme-border) 45%, transparent) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .text-\[\#bd93f9\] {
+    color: var(--theme-primary) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-\[\#bd93f9\] {
+    background-color: var(--theme-primary) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .text-\[\#ff79c6\] {
+    color: var(--theme-secondary) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-\[\#ff79c6\] {
+    background-color: var(--theme-secondary) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .text-\[\#ffb86c\] {
+    color: var(--theme-accent) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-\[\#ffb86c\] {
+    background-color: var(--theme-accent) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-gradient-to-r.from-\[\#ffb86c\] {
+    background-image: var(--theme-gradient) !important;
+}
+
+[data-theme]:not([data-theme="dracula"]) .bg-gradient-to-r.from-\[\#f1fa8c\] {
+    background-image: var(--theme-gradient) !important;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #282a36;
+    background: var(--theme-bg);
 }
 ::-webkit-scrollbar-thumb {
-    background: #44475a;
+    background: var(--theme-card-hover);
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #bd93f9;
+    background: var(--theme-primary);
 }
 
 /* Range Slider Styling - Halloween / Dracula Slicer */

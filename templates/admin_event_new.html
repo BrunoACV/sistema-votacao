@@ -76,9 +76,143 @@
                   name="descricao" 
                   rows="3" 
                   maxlength="500"
-                  placeholder="Ex: Votação anual institucional para escolha dos melhores projetos de tecnologia do INTS." 
+                  placeholder="Ex: Votação institucional para escolha das melhores fotografias do concurso." 
                   class="w-full px-4 py-3 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/40 focus:outline-none transition placeholder-[#6272a4]">{{ descricao or '' }}</textarea>
         <p class="text-xs text-[#6272a4]">Breve explicação sobre os objetivos do concurso e regras gerais.</p>
+      </div>
+
+      <!-- Seletor de Tema Visual (Cores Pré-programadas) -->
+      <div class="space-y-3 pt-2">
+        <div>
+          <label class="block text-sm font-bold text-[#f8f8f2]">
+            Tema Visual do Concurso (Paleta de Cores) <span class="text-[#ff5555]">*</span>
+          </label>
+          <p class="text-xs text-[#6272a4] mt-0.5">
+            Escolha uma das 5 predefinições de cores. A identidade visual completa da votação, telas públicas e resultados adotará a paleta escolhida.
+          </p>
+        </div>
+
+        <!-- Hidden Input para submissão do formulário -->
+        <input type="hidden" name="tema" id="tema-input" value="{{ selected_theme or tema or 'dracula' }}">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5" id="themes-grid">
+          
+          <!-- Opção 1: Drácula Noturno (Halloween) -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#282a36] {% if (selected_theme or tema or 'dracula') == 'dracula' %}border-[#bd93f9] ring-2 ring-[#bd93f9]/40 shadow-lg shadow-[#bd93f9]/15{% else %}border-[#6272a4]/40 hover:border-[#bd93f9]/60{% endif %}"
+               onclick="selectTheme('dracula', this)" data-theme-id="dracula">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#bd93f9] tracking-wide">Drácula Noturno</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if (selected_theme or tema or 'dracula') == 'dracula' %}bg-[#bd93f9] text-[#282a36]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#f8f8f2] mb-1">Halloween & Noite Gótica</div>
+              <p class="text-[11px] text-[#6272a4] leading-relaxed mb-3">Tons góticos: roxo vampiro, rosa choque, laranja místico e fundo escuro.</p>
+            </div>
+            <!-- Paleta de Amostras -->
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#6272a4]/20">
+              <span class="w-5 h-5 rounded-full bg-[#bd93f9] shadow-sm" title="Roxo #bd93f9"></span>
+              <span class="w-5 h-5 rounded-full bg-[#ff79c6] shadow-sm" title="Rosa #ff79c6"></span>
+              <span class="w-5 h-5 rounded-full bg-[#ffb86c] shadow-sm" title="Laranja #ffb86c"></span>
+              <span class="w-5 h-5 rounded-full bg-[#50fa7b] shadow-sm" title="Verde #50fa7b"></span>
+              <span class="w-5 h-5 rounded-full bg-[#282a36] border border-[#6272a4]/60 shadow-sm" title="Fundo Escuro #282a36"></span>
+            </div>
+          </div>
+
+          <!-- Opção 2: Carnaval Festivo (Ouro, Folia & Samba) -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#150d2a] {% if (selected_theme or tema) == 'carnaval' %}border-[#facc15] ring-2 ring-[#facc15]/40 shadow-lg shadow-[#facc15]/15{% else %}border-[#7c3aed]/40 hover:border-[#facc15]/60{% endif %}"
+               onclick="selectTheme('carnaval', this)" data-theme-id="carnaval">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#facc15] tracking-wide">Carnaval Festivo</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if (selected_theme or tema) == 'carnaval' %}bg-[#facc15] text-[#150d2a]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#fdf4ff] mb-1">Alegria, Folia & Samba</div>
+              <p class="text-[11px] text-[#a78bfa] leading-relaxed mb-3">Cores festivas: ouro samba, magenta elétrico, verde tropical e azul turquesa.</p>
+            </div>
+            <!-- Paleta de Amostras -->
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#7c3aed]/30">
+              <span class="w-5 h-5 rounded-full bg-[#facc15] shadow-sm" title="Ouro Samba #facc15"></span>
+              <span class="w-5 h-5 rounded-full bg-[#ec4899] shadow-sm" title="Magenta Folia #ec4899"></span>
+              <span class="w-5 h-5 rounded-full bg-[#06b6d4] shadow-sm" title="Azul Turquesa #06b6d4"></span>
+              <span class="w-5 h-5 rounded-full bg-[#10b981] shadow-sm" title="Verde Tropical #10b981"></span>
+              <span class="w-5 h-5 rounded-full bg-[#150d2a] border border-[#7c3aed]/60 shadow-sm" title="Fundo Violeta Noite #150d2a"></span>
+            </div>
+          </div>
+
+          <!-- Opção 3: INTS Corporativo (Azul Petróleo & Ciano) -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#0b1329] {% if (selected_theme or tema) == 'institucional' %}border-[#38bdf8] ring-2 ring-[#38bdf8]/40 shadow-lg shadow-[#38bdf8]/15{% else %}border-[#1e3a8a]/40 hover:border-[#38bdf8]/60{% endif %}"
+               onclick="selectTheme('institucional', this)" data-theme-id="institucional">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#38bdf8] tracking-wide">INTS Corporativo</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if (selected_theme or tema) == 'institucional' %}bg-[#38bdf8] text-[#0b1329]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#f8fafc] mb-1">Azul Petróleo & Ciano</div>
+              <p class="text-[11px] text-[#94a3b8] leading-relaxed mb-3">Visual institucional: azul naval, ciano cristalino e ardósia corporativa.</p>
+            </div>
+            <!-- Paleta de Amostras -->
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#1e3a8a]/30">
+              <span class="w-5 h-5 rounded-full bg-[#38bdf8] shadow-sm" title="Ciano Cristal #38bdf8"></span>
+              <span class="w-5 h-5 rounded-full bg-[#0284c7] shadow-sm" title="Azul Oceano #0284c7"></span>
+              <span class="w-5 h-5 rounded-full bg-[#f59e0b] shadow-sm" title="Âmbar #f59e0b"></span>
+              <span class="w-5 h-5 rounded-full bg-[#10b981] shadow-sm" title="Esmeralda #10b981"></span>
+              <span class="w-5 h-5 rounded-full bg-[#0b1329] border border-[#1e3a8a]/60 shadow-sm" title="Fundo Navy #0b1329"></span>
+            </div>
+          </div>
+
+          <!-- Opção 4: Pôr do Sol Dourado (Warm Sunset & Âmbar) -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#1c1917] {% if (selected_theme or tema) == 'sunset' %}border-[#f59e0b] ring-2 ring-[#f59e0b]/40 shadow-lg shadow-[#f59e0b]/15{% else %}border-[#57534e]/40 hover:border-[#f59e0b]/60{% endif %}"
+               onclick="selectTheme('sunset', this)" data-theme-id="sunset">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#f59e0b] tracking-wide">Pôr do Sol Dourado</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if (selected_theme or tema) == 'sunset' %}bg-[#f59e0b] text-[#1c1917]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#fafaf9] mb-1">Golden Hour & Âmbar</div>
+              <p class="text-[11px] text-[#a8a29e] leading-relaxed mb-3">Cálido para concurso de fotos: dourado âmbar, coral pôr do sol e terracota.</p>
+            </div>
+            <!-- Paleta de Amostras -->
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#57534e]/30">
+              <span class="w-5 h-5 rounded-full bg-[#f59e0b] shadow-sm" title="Âmbar Dourado #f59e0b"></span>
+              <span class="w-5 h-5 rounded-full bg-[#f97316] shadow-sm" title="Coral Sunset #f97316"></span>
+              <span class="w-5 h-5 rounded-full bg-[#fb7185] shadow-sm" title="Rosa Quente #fb7185"></span>
+              <span class="w-5 h-5 rounded-full bg-[#10b981] shadow-sm" title="Esmeralda #10b981"></span>
+              <span class="w-5 h-5 rounded-full bg-[#1c1917] border border-[#57534e]/60 shadow-sm" title="Fundo Stone Escuro #1c1917"></span>
+            </div>
+          </div>
+
+          <!-- Opção 5: Esmeralda & Natureza (Verde Menta & Floresta) -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#061a14] {% if (selected_theme or tema) == 'esmeralda' %}border-[#10b981] ring-2 ring-[#10b981]/40 shadow-lg shadow-[#10b981]/15{% else %}border-[#1e4a3c]/40 hover:border-[#10b981]/60{% endif %}"
+               onclick="selectTheme('esmeralda', this)" data-theme-id="esmeralda">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#10b981] tracking-wide">Esmeralda & Natureza</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if (selected_theme or tema) == 'esmeralda' %}bg-[#10b981] text-[#061a14]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#f0fdf4] mb-1">Verde Floresta & Menta</div>
+              <p class="text-[11px] text-[#6ee7b7] leading-relaxed mb-3">Tons botânicos e frescos: esmeralda vivo, verde menta luminosa e toques dourados.</p>
+            </div>
+            <!-- Paleta de Amostras -->
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#1e4a3c]/30">
+              <span class="w-5 h-5 rounded-full bg-[#10b981] shadow-sm" title="Esmeralda #10b981"></span>
+              <span class="w-5 h-5 rounded-full bg-[#34d399] shadow-sm" title="Verde Menta #34d399"></span>
+              <span class="w-5 h-5 rounded-full bg-[#fbbf24] shadow-sm" title="Dourado Sol #fbbf24"></span>
+              <span class="w-5 h-5 rounded-full bg-[#22c55e] shadow-sm" title="Verde Vivo #22c55e"></span>
+              <span class="w-5 h-5 rounded-full bg-[#061a14] border border-[#1e4a3c]/60 shadow-sm" title="Fundo Floresta #061a14"></span>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <!-- Status Ativo -->
@@ -138,4 +272,59 @@
   {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function selectTheme(themeId, cardElement) {
+    const input = document.getElementById('tema-input');
+    if (input) {
+        input.value = themeId;
+    }
+    
+    // Reset all cards styling
+    document.querySelectorAll('.theme-card-option').forEach(card => {
+        card.classList.remove('border-[#bd93f9]', 'ring-2', 'ring-[#bd93f9]/40', 'shadow-lg', 'shadow-[#bd93f9]/15',
+                              'border-[#facc15]', 'ring-[#facc15]/40', 'shadow-[#facc15]/15',
+                              'border-[#38bdf8]', 'ring-[#38bdf8]/40', 'shadow-[#38bdf8]/15',
+                              'border-[#f59e0b]', 'ring-[#f59e0b]/40', 'shadow-[#f59e0b]/15',
+                              'border-[#10b981]', 'ring-[#10b981]/40', 'shadow-[#10b981]/15');
+        
+        const badge = card.querySelector('.theme-check-badge');
+        if (badge) {
+            badge.classList.add('hidden');
+        }
+    });
+
+    // Add active styling based on theme
+    const activeBadge = cardElement.querySelector('.theme-check-badge');
+    if (themeId === 'carnaval') {
+        cardElement.classList.add('border-[#facc15]', 'ring-2', 'ring-[#facc15]/40', 'shadow-lg', 'shadow-[#facc15]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#facc15] text-[#150d2a]';
+        }
+    } else if (themeId === 'institucional') {
+        cardElement.classList.add('border-[#38bdf8]', 'ring-2', 'ring-[#38bdf8]/40', 'shadow-lg', 'shadow-[#38bdf8]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#38bdf8] text-[#0b1329]';
+        }
+    } else if (themeId === 'sunset') {
+        cardElement.classList.add('border-[#f59e0b]', 'ring-2', 'ring-[#f59e0b]/40', 'shadow-lg', 'shadow-[#f59e0b]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#1c1917]';
+        }
+    } else if (themeId === 'esmeralda') {
+        cardElement.classList.add('border-[#10b981]', 'ring-2', 'ring-[#10b981]/40', 'shadow-lg', 'shadow-[#10b981]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#10b981] text-[#061a14]';
+        }
+    } else {
+        // dracula
+        cardElement.classList.add('border-[#bd93f9]', 'ring-2', 'ring-[#bd93f9]/40', 'shadow-lg', 'shadow-[#bd93f9]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#bd93f9] text-[#282a36]';
+        }
+    }
+}
+</script>
 {% endblock %}

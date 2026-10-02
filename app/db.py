@@ -37,6 +37,76 @@ def slugify(text: str) -> str:
     return slug or "evento"
 
 
+AVAILABLE_THEMES: Dict[str, Dict[str, Any]] = {
+    "dracula": {
+        "id": "dracula",
+        "nome": "Drácula Noturno",
+        "subtitulo": "Halloween & Noturno",
+        "descricao": "Tons góticos refinados: roxo vampiro, rosa choque, laranja místico e fundo escuro.",
+        "primary": "#bd93f9",
+        "secondary": "#ff79c6",
+        "accent": "#ffb86c",
+        "success": "#50fa7b",
+        "cyan": "#8be9fd",
+        "bg": "#282a36",
+        "card": "#343746",
+    },
+    "carnaval": {
+        "id": "carnaval",
+        "nome": "Carnaval Festivo",
+        "subtitulo": "Alegria, Folia & Samba",
+        "descricao": "Cores festivas de concurso: ouro samba, magenta folia, verde tropical e azul turquesa.",
+        "primary": "#facc15",
+        "secondary": "#ec4899",
+        "accent": "#06b6d4",
+        "success": "#10b981",
+        "cyan": "#38bdf8",
+        "bg": "#150d2a",
+        "card": "#221644",
+    },
+    "institucional": {
+        "id": "institucional",
+        "nome": "INTS Corporativo",
+        "subtitulo": "Azul Petróleo & Ciano",
+        "descricao": "Visual institucional e sóbrio: azul naval, ciano cristalino e ardósia corporativa.",
+        "primary": "#38bdf8",
+        "secondary": "#0284c7",
+        "accent": "#f59e0b",
+        "success": "#10b981",
+        "cyan": "#0ea5e9",
+        "bg": "#0b1329",
+        "card": "#132040",
+    },
+    "sunset": {
+        "id": "sunset",
+        "nome": "Pôr do Sol Dourado",
+        "subtitulo": "Warm Sunset & Âmbar",
+        "descricao": "Cálido para concurso de fotos: dourado âmbar, coral pôr do sol e terracota.",
+        "primary": "#f59e0b",
+        "secondary": "#f97316",
+        "accent": "#fb7185",
+        "success": "#10b981",
+        "cyan": "#fdba74",
+        "bg": "#1c1917",
+        "card": "#292524",
+    },
+    "esmeralda": {
+        "id": "esmeralda",
+        "nome": "Esmeralda & Natureza",
+        "subtitulo": "Verde Floresta & Menta",
+        "descricao": "Tons botânicos e frescos: verde esmeralda, menta luminosa e toques dourados.",
+        "primary": "#10b981",
+        "secondary": "#34d399",
+        "accent": "#fbbf24",
+        "success": "#22c55e",
+        "cyan": "#2dd4bf",
+        "bg": "#061a14",
+        "card": "#0d2b22",
+    },
+}
+DEFAULT_THEME = "dracula"
+
+
 SCHEMA_SQL = """
 PRAGMA foreign_keys = ON;
 
@@ -45,6 +115,7 @@ CREATE TABLE IF NOT EXISTS events (
     slug TEXT NOT NULL COLLATE NOCASE UNIQUE,
     nome TEXT NOT NULL,
     descricao TEXT DEFAULT '',
+    tema TEXT DEFAULT 'dracula',
     ativo INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -221,17 +292,23 @@ def init_db(db_path: Optional[Union[str, Path]] = None) -> None:
                 slug TEXT NOT NULL COLLATE NOCASE UNIQUE,
                 nome TEXT NOT NULL,
                 descricao TEXT DEFAULT '',
+                tema TEXT DEFAULT 'dracula',
                 ativo INTEGER DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
 
+        # Migration: ensure tema column exists in events table
+        event_cols = [r[1] for r in cur.execute("PRAGMA table_info(events)").fetchall()]
+        if "tema" not in event_cols:
+            cur.execute("ALTER TABLE events ADD COLUMN tema TEXT DEFAULT 'dracula'")
+
         # Ensure default Halloween event exists (id=1, slug='halloween')
         cur.execute("SELECT id FROM events WHERE id = 1 OR slug = 'halloween'")
         if not cur.fetchone():
             cur.execute("""
-                INSERT OR IGNORE INTO events (id, slug, nome, descricao, ativo)
-                VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 1)
+                INSERT OR IGNORE INTO events (id, slug, nome, descricao, tema, ativo)
+                VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 'dracula', 1)
             """)
 
         # 2. Check and migrate participants table
@@ -360,6 +437,7 @@ def create_event(
     nome: str,
     slug: Optional[str] = None,
     descricao: str = "",
+    tema: str = "dracula",
     ativo: int = 1,
     conn: Optional[sqlite3.Connection] = None
 ) -> Dict[str, Any]:
@@ -370,6 +448,10 @@ def create_event(
     clean_nome = str(nome or "").strip()
     if not clean_nome:
         raise ValueError("O nome do evento é obrigatório.")
+
+    clean_tema = str(tema or "").strip().lower()
+    if clean_tema not in AVAILABLE_THEMES:
+        clean_tema = DEFAULT_THEME
 
     c = conn or get_db()
     cur = c.cursor()
@@ -391,12 +473,12 @@ def create_event(
     is_active = 1 if ativo else 0
 
     cur.execute(
-        "INSERT INTO events (slug, nome, descricao, ativo) VALUES (?, ?, ?, ?)",
-        (target_slug, clean_nome, clean_desc, is_active)
+        "INSERT INTO events (slug, nome, descricao, tema, ativo) VALUES (?, ?, ?, ?, ?)",
+        (target_slug, clean_nome, clean_desc, clean_tema, is_active)
     )
     event_id = cur.lastrowid
 
-    row = cur.execute("SELECT id, slug, nome, descricao, ativo, created_at FROM events WHERE id = ?", (event_id,)).fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = ?", (event_id,)).fetchone()
     return dict(row)
 
 
@@ -415,6 +497,7 @@ def list_events(ativo_only: bool = False, conn: Optional[sqlite3.Connection] = N
             e.slug, 
             e.nome, 
             e.descricao, 
+            e.tema, 
             e.ativo, 
             e.created_at,
             COUNT(DISTINCT p.id) AS total_candidatos,
@@ -437,7 +520,7 @@ def get_event_by_id(event_id: int, conn: Optional[sqlite3.Connection] = None) ->
     c = conn or get_db()
     cur = c.cursor()
     row = cur.execute(
-        "SELECT id, slug, nome, descricao, ativo, created_at FROM events WHERE id = ?",
+        "SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = ?",
         (event_id,)
     ).fetchone()
     return dict(row) if row else None
@@ -450,7 +533,7 @@ def get_event_by_slug(slug: str, conn: Optional[sqlite3.Connection] = None) -> O
     c = conn or get_db()
     cur = c.cursor()
     row = cur.execute(
-        "SELECT id, slug, nome, descricao, ativo, created_at FROM events WHERE slug = ? COLLATE NOCASE",
+        "SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE slug = ? COLLATE NOCASE",
         (slug.strip(),)
     ).fetchone()
     return dict(row) if row else None
@@ -465,23 +548,23 @@ def get_default_event(conn: Optional[sqlite3.Connection] = None) -> Dict[str, An
     c = conn or get_db()
     cur = c.cursor()
 
-    row = cur.execute("SELECT id, slug, nome, descricao, ativo, created_at FROM events WHERE id = 1 AND ativo = 1").fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = 1 AND ativo = 1").fetchone()
     if row:
         return dict(row)
 
-    row = cur.execute("SELECT id, slug, nome, descricao, ativo, created_at FROM events WHERE ativo = 1 ORDER BY id ASC LIMIT 1").fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE ativo = 1 ORDER BY id ASC LIMIT 1").fetchone()
     if row:
         return dict(row)
 
-    row = cur.execute("SELECT id, slug, nome, descricao, ativo, created_at FROM events ORDER BY id ASC LIMIT 1").fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events ORDER BY id ASC LIMIT 1").fetchone()
     if row:
         return dict(row)
 
     cur.execute("""
-        INSERT OR IGNORE INTO events (id, slug, nome, descricao, ativo)
-        VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 1)
+        INSERT OR IGNORE INTO events (id, slug, nome, descricao, tema, ativo)
+        VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 'dracula', 1)
     """)
-    row = cur.execute("SELECT id, slug, nome, descricao, ativo, created_at FROM events WHERE id = 1").fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = 1").fetchone()
     return dict(row)
 
 
@@ -490,6 +573,7 @@ def update_event(
     nome: Optional[str] = None,
     slug: Optional[str] = None,
     descricao: Optional[str] = None,
+    tema: Optional[str] = None,
     ativo: Optional[int] = None,
     conn: Optional[sqlite3.Connection] = None
 ) -> Optional[Dict[str, Any]]:
@@ -497,13 +581,19 @@ def update_event(
     c = conn or get_db()
     cur = c.cursor()
 
-    existing = cur.execute("SELECT id, slug, nome, descricao, ativo FROM events WHERE id = ?", (event_id,)).fetchone()
+    existing = cur.execute("SELECT id, slug, nome, descricao, tema, ativo FROM events WHERE id = ?", (event_id,)).fetchone()
     if not existing:
         return None
 
     new_nome = nome.strip() if nome is not None else existing["nome"]
     new_desc = descricao.strip() if descricao is not None else existing["descricao"]
     new_ativo = 1 if ativo else 0 if ativo is not None else existing["ativo"]
+    if tema is not None:
+        new_tema = str(tema).strip().lower()
+        if new_tema not in AVAILABLE_THEMES:
+            new_tema = DEFAULT_THEME
+    else:
+        new_tema = existing["tema"] if "tema" in existing.keys() and existing["tema"] else DEFAULT_THEME
 
     if slug is not None and slug.strip():
         new_slug = slugify(slug)
@@ -514,11 +604,11 @@ def update_event(
         new_slug = existing["slug"]
 
     cur.execute(
-        "UPDATE events SET nome = ?, slug = ?, descricao = ?, ativo = ? WHERE id = ?",
-        (new_nome, new_slug, new_desc, new_ativo, event_id)
+        "UPDATE events SET nome = ?, slug = ?, descricao = ?, tema = ?, ativo = ? WHERE id = ?",
+        (new_nome, new_slug, new_desc, new_tema, new_ativo, event_id)
     )
 
-    row = cur.execute("SELECT id, slug, nome, descricao, ativo, created_at FROM events WHERE id = ?", (event_id,)).fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = ?", (event_id,)).fetchone()
     return dict(row) if row else None
 
 

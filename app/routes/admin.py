@@ -282,22 +282,24 @@ def dashboard() -> Any:
 @admin_required
 def create_event() -> Any:
     """
-    Endpoint for creating a new distinct voting event.
+    Endpoint for creating a new distinct voting event with selectable color theme.
     """
     if request.method == "GET":
         events = db.list_events()
-        return render_template("admin_event_new.html", events=events)
+        return render_template("admin_event_new.html", events=events, selected_theme="dracula")
 
     if request.is_json:
         payload = request.get_json(silent=True) or {}
         nome = str(payload.get("nome") or "").strip()
         slug = str(payload.get("slug") or "").strip()
         descricao = str(payload.get("descricao") or "").strip()
+        tema = str(payload.get("tema") or "dracula").strip().lower()
         ativo = 1 if payload.get("ativo", True) else 0
     else:
         nome = str(request.form.get("nome") or "").strip()
         slug = str(request.form.get("slug") or "").strip()
         descricao = str(request.form.get("descricao") or "").strip()
+        tema = str(request.form.get("tema") or "dracula").strip().lower()
         ativo = 1 if request.form.get("ativo") in ("1", "on", "true", "True") else 0
 
     if not nome:
@@ -305,25 +307,25 @@ def create_event() -> Any:
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
             return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
         flash(msg, "error")
-        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, ativo=ativo), 400
+        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, tema=tema, selected_theme=tema, ativo=ativo), 400
 
     try:
-        new_event = db.create_event(nome=nome, slug=slug, descricao=descricao, ativo=ativo)
+        new_event = db.create_event(nome=nome, slug=slug, descricao=descricao, tema=tema, ativo=ativo)
     except (db.DuplicateEventSlugError, ValueError) as exc:
         msg = str(exc)
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
             return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
         flash(msg, "error")
-        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, ativo=ativo), 400
+        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, tema=tema, selected_theme=tema, ativo=ativo), 400
     except Exception as exc:
         msg = f"Erro ao criar evento: {str(exc)}"
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
             return jsonify({"status": "error", "error": "Server Error", "message": msg}), 500
         flash(msg, "error")
-        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, ativo=ativo), 500
+        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, tema=tema, selected_theme=tema, ativo=ativo), 500
 
-    success_msg = f"Evento '{new_event['nome']}' criado com sucesso! Ele opera em paralelo de forma totalmente independente."
-    logger.info("Novo evento criado pelo moderador: ID %d, Slug %s", new_event["id"], new_event["slug"])
+    success_msg = f"Evento '{new_event['nome']}' criado com sucesso com o tema {new_event.get('tema', 'dracula').capitalize()}! Ele opera em paralelo de forma totalmente independente."
+    logger.info("Novo evento criado pelo moderador: ID %d, Slug %s, Tema %s", new_event["id"], new_event["slug"], new_event.get("tema"))
 
     if request.is_json or "application/json" in request.headers.get("Accept", ""):
         return jsonify({

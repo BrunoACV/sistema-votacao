@@ -218,6 +218,57 @@ class MultiEventTestCase(unittest.TestCase):
         self.assertEqual(resp_res.status_code, 200)
         self.assertIn("Festival da Primavera".encode("utf-8"), resp_res.data)
 
+    def test_event_theme_creation_and_carnaval_preset(self):
+        """Tests that all 5 color themes (especially carnaval) can be selected and rendered."""
+        with self.app.app_context():
+            # 1. Carnaval event creation
+            ev_carnaval = db.create_event(nome="Carnaval dos Colaboradores", tema="carnaval")
+            self.assertEqual(ev_carnaval["tema"], "carnaval")
+
+            # 2. Institucional event creation
+            ev_inst = db.create_event(nome="Premio INTS Destaque", tema="institucional")
+            self.assertEqual(ev_inst["tema"], "institucional")
+
+            # 3. Sunset & Esmeralda event creation
+            ev_sunset = db.create_event(nome="Concurso Fotografia Sunset", tema="sunset")
+            self.assertEqual(ev_sunset["tema"], "sunset")
+            ev_esmeralda = db.create_event(nome="Concurso Natureza Viva", tema="esmeralda")
+            self.assertEqual(ev_esmeralda["tema"], "esmeralda")
+
+            # 4. Invalid theme defaults to dracula
+            ev_invalid = db.create_event(nome="Evento Tema Invalido", tema="inexistente")
+            self.assertEqual(ev_invalid["tema"], "dracula")
+
+        # 5. Check template rendering includes data-theme attribute
+        resp = self.client.get(f"/e/{ev_carnaval['slug']}/vote")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'data-theme="carnaval"', resp.data)
+
+    def test_admin_sidebar_and_public_navigation_isolation(self):
+        """
+        Tests that when unauthenticated, the user cannot navigate between other screens,
+        and no results button is displayed.
+        When logged in as admin, the left sidebar is present with full navigation.
+        """
+        # 1. Public user (unauthenticated) on voting page
+        resp_pub = self.client.get("/vote")
+        self.assertEqual(resp_pub.status_code, 200)
+        # Verify no left sidebar for public
+        self.assertNotIn(b'id="admin-sidebar"', resp_pub.data)
+        # Verify no link to results
+        self.assertNotIn(b'href="/results"', resp_pub.data)
+        self.assertNotIn(b'href="/e/halloween/results"', resp_pub.data)
+
+        # 2. Authenticated admin
+        self._login_admin()
+        resp_admin = self.client.get("/admin")
+        self.assertEqual(resp_admin.status_code, 200)
+        # Verify left sidebar navigation is rendered
+        self.assertIn(b'<aside', resp_admin.data)
+        self.assertIn(b'Modo Moderador', resp_admin.data)
+        self.assertIn(b'Painel Geral', resp_admin.data)
+        self.assertIn(b'Criar Novo Evento', resp_admin.data)
+
 
 if __name__ == "__main__":
     unittest.main()

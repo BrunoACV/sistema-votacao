@@ -519,7 +519,7 @@
                     submitBtn.classList.add('opacity-50', 'pointer-events-none');
                 }
                 if (submitBtnText) {
-                    submitBtnText.textContent = "⏳ Registrando seu voto...";
+                    submitBtnText.textContent = "Registrando seu voto...";
                 }
 
                 try {
@@ -538,7 +538,7 @@
                     const result = await response.json();
 
                     if (response.ok && result.status === 'success') {
-                        updateAlert('success', result.message || 'Voto computado com sucesso! Redirecionando...', 'VOTO CONFIRMADO! 🎉');
+                        updateAlert('success', result.message || 'Voto computado com sucesso! Redirecionando...', 'VOTO CONFIRMADO COM SUCESSO');
                         setTimeout(() => {
                             window.location.href = result.redirect_url || ("{{ url_for('public.vote_success') }}?candidate=" + encodeURIComponent(currentSelectedName) + "&email=" + encodeURIComponent(emailVal));
                         }, 500);
@@ -546,12 +546,12 @@
                         // Resposta com erro do servidor (ex: 400 Duplicado)
                         const errorMsg = result.message || result.error || 'Erro ao processar votação.';
                         voterHasAlreadyVoted = true;
-                        updateAlert('error', errorMsg, 'NÃO FOI POSSÍVEL VOTAR!');
+                        updateAlert('error', errorMsg, 'NÃO FOI POSSÍVEL VOTAR');
                         if (submitBtn) {
                             submitBtn.classList.add('opacity-50', 'pointer-events-none');
                         }
                         if (submitBtnText) {
-                            submitBtnText.textContent = "⛔ Voto Não Aceito (Já Votou)";
+                            submitBtnText.textContent = "Voto Não Aceito (Já Votou)";
                         }
                     }
                 } catch (err) {

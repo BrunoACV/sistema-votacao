@@ -411,7 +411,7 @@ def check_voter(slug: Optional[str] = None):
             "has_voted": True,
             "event_id": event["id"],
             "event_name": event["nome"],
-            "message": f"🚫 Voto já registrado! O colaborador '{email}' já votou no evento '{event['nome']}' e não pode votar novamente."
+            "message": f"Voto já registrado! O colaborador '{email}' já votou no evento '{event['nome']}' e não pode votar novamente."
         }), 200
 
     return jsonify({
