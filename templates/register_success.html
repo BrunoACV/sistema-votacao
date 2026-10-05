@@ -28,8 +28,9 @@
             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 p-5 bg-[#282a36] rounded-2xl border border-[#6272a4]/40">
                 <!-- Photo -->
                 <div class="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden bg-[#1e1f29] border-2 border-[#bd93f9]/50 shadow-xl flex-shrink-0">
-                    <img src="{{ url_for('static', filename='uploads/' + participant.foto_filename) }}" 
+                    <img src="{{ url_for('static', filename='uploads/' + participant.foto_filename) if participant.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
                          alt="{{ participant.nome_completo }}"
+                         onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'"
                          class="w-full h-full object-cover">
                 </div>
 
@@ -57,9 +58,11 @@
                     </div>
 
                     <!-- E-mail -->
+                    {% if participant.email and not participant.email.startswith('participante_') %}
                     <p class="text-xs text-[#6272a4] font-mono">
                         E-mail: {{ participant.email }}
                     </p>
+                    {% endif %}
 
                     <!-- Descrição -->
                     <div class="pt-2 border-t border-[#6272a4]/20">

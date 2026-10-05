@@ -256,8 +256,9 @@
                 <!-- Photo Thumbnail -->
                 <td class="px-5 py-4 whitespace-nowrap">
                   <div class="h-12 w-12 rounded-xl overflow-hidden bg-[#282a36] border border-[#6272a4]/40">
-                    <img src="{{ url_for('static', filename='uploads/' + p.foto_filename) }}" 
+                    <img src="{{ url_for('static', filename='uploads/' + p.foto_filename) if p.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
                          alt="{{ p.nome_completo }}"
+                         onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'"
                          class="h-full w-full object-cover">
                   </div>
                 </td>
@@ -287,7 +288,11 @@
 
                 <!-- Email -->
                 <td class="px-5 py-4 whitespace-nowrap text-xs text-[#8be9fd] font-mono">
-                  {{ p.email }}
+                  {% if p.email and not p.email.startswith('participante_') %}
+                    {{ p.email }}
+                  {% else %}
+                    <span class="text-[#6272a4] italic">Não informado</span>
+                  {% endif %}
                 </td>
 
                 <!-- Date -->

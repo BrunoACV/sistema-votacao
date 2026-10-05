@@ -151,11 +151,11 @@ def register(slug: Optional[str] = None):
             400,
         )
 
-    # 1. Text Field Validations
-    if not nome_completo or len(nome_completo) > 150:
-        return bad_request("O nome completo do participante é obrigatório (máximo 150 caracteres).")
+    # 1. Text Field Validations (all standard system fields are optional)
+    if nome_completo and len(nome_completo) > 150:
+        return bad_request("O nome completo do participante deve ter no máximo 150 caracteres.")
 
-    if not email or "@" not in email or "." not in email:
+    if email and ("@" not in email or "." not in email):
         return bad_request("Informe um endereço de e-mail válido para o participante.")
 
     if funcao and len(funcao) > 100:
@@ -164,8 +164,8 @@ def register(slug: Optional[str] = None):
     if setor and len(setor) > 100:
         return bad_request("O setor / departamento do participante deve ter no máximo 100 caracteres.")
 
-    if not descricao or len(descricao) > 500:
-        return bad_request("A descrição da inscrição é obrigatória (máximo 500 caracteres).")
+    if descricao and len(descricao) > 500:
+        return bad_request("A descrição da inscrição deve ter no máximo 500 caracteres.")
 
     # 2. Extract and Validate Custom Fields for this Event
     custom_fields = event.get("campos_personalizados_parsed")
@@ -201,26 +201,24 @@ def register(slug: Optional[str] = None):
             if val_str:
                 dados_personalizados[fid] = val_str
 
-    # 3. Check for Duplicate Participant Email in this specific event
-    existing = get_participant_by_email(email, event_id=event["id"])
-    if existing:
-        return bad_request(f"O e-mail '{email}' já está cadastrado como participante neste evento.")
+    # 3. Check for Duplicate Participant Email in this specific event (if provided)
+    if email:
+        existing = get_participant_by_email(email, event_id=event["id"])
+        if existing:
+            return bad_request(f"O e-mail '{email}' já está cadastrado como participante neste evento.")
 
-    # 4. Validate Photo Presence
-    if not foto_file or not getattr(foto_file, "filename", ""):
-        return bad_request("A foto do participante é obrigatória. Selecione um arquivo JPG, PNG ou WEBP.")
-
-    # 5. Save Photo with UUID & Pillow Deep Validation
-    foto_filename: Optional[str] = None
+    # 4. Save Photo with UUID & Pillow Deep Validation (Optional)
+    foto_filename: str = ""
     upload_folder = current_app.config.get("UPLOAD_FOLDER")
-    try:
-        foto_filename = save_photo(foto_file, upload_folder=upload_folder)
-    except (StorageValidationError, StorageFileTooLargeError, StorageInvalidFormatError) as exc:
-        return bad_request(f"Arquivo de foto inválido: {str(exc)}")
-    except Exception as exc:
-        return bad_request(f"Erro ao processar imagem da foto: {str(exc)}")
+    if foto_file and getattr(foto_file, "filename", ""):
+        try:
+            foto_filename = save_photo(foto_file, upload_folder=upload_folder)
+        except (StorageValidationError, StorageFileTooLargeError, StorageInvalidFormatError) as exc:
+            return bad_request(f"Arquivo de foto inválido: {str(exc)}")
+        except Exception as exc:
+            return bad_request(f"Erro ao processar imagem da foto: {str(exc)}")
 
-    # 6. Insert Participant Record (with Orphan Photo Rollback)
+    # 5. Insert Participant Record (with Orphan Photo Rollback)
     try:
         participant_id = add_participant(
             nome_completo=nome_completo,

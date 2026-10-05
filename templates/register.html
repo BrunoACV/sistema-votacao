@@ -34,9 +34,9 @@
             <!-- Full Name -->
             <div>
                 <label for="nome_completo" class="block text-sm font-bold text-[#f8f8f2] mb-1.5">
-                    Nome Completo <span class="text-[#ff5555]">*</span>
+                    Nome Completo <span class="text-xs font-normal text-[#6272a4] ml-1">(Opcional)</span>
                 </label>
-                <input type="text" name="nome_completo" id="nome_completo" required maxlength="150"
+                <input type="text" name="nome_completo" id="nome_completo" maxlength="150"
                        value="{{ nome_completo or '' }}"
                        placeholder="Ex: Carlos Eduardo de Oliveira"
                        class="w-full px-4 py-3.5 rounded-xl bg-[#282a36] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/30 outline-none transition text-sm text-[#f8f8f2] placeholder-[#6272a4]">
@@ -46,14 +46,14 @@
             <!-- Participant Email -->
             <div>
                 <label for="email" class="block text-sm font-bold text-[#f8f8f2] mb-1.5">
-                    E-mail do Participante <span class="text-[#ff5555]">*</span>
+                    E-mail do Participante <span class="text-xs font-normal text-[#6272a4] ml-1">(Opcional)</span>
                 </label>
-                <input type="email" name="email" id="email" required
+                <input type="email" name="email" id="email"
                        value="{{ email or '' }}"
                        placeholder="carlos.oliveira@ints.org.br ou email@exemplo.com"
                        class="w-full px-4 py-3.5 rounded-xl bg-[#282a36] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/30 outline-none transition text-sm text-[#f8f8f2] placeholder-[#6272a4]">
                 <p class="text-xs text-[#ffb86c] bg-[#282a36] border border-[#ffb86c]/30 p-2.5 rounded-xl mt-2 flex items-center">
-                    <strong class="mr-2 text-[#ffb86c]">Aviso:</strong> Cada e-mail pode ser cadastrado apenas uma única vez neste concurso.
+                    <strong class="mr-2 text-[#ffb86c]">Aviso:</strong> Caso informado, cada e-mail pode ser cadastrado apenas uma única vez neste concurso.
                 </p>
             </div>
 
@@ -62,9 +62,9 @@
                 <!-- Função / Cargo -->
                 <div>
                     <label for="funcao" class="block text-sm font-bold text-[#f8f8f2] mb-1.5">
-                        Função / Cargo <span class="text-[#ff5555]">*</span>
+                        Função / Cargo <span class="text-xs font-normal text-[#6272a4] ml-1">(Opcional)</span>
                     </label>
-                    <input type="text" name="funcao" id="funcao" required maxlength="100"
+                    <input type="text" name="funcao" id="funcao" maxlength="100"
                            value="{{ funcao or '' }}"
                            placeholder="Ex: Analista de TI, Enfermeiro(a)"
                            class="w-full px-4 py-3.5 rounded-xl bg-[#282a36] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/30 outline-none transition text-sm text-[#f8f8f2] placeholder-[#6272a4]">
@@ -74,9 +74,9 @@
                 <!-- Setor / Departamento -->
                 <div>
                     <label for="setor" class="block text-sm font-bold text-[#f8f8f2] mb-1.5">
-                        Setor / Departamento <span class="text-[#ff5555]">*</span>
+                        Setor / Departamento <span class="text-xs font-normal text-[#6272a4] ml-1">(Opcional)</span>
                     </label>
-                    <input type="text" name="setor" id="setor" required maxlength="100"
+                    <input type="text" name="setor" id="setor" maxlength="100"
                            value="{{ setor or '' }}"
                            placeholder="Ex: Recursos Humanos, Farmácia"
                            class="w-full px-4 py-3.5 rounded-xl bg-[#282a36] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/30 outline-none transition text-sm text-[#f8f8f2] placeholder-[#6272a4]">
@@ -148,9 +148,9 @@
             <!-- Description / Fantasia -->
             <div>
                 <label for="descricao" class="block text-sm font-bold text-[#f8f8f2] mb-1.5">
-                    Descrição / Apresentação do Participante <span class="text-[#ff5555]">*</span>
+                    Descrição / Apresentação do Participante <span class="text-xs font-normal text-[#6272a4] ml-1">(Opcional)</span>
                 </label>
-                <textarea name="descricao" id="descricao" required rows="4" maxlength="500"
+                <textarea name="descricao" id="descricao" rows="4" maxlength="500"
                           placeholder="Descreva sua caracterização, tema ou mensagem aos votantes..."
                           class="w-full px-4 py-3.5 rounded-xl bg-[#282a36] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/30 outline-none transition text-sm text-[#f8f8f2] placeholder-[#6272a4]">{{ descricao or '' }}</textarea>
                 <div class="flex justify-between text-xs text-[#6272a4] mt-1">
@@ -162,17 +162,17 @@
             <!-- Photo Upload Area with Drag & Drop and Preview -->
             <div>
                 <label class="block text-sm font-bold text-[#f8f8f2] mb-1.5">
-                    Foto do Participante <span class="text-[#ff5555]">*</span>
+                    Foto do Participante <span class="text-xs font-normal text-[#6272a4] ml-1">(Opcional)</span>
                 </label>
                 
                 <div id="drop-zone" 
                      class="border-2 border-dashed border-[#6272a4]/50 hover:border-[#ff79c6] rounded-2xl p-6 text-center cursor-pointer transition bg-[#282a36] hover:bg-[#282a36]/80">
-                    <input type="file" name="foto" id="foto" accept="image/jpeg,image/png,image/webp" required class="hidden">
+                    <input type="file" name="foto" id="foto" accept="image/jpeg,image/png,image/webp" class="hidden">
                     
                     <div id="upload-prompt" class="space-y-2">
                         <img src="{{ url_for('static', filename='img/icon_cad.jpg') }}" alt="Upload" class="w-12 h-12 rounded-xl mx-auto object-cover opacity-80 ring-1 ring-[#bd93f9]/40">
                         <div class="text-sm text-[#f8f8f2] font-semibold">
-                            <span class="text-[#ff79c6] underline">Clique para selecionar</span> ou arraste a imagem aqui
+                            <span class="text-[#ff79c6] underline">Clique para selecionar</span> ou arraste a imagem aqui (opcional)
                         </div>
                         <p class="text-xs text-[#6272a4]">
                             Formatos aceitos: <strong>JPG, PNG, WEBP</strong> (Limite máx: 10MB)

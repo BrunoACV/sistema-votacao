@@ -72,8 +72,9 @@
                             2º Lugar (Prata)
                         </span>
                         <div class="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full border-2 sm:border-4 border-[#8be9fd] shadow-lg shadow-[#8be9fd]/20 overflow-hidden mx-auto bg-[#282a36]">
-                            <img src="{{ url_for('static', filename='uploads/' + second_place.foto_filename) }}" 
-                                 alt="{{ second_place.nome_completo }}" class="w-full h-full object-cover">
+                            <img src="{{ url_for('static', filename='uploads/' + second_place.foto_filename) if second_place.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
+                                 alt="{{ second_place.nome_completo }}"
+                                 onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'" class="w-full h-full object-cover">
                         </div>
                         <h3 class="font-bold text-xs sm:text-sm text-[#f8f8f2] mt-1.5 truncate">{{ second_place.nome_completo }}</h3>
                         {% if second_place.funcao or second_place.setor %}
@@ -102,8 +103,9 @@
                         1º Lugar (Campeão)
                     </span>
                     <div class="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full border-2 sm:border-4 border-[#f1fa8c] shadow-2xl shadow-[#f1fa8c]/30 overflow-hidden mx-auto ring-2 sm:ring-4 ring-[#ffb86c]/40 bg-[#282a36]">
-                        <img src="{{ url_for('static', filename='uploads/' + first_place.foto_filename) }}" 
-                             alt="{{ first_place.nome_completo }}" class="w-full h-full object-cover">
+                        <img src="{{ url_for('static', filename='uploads/' + first_place.foto_filename) if first_place.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
+                             alt="{{ first_place.nome_completo }}"
+                             onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'" class="w-full h-full object-cover">
                     </div>
                     <h3 class="font-black text-xs sm:text-base text-[#f8f8f2] mt-1.5 truncate">{{ first_place.nome_completo }}</h3>
                     {% if first_place.funcao or first_place.setor %}
@@ -128,8 +130,9 @@
                             3º Lugar (Bronze)
                         </span>
                         <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-2 sm:border-4 border-[#ffb86c] shadow-lg shadow-[#ffb86c]/20 overflow-hidden mx-auto bg-[#282a36]">
-                            <img src="{{ url_for('static', filename='uploads/' + third_place.foto_filename) }}" 
-                                 alt="{{ third_place.nome_completo }}" class="w-full h-full object-cover">
+                            <img src="{{ url_for('static', filename='uploads/' + third_place.foto_filename) if third_place.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
+                                 alt="{{ third_place.nome_completo }}"
+                                 onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'" class="w-full h-full object-cover">
                         </div>
                         <h3 class="font-bold text-xs sm:text-sm text-[#f8f8f2] mt-1.5 truncate">{{ third_place.nome_completo }}</h3>
                         {% if third_place.funcao or third_place.setor %}
@@ -200,8 +203,9 @@
                             </td>
                             <td class="py-3.5 px-3">
                                 <div class="flex items-center space-x-3">
-                                    <img src="{{ url_for('static', filename='uploads/' + cand.foto_filename) }}" 
+                                    <img src="{{ url_for('static', filename='uploads/' + cand.foto_filename) if cand.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
                                          alt="{{ cand.nome_completo }}"
+                                         onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'"
                                          class="w-10 h-10 rounded-xl object-cover border border-[#6272a4]/40 bg-[#282a36]">
                                     <div>
                                         <div class="font-bold text-[#f8f8f2]">{{ cand.nome_completo }}</div>

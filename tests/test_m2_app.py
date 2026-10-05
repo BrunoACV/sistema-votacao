@@ -219,8 +219,8 @@ class M2AppIntegrationTestCase(unittest.TestCase):
         response = self.client.post("/register", data=data, content_type="multipart/form-data")
         self.assertEqual(response.status_code, 400)
 
-    def test_register_missing_fields_rejected_with_400(self):
-        """POST /register missing name or email or photo must return 400 Bad Request."""
+    def test_register_optional_fields_succeeds(self):
+        """POST /register without name or email or photo must succeed as all fields are optional."""
         data_no_name = {
             "nome_completo": "",
             "email": "valid@ints.org.br",
@@ -228,7 +228,33 @@ class M2AppIntegrationTestCase(unittest.TestCase):
             "foto": (create_mock_image(), "foto.jpg", "image/jpeg"),
         }
         res = self.client.post("/register", data=data_no_name, content_type="multipart/form-data")
-        self.assertEqual(res.status_code, 400)
+        self.assertIn(res.status_code, [200, 302])
+
+        # Test completely empty submission
+        data_empty_1 = {
+            "nome_completo": "",
+            "email": "",
+            "descricao": "",
+        }
+        res_empty_1 = self.client.post("/register", data=data_empty_1, content_type="multipart/form-data")
+        self.assertIn(res_empty_1.status_code, [200, 302])
+
+        # Test second completely empty submission (verifies no email collision)
+        data_empty_2 = {
+            "nome_completo": "",
+            "email": "",
+            "descricao": "",
+        }
+        res_empty_2 = self.client.post("/register", data=data_empty_2, content_type="multipart/form-data")
+        self.assertIn(res_empty_2.status_code, [200, 302])
+
+        with self.app.app_context():
+            participants = list_participants()
+            # Verify that all 3 registered successfully
+            self.assertEqual(len(participants), 3)
+            for p in participants:
+                self.assertTrue(p["nome_completo"])
+                self.assertTrue(p["email"])
 
     # ==========================================================================
     # 3. Public Voting Lifecycle

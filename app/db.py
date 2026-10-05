@@ -9,6 +9,7 @@ import os
 import re
 import sqlite3
 import unicodedata
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -848,10 +849,10 @@ def delete_event_by_id(event_id: int, conn: Optional[sqlite3.Connection] = None)
 # ==============================================================================
 
 def add_participant(
-    nome_completo: str,
-    email: str,
-    descricao: str,
-    foto_filename: str,
+    nome_completo: str = "",
+    email: str = "",
+    descricao: str = "",
+    foto_filename: str = "",
     funcao: str = "",
     setor: str = "",
     dados_personalizados: Optional[Union[str, Dict[str, Any]]] = None,
@@ -860,6 +861,7 @@ def add_participant(
 ) -> int:
     """
     Adds a new participant to a specific voting event.
+    All fields are optional.
     Raises DuplicateParticipantEmailError on unique email collision within the same event.
     """
     c = conn or get_db()
@@ -873,22 +875,34 @@ def add_participant(
     if not event["ativo"]:
         raise EventInactiveError(f"As inscrições para o evento '{event['nome']}' estão encerradas.")
 
-    clean_nome = nome_completo.strip()
-    clean_email = email.strip().lower()
-    clean_desc = descricao.strip()
+    clean_nome = str(nome_completo or "").strip()
+    if not clean_nome:
+        clean_nome = "Participante"
+
+    clean_email = str(email or "").strip().lower()
+    if not clean_email:
+        while True:
+            candidate_email = f"participante_{uuid.uuid4().hex[:8]}@ints.org.br"
+            exists = cur.execute(
+                "SELECT id FROM participants WHERE email = ? COLLATE NOCASE AND event_id = ?",
+                (candidate_email, target_event_id)
+            ).fetchone()
+            if not exists:
+                clean_email = candidate_email
+                break
+
+    clean_desc = str(descricao or "").strip()
+    clean_foto = str(foto_filename or "").strip()
     clean_funcao = str(funcao or "").strip()
     clean_setor = str(setor or "").strip()
     clean_custom = parse_custom_data(dados_personalizados)
     custom_json = json.dumps(clean_custom, ensure_ascii=False)
 
-    if not clean_nome or not clean_email or not clean_desc or not foto_filename:
-        raise ValueError("Todos os campos do participante são obrigatórios.")
-
     try:
         cur.execute(
             "INSERT INTO participants (event_id, nome_completo, email, descricao, foto_filename, funcao, setor, dados_personalizados) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (target_event_id, clean_nome, clean_email, clean_desc, foto_filename, clean_funcao, clean_setor, custom_json)
+            (target_event_id, clean_nome, clean_email, clean_desc, clean_foto, clean_funcao, clean_setor, custom_json)
         )
         return cur.lastrowid
     except sqlite3.IntegrityError as e:
