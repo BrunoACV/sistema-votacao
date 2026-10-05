@@ -268,10 +268,21 @@
                   <div class="text-xs text-[#6272a4] max-w-xs truncate mt-0.5">{{ p.descricao }}</div>
                 </td>
 
-                <!-- Função / Setor -->
-                <td class="px-5 py-4 whitespace-nowrap text-xs">
+                <!-- Função / Setor & Dados Personalizados -->
+                <td class="px-5 py-4 text-xs">
                   <div class="font-bold text-[#bd93f9]">{{ p.funcao or 'Não informado' }}</div>
                   <div class="text-[#8be9fd] mt-0.5">{{ p.setor or 'Não informado' }}</div>
+                  {% if p.dados_personalizados %}
+                    <div class="flex flex-wrap gap-1 mt-1.5 max-w-xs">
+                      {% for k, v in p.dados_personalizados.items() %}
+                        {% if v %}
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40" title="{{ k }}: {{ v }}">
+                          <span class="text-[#8be9fd] font-semibold mr-1">{{ k }}:</span> {{ v }}
+                        </span>
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
                 </td>
 
                 <!-- Email -->

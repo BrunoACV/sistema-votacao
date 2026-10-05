@@ -215,6 +215,128 @@
         </div>
       </div>
 
+      <!-- Ficha de Inscrição dos Participantes -->
+      <div class="space-y-4 pt-4 border-t border-[#6272a4]/30">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="text-base sm:text-lg font-black text-[#f8f8f2] tracking-tight">
+              Ficha de Inscrição do Candidato
+            </h2>
+            <span class="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+              Formulário Público
+            </span>
+          </div>
+          <p class="text-xs text-[#6272a4]">
+            Configure os dados solicitados aos colaboradores no momento da inscrição. Os dados institucionais essenciais são mantidos fixos pelo sistema, e você pode cadastrar campos personalizados adicionais para as particularidades deste concurso.
+          </p>
+        </div>
+
+        <!-- 1. Campos Fixos Obrigatórios -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 space-y-3">
+          <div class="flex items-center justify-between border-b border-[#6272a4]/30 pb-2.5">
+            <div>
+              <span class="text-xs font-black uppercase text-[#8be9fd] tracking-wider">Campos Fixos Padrão do Sistema</span>
+              <p class="text-[11px] text-[#6272a4] mt-0.5">Estes campos são essenciais, permanentes e não podem ser removidos.</p>
+            </div>
+            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+              Permanentes
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Nome Completo</div>
+                <div class="text-[10px] text-[#6272a4]">Identificação principal do candidato</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                Fixo Obrigatório
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">E-mail Institucional</div>
+                <div class="text-[10px] text-[#6272a4]">Domínio @ints.org.br (único por evento)</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                Fixo Obrigatório
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Cargo / Função</div>
+                <div class="text-[10px] text-[#6272a4]">Função ocupada na instituição</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                Fixo Obrigatório
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Setor / Departamento</div>
+                <div class="text-[10px] text-[#6272a4]">Lotação ou departamento de trabalho</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                Fixo Obrigatório
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Descrição / Apresentação</div>
+                <div class="text-[10px] text-[#6272a4]">Mensagem ou tema da foto (até 500 carac.)</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                Fixo Obrigatório
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Foto do Participante</div>
+                <div class="text-[10px] text-[#6272a4]">Upload de imagem (JPG, PNG ou WEBP)</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30">
+                Fixo Obrigatório
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Campos Personalizados Adicionais -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#6272a4]/30 pb-3">
+            <div>
+              <span class="text-xs font-black uppercase text-[#ff79c6] tracking-wider">Campos Personalizados Adicionais</span>
+              <p class="text-[11px] text-[#6272a4] mt-0.5">
+                Precisa de perguntas extras? Adicione campos personalizados específicos para este concurso.
+              </p>
+            </div>
+            <button type="button" 
+                    id="btn-add-custom-field"
+                    class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-bold text-[#282a36] bg-[#50fa7b] hover:bg-[#69ff94] transition shadow-md whitespace-nowrap cursor-pointer">
+              + Adicionar Novo Campo
+            </button>
+          </div>
+
+          <!-- Hidden Input serializado com os campos personalizados -->
+          <input type="hidden" name="campos_personalizados" id="campos_personalizados_input" value="[]">
+
+          <!-- Container de Cards Dinâmicos -->
+          <div id="custom-fields-container" class="space-y-3"></div>
+
+          <!-- Banner Vazio -->
+          <div id="empty-custom-fields-notice" class="p-4 rounded-xl bg-[#1e1f29] border border-dashed border-[#6272a4]/40 text-center">
+            <p class="text-xs text-[#6272a4]">
+              Nenhum campo personalizado adicionado. Apenas os campos fixos obrigatórios serão solicitados na ficha de inscrição pública deste evento.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Status Ativo -->
       <div class="p-4 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 flex items-start gap-3">
         <input type="checkbox" 
@@ -326,5 +448,211 @@ function selectTheme(themeId, cardElement) {
         }
     }
 }
+
+// ==============================================================================
+// Gerenciador de Campos Personalizados Dinâmicos
+// ==============================================================================
+(function() {
+    const container = document.getElementById('custom-fields-container');
+    const emptyNotice = document.getElementById('empty-custom-fields-notice');
+    const btnAdd = document.getElementById('btn-add-custom-field');
+    const inputHidden = document.getElementById('campos_personalizados_input');
+    const form = document.querySelector('form');
+
+    function updateEmptyState() {
+        if (!container || !emptyNotice) return;
+        const count = container.querySelectorAll('.custom-field-card').length;
+        if (count === 0) {
+            emptyNotice.classList.remove('hidden');
+        } else {
+            emptyNotice.classList.add('hidden');
+        }
+        
+        // Re-numera os títulos
+        container.querySelectorAll('.custom-field-card').forEach((card, index) => {
+            const titleEl = card.querySelector('.field-title-num');
+            if (titleEl) {
+                titleEl.textContent = 'Campo Personalizado #' + (index + 1);
+            }
+        });
+    }
+
+    function slugifySimple(text) {
+        return (text || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    }
+
+    function createFieldCard(data = {}) {
+        const card = document.createElement('div');
+        card.className = 'custom-field-card p-4 rounded-2xl bg-[#1e1f29] border border-[#6272a4]/40 space-y-3 relative transition';
+        
+        const labelVal = data.label || data.nome || '';
+        const idVal = data.id || '';
+        const tipoVal = data.tipo || 'text';
+        const placeholderVal = data.placeholder || '';
+        const obrigatorioVal = !!data.obrigatorio;
+        const opcoesVal = Array.isArray(data.opcoes) ? data.opcoes.join(', ') : (data.opcoes || '');
+
+        card.innerHTML = `
+            <div class="flex items-center justify-between border-b border-[#6272a4]/20 pb-2">
+                <span class="text-xs font-black uppercase text-[#bd93f9] tracking-wider field-title-num">Campo Personalizado</span>
+                <button type="button" class="btn-remove-field px-2.5 py-1 text-[11px] font-bold text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] rounded-lg transition border border-[#ff5555]/30">
+                    Remover
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Rótulo / Pergunta <span class="text-[#ff5555]">*</span></label>
+                    <input type="text" class="cf-label w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: Unidade Hospitalar" value="${escapeHtml(labelVal)}" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Identificador Único (ID / Chave)</label>
+                    <input type="text" class="cf-id w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs font-mono focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: unidade_hospitalar" value="${escapeHtml(idVal)}">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Tipo de Campo</label>
+                    <select class="cf-tipo w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]">
+                        <option value="text" ${tipoVal === 'text' ? 'selected' : ''}>Texto Curto</option>
+                        <option value="textarea" ${tipoVal === 'textarea' ? 'selected' : ''}>Texto Longo</option>
+                        <option value="number" ${tipoVal === 'number' ? 'selected' : ''}>Número</option>
+                        <option value="select" ${tipoVal === 'select' ? 'selected' : ''}>Menu Suspenso (Seleção)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Texto de Apoio (Placeholder / Dica)</label>
+                    <input type="text" class="cf-placeholder w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: Selecione sua unidade..." value="${escapeHtml(placeholderVal)}">
+                </div>
+            </div>
+
+            <div class="cf-opcoes-wrapper ${tipoVal === 'select' ? '' : 'hidden'}">
+                <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Opções da Seleção (separadas por vírgula) <span class="text-[#ff5555]">*</span></label>
+                <input type="text" class="cf-opcoes w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: Hospital Espanhol, Sede Salvador, UPA Brotas" value="${escapeHtml(opcoesVal)}">
+                <p class="text-[10px] text-[#6272a4] mt-0.5">Separe cada item com uma vírgula para montar a lista suspensa de opções.</p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+                <input type="checkbox" class="cf-obrigatorio w-3.5 h-3.5 rounded text-[#bd93f9] bg-[#282a36] border-[#6272a4]" ${obrigatorioVal ? 'checked' : ''}>
+                <label class="text-xs font-semibold text-[#f8f8f2]">Tornar este campo obrigatório na inscrição</label>
+            </div>
+        `;
+
+        // Eventos
+        const btnRemove = card.querySelector('.btn-remove-field');
+        btnRemove.addEventListener('click', function() {
+            card.remove();
+            updateEmptyState();
+        });
+
+        const selectTipo = card.querySelector('.cf-tipo');
+        const opcoesWrapper = card.querySelector('.cf-opcoes-wrapper');
+        selectTipo.addEventListener('change', function() {
+            if (this.value === 'select') {
+                opcoesWrapper.classList.remove('hidden');
+            } else {
+                opcoesWrapper.classList.add('hidden');
+            }
+        });
+
+        const inputLabel = card.querySelector('.cf-label');
+        const inputId = card.querySelector('.cf-id');
+        let userEditedId = !!idVal;
+        inputId.addEventListener('input', function() {
+            userEditedId = true;
+        });
+        inputLabel.addEventListener('input', function() {
+            if (!userEditedId) {
+                inputId.value = slugifySimple(this.value);
+            }
+        });
+
+        container.appendChild(card);
+        updateEmptyState();
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    if (btnAdd) {
+        btnAdd.addEventListener('click', function() {
+            createFieldCard();
+        });
+    }
+
+    // Pre-população se campos_personalizados foi enviado na requisição anterior
+    try {
+        let initial = {{ campos_personalizados|tojson if campos_personalizados else '[]' }};
+        if (typeof initial === 'string') {
+            initial = JSON.parse(initial);
+        }
+        if (Array.isArray(initial) && initial.length > 0) {
+            initial.forEach(field => createFieldCard(field));
+        }
+    } catch(e) {
+        console.error('Erro ao pre-popular campos personalizados:', e);
+    }
+
+    // Serialização antes do submit
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const cards = container.querySelectorAll('.custom-field-card');
+            const fields = [];
+            const seenIds = new Set();
+
+            cards.forEach((card, index) => {
+                const label = (card.querySelector('.cf-label')?.value || '').trim();
+                let id = (card.querySelector('.cf-id')?.value || '').trim();
+                const tipo = (card.querySelector('.cf-tipo')?.value || 'text').trim();
+                const placeholder = (card.querySelector('.cf-placeholder')?.value || '').trim();
+                const obrigatorio = !!card.querySelector('.cf-obrigatorio')?.checked;
+                const opcoesRaw = (card.querySelector('.cf-opcoes')?.value || '').trim();
+
+                if (!label) return;
+                if (!id) {
+                    id = slugifySimple(label) || ('campo_' + (index + 1));
+                }
+
+                let uniqueId = id;
+                let c = 1;
+                while (seenIds.has(uniqueId)) {
+                    uniqueId = id + '_' + c;
+                    c++;
+                }
+                seenIds.add(uniqueId);
+
+                let opcoes = [];
+                if (tipo === 'select' && opcoesRaw) {
+                    opcoes = opcoesRaw.split(',').map(s => s.trim()).filter(Boolean);
+                }
+
+                fields.push({
+                    id: uniqueId,
+                    label: label,
+                    tipo: tipo,
+                    obrigatorio: obrigatorio,
+                    placeholder: placeholder,
+                    opcoes: opcoes
+                });
+            });
+
+            if (inputHidden) {
+                inputHidden.value = JSON.stringify(fields);
+            }
+        });
+    }
+})();
 </script>
 {% endblock %}

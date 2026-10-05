@@ -436,34 +436,70 @@ def create_event() -> Any:
         descricao = str(payload.get("descricao") or "").strip()
         tema = str(payload.get("tema") or "dracula").strip().lower()
         ativo = 1 if payload.get("ativo", True) else 0
+        campos_personalizados = payload.get("campos_personalizados")
     else:
         nome = str(request.form.get("nome") or "").strip()
         slug = str(request.form.get("slug") or "").strip()
         descricao = str(request.form.get("descricao") or "").strip()
         tema = str(request.form.get("tema") or "dracula").strip().lower()
         ativo = 1 if request.form.get("ativo") in ("1", "on", "true", "True") else 0
+        campos_personalizados = request.form.get("campos_personalizados")
 
     if not nome:
         msg = "O nome do evento é obrigatório."
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
             return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
         flash(msg, "error")
-        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, tema=tema, selected_theme=tema, ativo=ativo), 400
+        return render_template(
+            "admin_event_new.html",
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            selected_theme=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        ), 400
 
     try:
-        new_event = db.create_event(nome=nome, slug=slug, descricao=descricao, tema=tema, ativo=ativo)
+        new_event = db.create_event(
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        )
     except (db.DuplicateEventSlugError, ValueError) as exc:
         msg = str(exc)
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
             return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
         flash(msg, "error")
-        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, tema=tema, selected_theme=tema, ativo=ativo), 400
+        return render_template(
+            "admin_event_new.html",
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            selected_theme=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        ), 400
     except Exception as exc:
         msg = f"Erro ao criar evento: {str(exc)}"
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
             return jsonify({"status": "error", "error": "Server Error", "message": msg}), 500
         flash(msg, "error")
-        return render_template("admin_event_new.html", nome=nome, slug=slug, descricao=descricao, tema=tema, selected_theme=tema, ativo=ativo), 500
+        return render_template(
+            "admin_event_new.html",
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            selected_theme=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        ), 500
 
     success_msg = f"Evento '{new_event['nome']}' criado com sucesso com o tema {new_event.get('tema', 'dracula').capitalize()}! Ele opera em paralelo de forma totalmente independente."
     logger.info("Novo evento criado pelo moderador: ID %d, Slug %s, Tema %s", new_event["id"], new_event["slug"], new_event.get("tema"))

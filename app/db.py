@@ -3,6 +3,7 @@ app/db.py - SQLite persistence, schema initialization, and transactional queries
 Sistema de Votação Institucional INTS com suporte a múltiplos eventos simultâneos.
 """
 
+import json
 import math
 import os
 import re
@@ -107,6 +108,104 @@ AVAILABLE_THEMES: Dict[str, Dict[str, Any]] = {
 DEFAULT_THEME = "dracula"
 
 
+def parse_custom_fields(fields_input: Any) -> List[Dict[str, Any]]:
+    """
+    Safely deserializes and sanitizes custom field definitions for an event.
+    Returns a list of dicts with: id, label, tipo, obrigatorio, placeholder, opcoes.
+    """
+    if not fields_input:
+        return []
+
+    parsed = []
+    if isinstance(fields_input, str):
+        fields_input = fields_input.strip()
+        if not fields_input or fields_input in ("[]", "{}"):
+            return []
+        try:
+            parsed = json.loads(fields_input)
+        except Exception:
+            return []
+    elif isinstance(fields_input, list):
+        parsed = fields_input
+    elif isinstance(fields_input, dict):
+        parsed = [fields_input]
+    else:
+        return []
+
+    if not isinstance(parsed, list):
+        return []
+
+    valid_fields: List[Dict[str, Any]] = []
+    seen_ids = set()
+
+    for idx, item in enumerate(parsed, start=1):
+        if not isinstance(item, dict):
+            continue
+
+        label = str(item.get("label") or item.get("nome") or item.get("rotulo") or "").strip()
+        if not label:
+            continue
+
+        raw_id = str(item.get("id") or item.get("name") or "").strip()
+        if not raw_id:
+            raw_id = slugify(label).replace("-", "_")
+        if not raw_id:
+            raw_id = f"campo_{idx}"
+
+        unique_id = raw_id
+        counter = 1
+        while unique_id in seen_ids:
+            unique_id = f"{raw_id}_{counter}"
+            counter += 1
+        seen_ids.add(unique_id)
+
+        tipo = str(item.get("tipo") or item.get("type") or "text").strip().lower()
+        if tipo not in ("text", "textarea", "number", "select"):
+            tipo = "text"
+
+        obrigatorio = bool(item.get("obrigatorio") or item.get("required") in (True, 1, "1", "true", "True"))
+        placeholder = str(item.get("placeholder") or "").strip()
+
+        opcoes: List[str] = []
+        raw_opcoes = item.get("opcoes") or item.get("options")
+        if isinstance(raw_opcoes, list):
+            opcoes = [str(o).strip() for o in raw_opcoes if str(o).strip()]
+        elif isinstance(raw_opcoes, str) and raw_opcoes.strip():
+            opcoes = [o.strip() for o in raw_opcoes.split(",") if o.strip()]
+
+        valid_fields.append({
+            "id": unique_id,
+            "label": label,
+            "tipo": tipo,
+            "obrigatorio": obrigatorio,
+            "placeholder": placeholder,
+            "opcoes": opcoes,
+        })
+
+    return valid_fields
+
+
+def parse_custom_data(data_input: Any) -> Dict[str, Any]:
+    """
+    Safely deserializes and cleans participant custom field responses.
+    """
+    if not data_input:
+        return {}
+    if isinstance(data_input, dict):
+        return {str(k).strip(): (v.strip() if isinstance(v, str) else v) for k, v in data_input.items() if v is not None}
+    if isinstance(data_input, str):
+        data_input = data_input.strip()
+        if not data_input or data_input in ("{}", "[]"):
+            return {}
+        try:
+            loaded = json.loads(data_input)
+            if isinstance(loaded, dict):
+                return {str(k).strip(): (v.strip() if isinstance(v, str) else v) for k, v in loaded.items() if v is not None}
+        except Exception:
+            return {}
+    return {}
+
+
 SCHEMA_SQL = """
 PRAGMA foreign_keys = ON;
 
@@ -116,6 +215,7 @@ CREATE TABLE IF NOT EXISTS events (
     nome TEXT NOT NULL,
     descricao TEXT DEFAULT '',
     tema TEXT DEFAULT 'dracula',
+    campos_personalizados TEXT DEFAULT '[]',
     ativo INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -129,6 +229,7 @@ CREATE TABLE IF NOT EXISTS participants (
     foto_filename TEXT NOT NULL,
     funcao TEXT DEFAULT '',
     setor TEXT DEFAULT '',
+    dados_personalizados TEXT DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
     UNIQUE(event_id, email)
@@ -316,22 +417,25 @@ def init_db(db_path: Optional[Union[str, Path]] = None) -> None:
                 nome TEXT NOT NULL,
                 descricao TEXT DEFAULT '',
                 tema TEXT DEFAULT 'dracula',
+                campos_personalizados TEXT DEFAULT '[]',
                 ativo INTEGER DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
 
-        # Migration: ensure tema column exists in events table
+        # Migration: ensure tema & campos_personalizados columns exist in events table
         event_cols = [r[1] for r in cur.execute("PRAGMA table_info(events)").fetchall()]
         if "tema" not in event_cols:
             cur.execute("ALTER TABLE events ADD COLUMN tema TEXT DEFAULT 'dracula'")
+        if "campos_personalizados" not in event_cols:
+            cur.execute("ALTER TABLE events ADD COLUMN campos_personalizados TEXT DEFAULT '[]'")
 
         # Ensure default Halloween event exists (id=1, slug='halloween')
         cur.execute("SELECT id FROM events WHERE id = 1 OR slug = 'halloween'")
         if not cur.fetchone():
             cur.execute("""
-                INSERT OR IGNORE INTO events (id, slug, nome, descricao, tema, ativo)
-                VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 'dracula', 1)
+                INSERT OR IGNORE INTO events (id, slug, nome, descricao, tema, campos_personalizados, ativo)
+                VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 'dracula', '[]', 1)
             """)
 
         # 2. Check and migrate participants table
@@ -347,6 +451,7 @@ def init_db(db_path: Optional[Union[str, Path]] = None) -> None:
                     foto_filename TEXT NOT NULL,
                     funcao TEXT DEFAULT '',
                     setor TEXT DEFAULT '',
+                    dados_personalizados TEXT DEFAULT '{}',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
                     UNIQUE(event_id, email)
@@ -360,6 +465,8 @@ def init_db(db_path: Optional[Union[str, Path]] = None) -> None:
                 cur.execute("ALTER TABLE participants ADD COLUMN funcao TEXT DEFAULT ''")
             if "setor" not in cols:
                 cur.execute("ALTER TABLE participants ADD COLUMN setor TEXT DEFAULT ''")
+            if "dados_personalizados" not in cols:
+                cur.execute("ALTER TABLE participants ADD COLUMN dados_personalizados TEXT DEFAULT '{}'")
 
         # 3. Check and migrate voters table
         voter_table = cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='voters'").fetchone()
@@ -502,6 +609,7 @@ def create_event(
     descricao: str = "",
     tema: str = "dracula",
     ativo: int = 1,
+    campos_personalizados: Optional[Union[str, List[Dict[str, Any]]]] = None,
     conn: Optional[sqlite3.Connection] = None
 ) -> Dict[str, Any]:
     """
@@ -515,6 +623,9 @@ def create_event(
     clean_tema = str(tema or "").strip().lower()
     if clean_tema not in AVAILABLE_THEMES:
         clean_tema = DEFAULT_THEME
+
+    fields_list = parse_custom_fields(campos_personalizados)
+    fields_json = json.dumps(fields_list, ensure_ascii=False)
 
     c = conn or get_db()
     cur = c.cursor()
@@ -536,13 +647,18 @@ def create_event(
     is_active = 1 if ativo else 0
 
     cur.execute(
-        "INSERT INTO events (slug, nome, descricao, tema, ativo) VALUES (?, ?, ?, ?, ?)",
-        (target_slug, clean_nome, clean_desc, clean_tema, is_active)
+        "INSERT INTO events (slug, nome, descricao, tema, ativo, campos_personalizados) VALUES (?, ?, ?, ?, ?, ?)",
+        (target_slug, clean_nome, clean_desc, clean_tema, is_active, fields_json)
     )
     event_id = cur.lastrowid
 
-    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = ?", (event_id,)).fetchone()
-    return dict(row)
+    row = cur.execute(
+        "SELECT id, slug, nome, descricao, tema, ativo, campos_personalizados, created_at FROM events WHERE id = ?",
+        (event_id,)
+    ).fetchone()
+    res = dict(row)
+    res["campos_personalizados_parsed"] = parse_custom_fields(res.get("campos_personalizados"))
+    return res
 
 
 def list_events(ativo_only: bool = False, conn: Optional[sqlite3.Connection] = None) -> List[Dict[str, Any]]:
@@ -561,6 +677,7 @@ def list_events(ativo_only: bool = False, conn: Optional[sqlite3.Connection] = N
             e.nome, 
             e.descricao, 
             e.tema, 
+            e.campos_personalizados,
             e.ativo, 
             e.created_at,
             COUNT(DISTINCT p.id) AS total_candidatos,
@@ -575,7 +692,12 @@ def list_events(ativo_only: bool = False, conn: Optional[sqlite3.Connection] = N
         ORDER BY e.ativo DESC, e.created_at DESC, e.id DESC
     """
     rows = cur.execute(sql).fetchall()
-    return [dict(r) for r in rows]
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+        result.append(d)
+    return result
 
 
 def get_event_by_id(event_id: int, conn: Optional[sqlite3.Connection] = None) -> Optional[Dict[str, Any]]:
@@ -583,10 +705,14 @@ def get_event_by_id(event_id: int, conn: Optional[sqlite3.Connection] = None) ->
     c = conn or get_db()
     cur = c.cursor()
     row = cur.execute(
-        "SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = ?",
+        "SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo, created_at FROM events WHERE id = ?",
         (event_id,)
     ).fetchone()
-    return dict(row) if row else None
+    if not row:
+        return None
+    d = dict(row)
+    d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+    return d
 
 
 def get_event_by_slug(slug: str, conn: Optional[sqlite3.Connection] = None) -> Optional[Dict[str, Any]]:
@@ -596,10 +722,14 @@ def get_event_by_slug(slug: str, conn: Optional[sqlite3.Connection] = None) -> O
     c = conn or get_db()
     cur = c.cursor()
     row = cur.execute(
-        "SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE slug = ? COLLATE NOCASE",
+        "SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo, created_at FROM events WHERE slug = ? COLLATE NOCASE",
         (slug.strip(),)
     ).fetchone()
-    return dict(row) if row else None
+    if not row:
+        return None
+    d = dict(row)
+    d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+    return d
 
 
 def get_default_event(conn: Optional[sqlite3.Connection] = None) -> Dict[str, Any]:
@@ -611,24 +741,32 @@ def get_default_event(conn: Optional[sqlite3.Connection] = None) -> Dict[str, An
     c = conn or get_db()
     cur = c.cursor()
 
-    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = 1 AND ativo = 1").fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo, created_at FROM events WHERE id = 1 AND ativo = 1").fetchone()
     if row:
-        return dict(row)
+        d = dict(row)
+        d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+        return d
 
-    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE ativo = 1 ORDER BY id ASC LIMIT 1").fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo, created_at FROM events WHERE ativo = 1 ORDER BY id ASC LIMIT 1").fetchone()
     if row:
-        return dict(row)
+        d = dict(row)
+        d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+        return d
 
-    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events ORDER BY id ASC LIMIT 1").fetchone()
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo, created_at FROM events ORDER BY id ASC LIMIT 1").fetchone()
     if row:
-        return dict(row)
+        d = dict(row)
+        d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+        return d
 
     cur.execute("""
-        INSERT OR IGNORE INTO events (id, slug, nome, descricao, tema, ativo)
-        VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 'dracula', 1)
+        INSERT OR IGNORE INTO events (id, slug, nome, descricao, tema, campos_personalizados, ativo)
+        VALUES (1, 'halloween', 'Concurso de Fantasias de Halloween', 'Concurso oficial de fantasias de Halloween do INTS', 'dracula', '[]', 1)
     """)
-    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = 1").fetchone()
-    return dict(row)
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo, created_at FROM events WHERE id = 1").fetchone()
+    d = dict(row)
+    d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+    return d
 
 
 def update_event(
@@ -638,13 +776,14 @@ def update_event(
     descricao: Optional[str] = None,
     tema: Optional[str] = None,
     ativo: Optional[int] = None,
+    campos_personalizados: Optional[Union[str, List[Dict[str, Any]]]] = None,
     conn: Optional[sqlite3.Connection] = None
 ) -> Optional[Dict[str, Any]]:
     """Updates attributes of an existing event."""
     c = conn or get_db()
     cur = c.cursor()
 
-    existing = cur.execute("SELECT id, slug, nome, descricao, tema, ativo FROM events WHERE id = ?", (event_id,)).fetchone()
+    existing = cur.execute("SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo FROM events WHERE id = ?", (event_id,)).fetchone()
     if not existing:
         return None
 
@@ -658,6 +797,11 @@ def update_event(
     else:
         new_tema = existing["tema"] if "tema" in existing.keys() and existing["tema"] else DEFAULT_THEME
 
+    if campos_personalizados is not None:
+        new_fields = json.dumps(parse_custom_fields(campos_personalizados), ensure_ascii=False)
+    else:
+        new_fields = existing["campos_personalizados"] if "campos_personalizados" in existing.keys() and existing["campos_personalizados"] else "[]"
+
     if slug is not None and slug.strip():
         new_slug = slugify(slug)
         slug_owner = cur.execute("SELECT id FROM events WHERE slug = ? COLLATE NOCASE AND id != ?", (new_slug, event_id)).fetchone()
@@ -667,12 +811,16 @@ def update_event(
         new_slug = existing["slug"]
 
     cur.execute(
-        "UPDATE events SET nome = ?, slug = ?, descricao = ?, tema = ?, ativo = ? WHERE id = ?",
-        (new_nome, new_slug, new_desc, new_tema, new_ativo, event_id)
+        "UPDATE events SET nome = ?, slug = ?, descricao = ?, tema = ?, ativo = ?, campos_personalizados = ? WHERE id = ?",
+        (new_nome, new_slug, new_desc, new_tema, new_ativo, new_fields, event_id)
     )
 
-    row = cur.execute("SELECT id, slug, nome, descricao, tema, ativo, created_at FROM events WHERE id = ?", (event_id,)).fetchone()
-    return dict(row) if row else None
+    row = cur.execute("SELECT id, slug, nome, descricao, tema, campos_personalizados, ativo, created_at FROM events WHERE id = ?", (event_id,)).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["campos_personalizados_parsed"] = parse_custom_fields(d.get("campos_personalizados"))
+    return d
 
 
 def delete_event_by_id(event_id: int, conn: Optional[sqlite3.Connection] = None) -> Optional[Dict[str, Any]]:
@@ -706,6 +854,7 @@ def add_participant(
     foto_filename: str,
     funcao: str = "",
     setor: str = "",
+    dados_personalizados: Optional[Union[str, Dict[str, Any]]] = None,
     event_id: Optional[int] = None,
     conn: Optional[sqlite3.Connection] = None
 ) -> int:
@@ -729,15 +878,17 @@ def add_participant(
     clean_desc = descricao.strip()
     clean_funcao = str(funcao or "").strip()
     clean_setor = str(setor or "").strip()
+    clean_custom = parse_custom_data(dados_personalizados)
+    custom_json = json.dumps(clean_custom, ensure_ascii=False)
 
     if not clean_nome or not clean_email or not clean_desc or not foto_filename:
         raise ValueError("Todos os campos do participante são obrigatórios.")
 
     try:
         cur.execute(
-            "INSERT INTO participants (event_id, nome_completo, email, descricao, foto_filename, funcao, setor) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (target_event_id, clean_nome, clean_email, clean_desc, foto_filename, clean_funcao, clean_setor)
+            "INSERT INTO participants (event_id, nome_completo, email, descricao, foto_filename, funcao, setor, dados_personalizados) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (target_event_id, clean_nome, clean_email, clean_desc, foto_filename, clean_funcao, clean_setor, custom_json)
         )
         return cur.lastrowid
     except sqlite3.IntegrityError as e:
@@ -765,18 +916,23 @@ def list_participants(
 
     if event_id == -1:
         rows = cur.execute(
-            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, created_at "
+            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, dados_personalizados, created_at "
             "FROM participants ORDER BY nome_completo ASC, id ASC"
         ).fetchall()
     else:
         target_event_id = event_id if event_id is not None else get_default_event(c)["id"]
         rows = cur.execute(
-            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, created_at "
+            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, dados_personalizados, created_at "
             "FROM participants WHERE event_id = ? ORDER BY nome_completo ASC, id ASC",
             (target_event_id,)
         ).fetchall()
 
-    return [dict(r) for r in rows]
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["dados_personalizados"] = parse_custom_data(d.get("dados_personalizados"))
+        result.append(d)
+    return result
 
 
 def get_participant_by_id(participant_id: int, conn: Optional[sqlite3.Connection] = None) -> Optional[Dict[str, Any]]:
@@ -784,11 +940,15 @@ def get_participant_by_id(participant_id: int, conn: Optional[sqlite3.Connection
     c = conn or get_db()
     cur = c.cursor()
     row = cur.execute(
-        "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, created_at "
+        "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, dados_personalizados, created_at "
         "FROM participants WHERE id = ?",
         (participant_id,)
     ).fetchone()
-    return dict(row) if row else None
+    if not row:
+        return None
+    d = dict(row)
+    d["dados_personalizados"] = parse_custom_data(d.get("dados_personalizados"))
+    return d
 
 
 get_participant = get_participant_by_id
@@ -806,19 +966,23 @@ def get_participant_by_email(
 
     if event_id is not None:
         row = cur.execute(
-            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, created_at "
+            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, dados_personalizados, created_at "
             "FROM participants WHERE email = ? COLLATE NOCASE AND event_id = ?",
             (clean_email, event_id)
         ).fetchone()
     else:
         target_event_id = get_default_event(c)["id"]
         row = cur.execute(
-            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, created_at "
+            "SELECT id, event_id, nome_completo, email, descricao, foto_filename, funcao, setor, dados_personalizados, created_at "
             "FROM participants WHERE email = ? COLLATE NOCASE AND event_id = ?",
             (clean_email, target_event_id)
         ).fetchone()
 
-    return dict(row) if row else None
+    if not row:
+        return None
+    d = dict(row)
+    d["dados_personalizados"] = parse_custom_data(d.get("dados_personalizados"))
+    return d
 
 
 def delete_participant_by_id(participant_id: int, conn: Optional[sqlite3.Connection] = None) -> Optional[Dict[str, Any]]:
@@ -1127,6 +1291,7 @@ def get_leaderboard(
                 p.foto_filename,
                 p.funcao,
                 p.setor,
+                p.dados_personalizados,
                 p.created_at,
                 COUNT(v.id) AS total_votos,
                 COALESCE(ROUND(AVG(v.nota), 2), 0.0) AS media_nota
@@ -1152,6 +1317,7 @@ def get_leaderboard(
                 p.foto_filename,
                 p.funcao,
                 p.setor,
+                p.dados_personalizados,
                 p.created_at,
                 COUNT(v.id) AS total_votos,
                 COALESCE(ROUND(AVG(v.nota), 2), 0.0) AS media_nota
@@ -1169,6 +1335,7 @@ def get_leaderboard(
     leaderboard = []
     for rank, row in enumerate(rows, start=1):
         item = dict(row)
+        item["dados_personalizados"] = parse_custom_data(item.get("dados_personalizados"))
         item["posicao"] = rank
         total_v = item["total_votos"]
         item["percentual"] = round((total_v * 100.0 / total_votes_overall), 1) if total_votes_overall > 0 else 0.0

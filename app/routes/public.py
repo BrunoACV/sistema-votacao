@@ -130,6 +130,8 @@ def register(slug: Optional[str] = None):
         descricao = str(request.form.get("descricao") or "").strip()
         foto_file = request.files.get("foto")
 
+    dados_personalizados: Dict[str, Any] = {}
+
     def bad_request(msg: str):
         if request.is_json or request.headers.get("Accept") == "application/json":
             return jsonify({"status": "error", "error": "Requisição Inválida", "message": msg}), 400
@@ -144,6 +146,7 @@ def register(slug: Optional[str] = None):
                 funcao=funcao,
                 setor=setor,
                 descricao=descricao,
+                dados_personalizados=dados_personalizados,
             ),
             400,
         )
@@ -164,16 +167,50 @@ def register(slug: Optional[str] = None):
     if not descricao or len(descricao) > 500:
         return bad_request("A descrição da inscrição é obrigatória (máximo 500 caracteres).")
 
-    # 2. Check for Duplicate Participant Email in this specific event
+    # 2. Extract and Validate Custom Fields for this Event
+    custom_fields = event.get("campos_personalizados_parsed")
+    if custom_fields is None:
+        custom_fields = db.parse_custom_fields(event.get("campos_personalizados"))
+
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+        custom_payload = payload.get("dados_personalizados") or {}
+        for field in custom_fields:
+            fid = field["id"]
+            val = custom_payload.get(fid)
+            if val is None:
+                val = payload.get(f"custom_{fid}")
+            if val is None:
+                val = payload.get(fid)
+
+            val_str = str(val).strip() if val is not None else ""
+            if field.get("obrigatorio") and not val_str:
+                return bad_request(f"O campo '{field.get('label') or fid}' é obrigatório.")
+            if val_str:
+                dados_personalizados[fid] = val_str
+    else:
+        for field in custom_fields:
+            fid = field["id"]
+            val = request.form.get(f"custom_{fid}")
+            if val is None:
+                val = request.form.get(fid)
+
+            val_str = str(val).strip() if val is not None else ""
+            if field.get("obrigatorio") and not val_str:
+                return bad_request(f"O campo '{field.get('label') or fid}' é obrigatório.")
+            if val_str:
+                dados_personalizados[fid] = val_str
+
+    # 3. Check for Duplicate Participant Email in this specific event
     existing = get_participant_by_email(email, event_id=event["id"])
     if existing:
         return bad_request(f"O e-mail '{email}' já está cadastrado como participante neste evento.")
 
-    # 3. Validate Photo Presence
+    # 4. Validate Photo Presence
     if not foto_file or not getattr(foto_file, "filename", ""):
         return bad_request("A foto do participante é obrigatória. Selecione um arquivo JPG, PNG ou WEBP.")
 
-    # 4. Save Photo with UUID & Pillow Deep Validation
+    # 5. Save Photo with UUID & Pillow Deep Validation
     foto_filename: Optional[str] = None
     upload_folder = current_app.config.get("UPLOAD_FOLDER")
     try:
@@ -183,7 +220,7 @@ def register(slug: Optional[str] = None):
     except Exception as exc:
         return bad_request(f"Erro ao processar imagem da foto: {str(exc)}")
 
-    # 5. Insert Participant Record (with Orphan Photo Rollback)
+    # 6. Insert Participant Record (with Orphan Photo Rollback)
     try:
         participant_id = add_participant(
             nome_completo=nome_completo,
@@ -192,6 +229,7 @@ def register(slug: Optional[str] = None):
             foto_filename=foto_filename,
             funcao=funcao,
             setor=setor,
+            dados_personalizados=dados_personalizados,
             event_id=event["id"],
         )
     except DuplicateParticipantEmailError as exc:
@@ -218,6 +256,7 @@ def register(slug: Optional[str] = None):
                 funcao=funcao,
                 setor=setor,
                 descricao=descricao,
+                dados_personalizados=dados_personalizados,
             ),
             500,
         )

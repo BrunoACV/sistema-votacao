@@ -269,6 +269,149 @@ class MultiEventTestCase(unittest.TestCase):
         self.assertIn(b'Painel Geral', resp_admin.data)
         self.assertIn(b'Criar Novo Evento', resp_admin.data)
 
+    def test_custom_fields_definition_and_persistence(self):
+        """Tests that custom fields can be defined on an event and correctly parsed."""
+        with self.app.app_context():
+            custom_defs = [
+                {
+                    "label": "Unidade Hospitalar",
+                    "tipo": "select",
+                    "obrigatorio": True,
+                    "opcoes": ["Sede Salvador", "Hospital Espanhol", "UPA Brotas"],
+                },
+                {
+                    "label": "Nome da Fantasia",
+                    "tipo": "text",
+                    "obrigatorio": False,
+                    "placeholder": "Ex: Vampiro Elegante",
+                },
+            ]
+            ev = db.create_event(
+                nome="Concurso Fantasias Hospitalares",
+                descricao="Evento com perguntas personalizadas",
+                campos_personalizados=custom_defs,
+            )
+            self.assertIsNotNone(ev)
+            self.assertEqual(len(ev["campos_personalizados_parsed"]), 2)
+            self.assertEqual(ev["campos_personalizados_parsed"][0]["id"], "unidade_hospitalar")
+            self.assertEqual(ev["campos_personalizados_parsed"][0]["tipo"], "select")
+            self.assertTrue(ev["campos_personalizados_parsed"][0]["obrigatorio"])
+            self.assertEqual(len(ev["campos_personalizados_parsed"][0]["opcoes"]), 3)
+
+            # Retrieve from DB and verify parsing
+            fetched = db.get_event_by_id(ev["id"])
+            self.assertIsNotNone(fetched)
+            self.assertEqual(len(fetched["campos_personalizados_parsed"]), 2)
+
+    def test_admin_creates_event_with_custom_fields_endpoint(self):
+        """Tests admin creation of event via POST /admin/events/new with custom fields."""
+        self._login_admin()
+        custom_fields_json = (
+            '[{"id":"categoria","label":"Categoria da Foto","tipo":"select","obrigatorio":true,"opcoes":["Profissional","Amador"]},'
+            '{"id":"camera","label":"Equipamento Utilizado","tipo":"text","obrigatorio":false}]'
+        )
+
+        resp = self.client.post(
+            "/admin/events/new",
+            data={
+                "nome": "Concurso de Fotografia 2026",
+                "slug": "concurso-fotografia-2026",
+                "descricao": "Melhores fotos institucionais",
+                "tema": "esmeralda",
+                "ativo": "1",
+                "campos_personalizados": custom_fields_json,
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+
+        with self.app.app_context():
+            ev = db.get_event_by_slug("concurso-fotografia-2026")
+            self.assertIsNotNone(ev)
+            self.assertEqual(ev["tema"], "esmeralda")
+            self.assertEqual(len(ev["campos_personalizados_parsed"]), 2)
+            self.assertEqual(ev["campos_personalizados_parsed"][0]["label"], "Categoria da Foto")
+
+    def test_registration_with_custom_fields_validation_and_storage(self):
+        """
+        Tests public candidate registration with custom fields:
+        - Rejection when mandatory custom field is missing.
+        - Successful storage when provided.
+        - Visibility in the admin dashboard.
+        """
+        with self.app.app_context():
+            custom_defs = [
+                {
+                    "id": "unidade",
+                    "label": "Unidade de Saúde",
+                    "tipo": "text",
+                    "obrigatorio": True,
+                },
+                {
+                    "id": "tempo_casa",
+                    "label": "Tempo de INTS (Anos)",
+                    "tipo": "number",
+                    "obrigatorio": False,
+                },
+            ]
+            ev = db.create_event(
+                nome="Premio Destaque INTS",
+                slug="premio-destaque",
+                campos_personalizados=custom_defs,
+            )
+
+        # 1. Missing required custom field -> 400 Bad Request
+        img_bytes = create_dummy_png_bytes()
+        resp_err = self.client.post(
+            f"/e/{ev['slug']}/register",
+            data={
+                "nome_completo": "Mariana Santos",
+                "email": "mariana.santos@ints.org.br",
+                "funcao": "Enfermeira Chefe",
+                "setor": "UTI Pediátrica",
+                "descricao": "Dedicação aos pacientes",
+                "custom_tempo_casa": "5",
+                # 'custom_unidade' omitted
+                "foto": (io.BytesIO(img_bytes), "foto_mariana.png"),
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_err.status_code, 400)
+        self.assertIn("Unidade de Sa", resp_err.get_data(as_text=True))
+
+        # 2. Valid submission with all required custom fields -> Success
+        resp_ok = self.client.post(
+            f"/e/{ev['slug']}/register",
+            data={
+                "nome_completo": "Mariana Santos",
+                "email": "mariana.santos@ints.org.br",
+                "funcao": "Enfermeira Chefe",
+                "setor": "UTI Pediátrica",
+                "descricao": "Dedicação aos pacientes",
+                "custom_unidade": "Hospital Municipal",
+                "custom_tempo_casa": "5",
+                "foto": (io.BytesIO(img_bytes), "foto_mariana.png"),
+            },
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+        self.assertEqual(resp_ok.status_code, 200)
+
+        # 3. Check DB participant dados_personalizados
+        with self.app.app_context():
+            part = db.get_participant_by_email("mariana.santos@ints.org.br", event_id=ev["id"])
+            self.assertIsNotNone(part)
+            self.assertEqual(part["dados_personalizados"].get("unidade"), "Hospital Municipal")
+            self.assertEqual(part["dados_personalizados"].get("tempo_casa"), "5")
+
+        # 4. Check admin dashboard displays the custom data
+        self._login_admin()
+        resp_admin = self.client.get(f"/admin?evento={ev['slug']}")
+        self.assertEqual(resp_admin.status_code, 200)
+        admin_html = resp_admin.get_data(as_text=True)
+        self.assertIn("Hospital Municipal", admin_html)
+
 
 if __name__ == "__main__":
     unittest.main()
+
