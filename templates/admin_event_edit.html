@@ -1,0 +1,643 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Concurso & Campos - {{ event.nome }} - INTS{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+  <!-- Breadcrumb & Top Action -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2 text-xs font-semibold text-[#6272a4]">
+      <a href="{{ url_for('admin.dashboard', evento=event.slug) }}" class="hover:text-[#bd93f9] transition">Painel de Moderação</a>
+      <span>/</span>
+      <span>Concursos</span>
+      <span>/</span>
+      <span class="text-[#f8f8f2] truncate max-w-xs">{{ event.nome }}</span>
+      <span>/</span>
+      <span class="text-[#bd93f9]">Editar</span>
+    </div>
+    <a href="{{ url_for('admin.dashboard', evento=event.slug) }}" 
+       class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#f8f8f2] bg-[#343746] hover:bg-[#44475a] border border-[#6272a4]/40 transition">
+      Voltar ao Painel
+    </a>
+  </div>
+
+  <!-- Form Card (Dracula Dark) -->
+  <div class="bg-[#343746] rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#6272a4]/40 space-y-6">
+    <div class="border-b border-[#6272a4]/30 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#bd93f9]/20 text-[#bd93f9] border border-[#bd93f9]/30 mb-2">
+          Gerenciamento de Concurso #{{ event.id }}
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-[#f8f8f2] tracking-tight">Editar Concurso & Campos</h1>
+        <p class="text-xs sm:text-sm text-[#6272a4] mt-1">
+          Modifique as informações do evento, remova ou inclua novos campos na ficha de inscrição pública.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="{{ url_for('public.vote', slug=event.slug) }}" target="_blank"
+           class="px-3 py-1.5 rounded-xl text-xs font-bold text-[#8be9fd] bg-[#282a36] hover:bg-[#8be9fd] hover:text-[#282a36] border border-[#8be9fd]/30 transition">
+          Ver Votação ↗
+        </a>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.edit_event', event_id=event.id) }}" class="space-y-6">
+      
+      <!-- 1. Dados Básicos do Concurso -->
+      <div class="space-y-4">
+        <span class="text-xs font-black uppercase text-[#bd93f9] tracking-wider">1. Dados Básicos do Concurso</span>
+
+        <!-- Nome do Evento -->
+        <div class="space-y-2">
+          <label for="nome" class="block text-sm font-bold text-[#f8f8f2]">
+            Nome do Concurso <span class="text-[#ff5555]">*</span>
+          </label>
+          <input type="text" 
+                 id="nome" 
+                 name="nome" 
+                 required 
+                 maxlength="150"
+                 value="{{ nome or event.nome }}"
+                 placeholder="Ex: Concurso de Fantasias 2026, Prêmio Inovação INTS" 
+                 class="w-full px-4 py-3 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/40 focus:outline-none transition placeholder-[#6272a4]">
+          <p class="text-xs text-[#6272a4]">O nome oficial do concurso exibido para os colaboradores.</p>
+        </div>
+
+        <!-- Slug na URL -->
+        <div class="space-y-2">
+          <label for="slug" class="block text-sm font-bold text-[#f8f8f2]">
+            Identificador na URL (Slug)
+          </label>
+          <div class="flex items-center rounded-xl bg-[#282a36] border border-[#6272a4]/50 focus-within:border-[#bd93f9] focus-within:ring-2 focus-within:ring-[#bd93f9]/40 transition overflow-hidden">
+            <span class="px-4 py-3 text-xs font-mono text-[#6272a4] bg-[#1e1f29] border-r border-[#6272a4]/40 select-none">
+              /e/
+            </span>
+            <input type="text" 
+                   id="slug" 
+                   name="slug" 
+                   maxlength="80"
+                   value="{{ slug or event.slug }}"
+                   placeholder="Ex: premio-inovacao-2026" 
+                   class="w-full px-4 py-3 bg-transparent text-[#f8f8f2] text-sm focus:outline-none placeholder-[#6272a4]">
+          </div>
+          <p class="text-xs text-[#6272a4]">Identificador amigável na URL. Modificar o slug altera os links públicos de votação deste evento.</p>
+        </div>
+
+        <!-- Descrição -->
+        <div class="space-y-2">
+          <label for="descricao" class="block text-sm font-bold text-[#f8f8f2]">
+            Descrição / Regulamento do Concurso
+          </label>
+          <textarea id="descricao" 
+                    name="descricao" 
+                    rows="3" 
+                    maxlength="500"
+                    placeholder="Ex: Votação institucional para escolha das melhores fotografias do concurso." 
+                    class="w-full px-4 py-3 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/50 focus:border-[#bd93f9] focus:ring-2 focus:ring-[#bd93f9]/40 focus:outline-none transition placeholder-[#6272a4]">{{ descricao if descricao is not none else (event.descricao or '') }}</textarea>
+          <p class="text-xs text-[#6272a4]">Breve explicação sobre os objetivos do concurso e regras gerais.</p>
+        </div>
+      </div>
+
+      <!-- 2. Seletor de Tema Visual -->
+      <div class="space-y-3 pt-2">
+        <div>
+          <label class="block text-sm font-bold text-[#f8f8f2]">
+            Tema Visual do Concurso (Paleta de Cores) <span class="text-[#ff5555]">*</span>
+          </label>
+          <p class="text-xs text-[#6272a4] mt-0.5">
+            A identidade visual completa da votação e apuração adotará a paleta escolhida.
+          </p>
+        </div>
+
+        <!-- Hidden Input para submissão do formulário -->
+        <input type="hidden" name="tema" id="tema-input" value="{{ selected_theme or tema or event.tema or 'dracula' }}">
+
+        {% set cur_theme = selected_theme or tema or event.tema or 'dracula' %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5" id="themes-grid">
+          
+          <!-- Opção 1: Drácula Noturno -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#282a36] {% if cur_theme == 'dracula' %}border-[#bd93f9] ring-2 ring-[#bd93f9]/40 shadow-lg shadow-[#bd93f9]/15{% else %}border-[#6272a4]/40 hover:border-[#bd93f9]/60{% endif %}"
+               onclick="selectTheme('dracula', this)" data-theme-id="dracula">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#bd93f9] tracking-wide">Drácula Noturno</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if cur_theme == 'dracula' %}bg-[#bd93f9] text-[#282a36]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#f8f8f2] mb-1">Halloween & Noite Gótica</div>
+              <p class="text-[11px] text-[#6272a4] leading-relaxed mb-3">Tons góticos: roxo vampiro, rosa choque, laranja místico e fundo escuro.</p>
+            </div>
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#6272a4]/20">
+              <span class="w-5 h-5 rounded-full bg-[#bd93f9] shadow-sm" title="Roxo #bd93f9"></span>
+              <span class="w-5 h-5 rounded-full bg-[#ff79c6] shadow-sm" title="Rosa #ff79c6"></span>
+              <span class="w-5 h-5 rounded-full bg-[#ffb86c] shadow-sm" title="Laranja #ffb86c"></span>
+              <span class="w-5 h-5 rounded-full bg-[#50fa7b] shadow-sm" title="Verde #50fa7b"></span>
+              <span class="w-5 h-5 rounded-full bg-[#282a36] border border-[#6272a4]/60 shadow-sm" title="Fundo Escuro #282a36"></span>
+            </div>
+          </div>
+
+          <!-- Opção 2: Carnaval Festivo -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#150d2a] {% if cur_theme == 'carnaval' %}border-[#facc15] ring-2 ring-[#facc15]/40 shadow-lg shadow-[#facc15]/15{% else %}border-[#7c3aed]/40 hover:border-[#facc15]/60{% endif %}"
+               onclick="selectTheme('carnaval', this)" data-theme-id="carnaval">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#facc15] tracking-wide">Carnaval Festivo</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if cur_theme == 'carnaval' %}bg-[#facc15] text-[#150d2a]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#fdf4ff] mb-1">Alegria, Folia & Samba</div>
+              <p class="text-[11px] text-[#a78bfa] leading-relaxed mb-3">Cores festivas: ouro samba, magenta elétrico, verde tropical e azul turquesa.</p>
+            </div>
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#7c3aed]/30">
+              <span class="w-5 h-5 rounded-full bg-[#facc15] shadow-sm" title="Ouro Samba #facc15"></span>
+              <span class="w-5 h-5 rounded-full bg-[#ec4899] shadow-sm" title="Magenta Folia #ec4899"></span>
+              <span class="w-5 h-5 rounded-full bg-[#06b6d4] shadow-sm" title="Azul Turquesa #06b6d4"></span>
+              <span class="w-5 h-5 rounded-full bg-[#22c55e] shadow-sm" title="Verde Tropical #22c55e"></span>
+              <span class="w-5 h-5 rounded-full bg-[#150d2a] border border-[#7c3aed]/60 shadow-sm" title="Fundo Roxo #150d2a"></span>
+            </div>
+          </div>
+
+          <!-- Opção 3: Institucional INTS -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#0b1329] {% if cur_theme == 'institucional' %}border-[#38bdf8] ring-2 ring-[#38bdf8]/40 shadow-lg shadow-[#38bdf8]/15{% else %}border-[#1e293b]/60 hover:border-[#38bdf8]/60{% endif %}"
+               onclick="selectTheme('institucional', this)" data-theme-id="institucional">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#38bdf8] tracking-wide">Institucional INTS</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if cur_theme == 'institucional' %}bg-[#38bdf8] text-[#0b1329]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#f0f9ff] mb-1">Oficial, Saúde & Corporativo</div>
+              <p class="text-[11px] text-[#94a3b8] leading-relaxed mb-3">Tons corporativos: azul celeste saúde, ciano institucional e esmeralda.</p>
+            </div>
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#1e293b]/50">
+              <span class="w-5 h-5 rounded-full bg-[#38bdf8] shadow-sm" title="Azul Celeste #38bdf8"></span>
+              <span class="w-5 h-5 rounded-full bg-[#0284c7] shadow-sm" title="Azul Royal #0284c7"></span>
+              <span class="w-5 h-5 rounded-full bg-[#34d399] shadow-sm" title="Esmeralda Saúde #34d399"></span>
+              <span class="w-5 h-5 rounded-full bg-[#f8fafc] shadow-sm" title="Branco Neve #f8fafc"></span>
+              <span class="w-5 h-5 rounded-full bg-[#0b1329] border border-[#334155] shadow-sm" title="Fundo Azul Noturno #0b1329"></span>
+            </div>
+          </div>
+
+          <!-- Opção 4: Sunset Dourado -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#1c1917] {% if cur_theme == 'sunset' %}border-[#f59e0b] ring-2 ring-[#f59e0b]/40 shadow-lg shadow-[#f59e0b]/15{% else %}border-[#44403c]/60 hover:border-[#f59e0b]/60{% endif %}"
+               onclick="selectTheme('sunset', this)" data-theme-id="sunset">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#f59e0b] tracking-wide">Sunset Dourado</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if cur_theme == 'sunset' %}bg-[#f59e0b] text-[#1c1917]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#fef3c7] mb-1">Pôr do Sol & Verão</div>
+              <p class="text-[11px] text-[#a8a29e] leading-relaxed mb-3">Tons quentes: âmbar dourado, laranja pôr do sol, coral e amarelo canário.</p>
+            </div>
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#44403c]/40">
+              <span class="w-5 h-5 rounded-full bg-[#f59e0b] shadow-sm" title="Âmbar #f59e0b"></span>
+              <span class="w-5 h-5 rounded-full bg-[#ea580c] shadow-sm" title="Laranja Queimado #ea580c"></span>
+              <span class="w-5 h-5 rounded-full bg-[#f43f5e] shadow-sm" title="Coral #f43f5e"></span>
+              <span class="w-5 h-5 rounded-full bg-[#10b981] shadow-sm" title="Verde Menta #10b981"></span>
+              <span class="w-5 h-5 rounded-full bg-[#1c1917] border border-[#44403c] shadow-sm" title="Fundo Quente #1c1917"></span>
+            </div>
+          </div>
+
+          <!-- Opção 5: Esmeralda Nobre -->
+          <div class="theme-card-option cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between bg-[#061a14] {% if cur_theme == 'esmeralda' %}border-[#10b981] ring-2 ring-[#10b981]/40 shadow-lg shadow-[#10b981]/15{% else %}border-[#064e3b]/50 hover:border-[#10b981]/60{% endif %}"
+               onclick="selectTheme('esmeralda', this)" data-theme-id="esmeralda">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-black uppercase text-[#10b981] tracking-wide">Esmeralda Nobre</span>
+                <span class="theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full {% if cur_theme == 'esmeralda' %}bg-[#10b981] text-[#061a14]{% else %}hidden{% endif %}">
+                  Ativo
+                </span>
+              </div>
+              <div class="text-[11px] font-semibold text-[#ecfdf5] mb-1">Natureza, Prestígio & Verde</div>
+              <p class="text-[11px] text-[#6ee7b7] leading-relaxed mb-3">Tons sofisticados: verde esmeralda nobre, menta, dourado champanhe.</p>
+            </div>
+            <div class="flex items-center gap-1.5 pt-2 border-t border-[#064e3b]/40">
+              <span class="w-5 h-5 rounded-full bg-[#10b981] shadow-sm" title="Esmeralda #10b981"></span>
+              <span class="w-5 h-5 rounded-full bg-[#34d399] shadow-sm" title="Menta #34d399"></span>
+              <span class="w-5 h-5 rounded-full bg-[#fbbf24] shadow-sm" title="Champagne #fbbf24"></span>
+              <span class="w-5 h-5 rounded-full bg-[#38bdf8] shadow-sm" title="Ciano Claro #38bdf8"></span>
+              <span class="w-5 h-5 rounded-full bg-[#061a14] border border-[#064e3b] shadow-sm" title="Fundo Floresta #061a14"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 3. Configuração dos Campos da Inscrição -->
+      <div class="space-y-4 pt-2">
+        <div>
+          <span class="text-xs font-black uppercase text-[#bd93f9] tracking-wider">3. Configuração dos Campos da Ficha de Inscrição</span>
+          <p class="text-xs text-[#6272a4] mt-0.5">
+            Configure os dados solicitados aos participantes na inscrição deste concurso. Você pode incluir novos campos ou remover campos já existentes.
+          </p>
+        </div>
+
+        <!-- 3.1 Campos Fixos Padrão -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 space-y-3">
+          <div class="flex items-center justify-between border-b border-[#6272a4]/30 pb-2.5">
+            <div>
+              <span class="text-xs font-black uppercase text-[#8be9fd] tracking-wider">Campos Fixos Padrão do Sistema</span>
+              <p class="text-[11px] text-[#6272a4] mt-0.5">Estes campos são padrão do sistema e estão disponíveis como opcionais na ficha de inscrição.</p>
+            </div>
+            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+              Padrão
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Nome Completo</div>
+                <div class="text-[10px] text-[#6272a4]">Identificação principal do candidato</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                Fixo Opcional
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">E-mail Institucional</div>
+                <div class="text-[10px] text-[#6272a4]">Domínio @ints.org.br (único por evento)</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                Fixo Opcional
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Cargo / Função</div>
+                <div class="text-[10px] text-[#6272a4]">Função ocupada na instituição</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                Fixo Opcional
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Setor / Departamento</div>
+                <div class="text-[10px] text-[#6272a4]">Lotação ou departamento de trabalho</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                Fixo Opcional
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Descrição / Apresentação</div>
+                <div class="text-[10px] text-[#6272a4]">Mensagem ou tema da foto (até 500 carac.)</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                Fixo Opcional
+              </span>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#1e1f29] border border-[#6272a4]/30 flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-[#f8f8f2]">Foto do Participante</div>
+                <div class="text-[10px] text-[#6272a4]">Upload de imagem (JPG, PNG ou WEBP)</div>
+              </div>
+              <span class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#50fa7b]/20 text-[#50fa7b] border border-[#50fa7b]/30">
+                Fixo Opcional
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3.2 Campos Personalizados do Evento (Editor Dinâmico) -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#6272a4]/30 pb-3">
+            <div>
+              <span class="text-xs font-black uppercase text-[#ff79c6] tracking-wider">Campos Personalizados do Concurso</span>
+              <p class="text-[11px] text-[#6272a4] mt-0.5">
+                Adicione novas perguntas ou remova campos que não são mais necessários neste concurso.
+              </p>
+            </div>
+            <button type="button" 
+                    id="btn-add-custom-field"
+                    class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-bold text-[#282a36] bg-[#50fa7b] hover:bg-[#69ff94] transition shadow-md whitespace-nowrap cursor-pointer">
+              + Adicionar Novo Campo
+            </button>
+          </div>
+
+          <!-- Hidden Input serializado com os campos personalizados -->
+          <input type="hidden" name="campos_personalizados" id="campos_personalizados_input" value="[]">
+
+          <!-- Container de Cards Dinâmicos -->
+          <div id="custom-fields-container" class="space-y-3"></div>
+
+          <!-- Banner Vazio -->
+          <div id="empty-custom-fields-notice" class="p-4 rounded-xl bg-[#1e1f29] border border-dashed border-[#6272a4]/40 text-center">
+            <p class="text-xs text-[#6272a4]">
+              Nenhum campo personalizado cadastrado. Apenas os campos fixos padrão serão solicitados na ficha de inscrição pública deste evento.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Status Ativo -->
+      <div class="p-4 rounded-2xl bg-[#282a36] border border-[#6272a4]/40 flex items-start gap-3">
+        <input type="checkbox" 
+               id="ativo" 
+               name="ativo" 
+               value="1" 
+               {% if ativo is defined and ativo %}checked{% elif event.ativo %}checked{% endif %}
+               class="mt-1 w-4 h-4 rounded text-[#bd93f9] bg-[#1e1f29] border-[#6272a4] focus:ring-[#bd93f9]">
+        <div>
+          <label for="ativo" class="text-sm font-bold text-[#f8f8f2] cursor-pointer">
+            Evento Ativo (Votações e Inscrições Abertas)
+          </label>
+          <p class="text-xs text-[#6272a4] mt-0.5">
+            Quando desmarcado, o evento fica pausado para novas inscrições e recebimento de votos.
+          </p>
+        </div>
+      </div>
+
+      <!-- Ações do Formulário -->
+      <div class="pt-4 border-t border-[#6272a4]/30 flex flex-col sm:flex-row items-center justify-end gap-3">
+        <a href="{{ url_for('admin.dashboard', evento=event.slug) }}" 
+           class="w-full sm:w-auto px-5 py-3 rounded-xl text-xs font-bold text-center text-[#f8f8f2] bg-[#282a36] hover:bg-[#44475a] border border-[#6272a4]/40 transition">
+          Cancelar
+        </a>
+        <button type="submit" 
+                class="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider text-[#282a36] bg-[#50fa7b] hover:bg-[#69ff94] shadow-lg shadow-[#50fa7b]/20 transition duration-200">
+          Salvar Alterações do Concurso
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function selectTheme(themeId, cardElement) {
+    const input = document.getElementById('tema-input');
+    if (input) {
+        input.value = themeId;
+    }
+    
+    // Reset all cards styling
+    document.querySelectorAll('.theme-card-option').forEach(card => {
+        card.classList.remove('border-[#bd93f9]', 'ring-2', 'ring-[#bd93f9]/40', 'shadow-lg', 'shadow-[#bd93f9]/15',
+                              'border-[#facc15]', 'ring-[#facc15]/40', 'shadow-[#facc15]/15',
+                              'border-[#38bdf8]', 'ring-[#38bdf8]/40', 'shadow-[#38bdf8]/15',
+                              'border-[#f59e0b]', 'ring-[#f59e0b]/40', 'shadow-[#f59e0b]/15',
+                              'border-[#10b981]', 'ring-[#10b981]/40', 'shadow-[#10b981]/15');
+        
+        const badge = card.querySelector('.theme-check-badge');
+        if (badge) {
+            badge.classList.add('hidden');
+        }
+    });
+
+    // Add active styling based on theme
+    const activeBadge = cardElement.querySelector('.theme-check-badge');
+    if (themeId === 'carnaval') {
+        cardElement.classList.add('border-[#facc15]', 'ring-2', 'ring-[#facc15]/40', 'shadow-lg', 'shadow-[#facc15]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#facc15] text-[#150d2a]';
+        }
+    } else if (themeId === 'institucional') {
+        cardElement.classList.add('border-[#38bdf8]', 'ring-2', 'ring-[#38bdf8]/40', 'shadow-lg', 'shadow-[#38bdf8]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#38bdf8] text-[#0b1329]';
+        }
+    } else if (themeId === 'sunset') {
+        cardElement.classList.add('border-[#f59e0b]', 'ring-2', 'ring-[#f59e0b]/40', 'shadow-lg', 'shadow-[#f59e0b]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#1c1917]';
+        }
+    } else if (themeId === 'esmeralda') {
+        cardElement.classList.add('border-[#10b981]', 'ring-2', 'ring-[#10b981]/40', 'shadow-lg', 'shadow-[#10b981]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#10b981] text-[#061a14]';
+        }
+    } else {
+        // dracula
+        cardElement.classList.add('border-[#bd93f9]', 'ring-2', 'ring-[#bd93f9]/40', 'shadow-lg', 'shadow-[#bd93f9]/15');
+        if (activeBadge) {
+            activeBadge.className = 'theme-check-badge text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#bd93f9] text-[#282a36]';
+        }
+    }
+}
+
+// ==============================================================================
+// Gerenciador de Campos Personalizados Dinâmicos (Adicionar / Remover / Editar)
+// ==============================================================================
+(function() {
+    const container = document.getElementById('custom-fields-container');
+    const emptyNotice = document.getElementById('empty-custom-fields-notice');
+    const btnAdd = document.getElementById('btn-add-custom-field');
+    const inputHidden = document.getElementById('campos_personalizados_input');
+    const form = document.querySelector('form');
+
+    function updateEmptyState() {
+        if (!container || !emptyNotice) return;
+        const count = container.querySelectorAll('.custom-field-card').length;
+        if (count === 0) {
+            emptyNotice.classList.remove('hidden');
+        } else {
+            emptyNotice.classList.add('hidden');
+        }
+        
+        // Re-numera os títulos
+        container.querySelectorAll('.custom-field-card').forEach((card, index) => {
+            const titleEl = card.querySelector('.field-title-num');
+            if (titleEl) {
+                titleEl.textContent = 'Campo Personalizado #' + (index + 1);
+            }
+        });
+    }
+
+    function slugifySimple(text) {
+        return (text || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    }
+
+    function createFieldCard(data = {}) {
+        const card = document.createElement('div');
+        card.className = 'custom-field-card p-4 rounded-2xl bg-[#1e1f29] border border-[#6272a4]/40 space-y-3 relative transition';
+        
+        const labelVal = data.label || data.nome || '';
+        const idVal = data.id || '';
+        const tipoVal = data.tipo || 'text';
+        const placeholderVal = data.placeholder || '';
+        const obrigatorioVal = !!data.obrigatorio;
+        const opcoesVal = Array.isArray(data.opcoes) ? data.opcoes.join(', ') : (data.opcoes || '');
+
+        card.innerHTML = `
+            <div class="flex items-center justify-between border-b border-[#6272a4]/20 pb-2">
+                <span class="text-xs font-black uppercase text-[#bd93f9] tracking-wider field-title-num">Campo Personalizado</span>
+                <button type="button" class="btn-remove-field px-2.5 py-1 text-[11px] font-bold text-[#ff5555] bg-[#ff5555]/10 hover:bg-[#ff5555] hover:text-[#282a36] rounded-lg transition border border-[#ff5555]/30 cursor-pointer" title="Remover este campo">
+                    Remover
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Rótulo / Pergunta <span class="text-[#ff5555]">*</span></label>
+                    <input type="text" class="cf-label w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: Unidade Hospitalar" value="${escapeHtml(labelVal)}" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Identificador Único (ID / Chave)</label>
+                    <input type="text" class="cf-id w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs font-mono focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: unidade_hospitalar" value="${escapeHtml(idVal)}">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Tipo de Campo</label>
+                    <select class="cf-tipo w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]">
+                        <option value="text" ${tipoVal === 'text' ? 'selected' : ''}>Texto Curto</option>
+                        <option value="textarea" ${tipoVal === 'textarea' ? 'selected' : ''}>Texto Longo</option>
+                        <option value="number" ${tipoVal === 'number' ? 'selected' : ''}>Número</option>
+                        <option value="select" ${tipoVal === 'select' ? 'selected' : ''}>Menu Suspenso (Seleção)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Texto de Apoio (Placeholder / Dica)</label>
+                    <input type="text" class="cf-placeholder w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: Selecione sua unidade..." value="${escapeHtml(placeholderVal)}">
+                </div>
+            </div>
+
+            <div class="cf-opcoes-wrapper ${tipoVal === 'select' ? '' : 'hidden'}">
+                <label class="block text-xs font-bold text-[#f8f8f2] mb-1">Opções da Seleção (separadas por vírgula) <span class="text-[#ff5555]">*</span></label>
+                <input type="text" class="cf-opcoes w-full px-3 py-2 rounded-xl bg-[#282a36] text-[#f8f8f2] border border-[#6272a4]/40 text-xs focus:outline-none focus:border-[#bd93f9]" placeholder="Ex: Hospital Espanhol, Sede Salvador, UPA Brotas" value="${escapeHtml(opcoesVal)}">
+                <p class="text-[10px] text-[#6272a4] mt-0.5">Separe cada item com uma vírgula para montar a lista suspensa de opções.</p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+                <input type="checkbox" class="cf-obrigatorio w-3.5 h-3.5 rounded text-[#bd93f9] bg-[#282a36] border-[#6272a4]" ${obrigatorioVal ? 'checked' : ''}>
+                <label class="text-xs font-semibold text-[#f8f8f2]">Tornar este campo obrigatório na inscrição</label>
+            </div>
+        `;
+
+        // Eventos
+        const btnRemove = card.querySelector('.btn-remove-field');
+        btnRemove.addEventListener('click', function() {
+            card.remove();
+            updateEmptyState();
+        });
+
+        const selectTipo = card.querySelector('.cf-tipo');
+        const opcoesWrapper = card.querySelector('.cf-opcoes-wrapper');
+        selectTipo.addEventListener('change', function() {
+            if (this.value === 'select') {
+                opcoesWrapper.classList.remove('hidden');
+            } else {
+                opcoesWrapper.classList.add('hidden');
+            }
+        });
+
+        const inputLabel = card.querySelector('.cf-label');
+        const inputId = card.querySelector('.cf-id');
+        let userEditedId = !!idVal;
+        inputId.addEventListener('input', function() {
+            userEditedId = true;
+        });
+        inputLabel.addEventListener('input', function() {
+            if (!userEditedId) {
+                inputId.value = slugifySimple(this.value);
+            }
+        });
+
+        container.appendChild(card);
+        updateEmptyState();
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    if (btnAdd) {
+        btnAdd.addEventListener('click', function() {
+            createFieldCard();
+        });
+    }
+
+    // Pre-população com os campos já existentes do evento
+    try {
+        let initial = {{ (campos_personalizados if campos_personalizados is not string else campos_personalizados)|tojson if campos_personalizados else '[]' }};
+        if (typeof initial === 'string') {
+            initial = JSON.parse(initial);
+        }
+        if (Array.isArray(initial) && initial.length > 0) {
+            initial.forEach(field => createFieldCard(field));
+        }
+    } catch(e) {
+        console.error('Erro ao pre-popular campos personalizados:', e);
+    }
+
+    // Serialização antes do submit
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const cards = container.querySelectorAll('.custom-field-card');
+            const fields = [];
+            const seenIds = new Set();
+
+            cards.forEach((card, index) => {
+                const label = (card.querySelector('.cf-label')?.value || '').trim();
+                let id = (card.querySelector('.cf-id')?.value || '').trim();
+                const tipo = (card.querySelector('.cf-tipo')?.value || 'text').trim();
+                const placeholder = (card.querySelector('.cf-placeholder')?.value || '').trim();
+                const obrigatorio = !!card.querySelector('.cf-obrigatorio')?.checked;
+                const opcoesRaw = (card.querySelector('.cf-opcoes')?.value || '').trim();
+
+                if (!label) return;
+                if (!id) {
+                    id = slugifySimple(label) || ('campo_' + (index + 1));
+                }
+
+                let uniqueId = id;
+                let c = 1;
+                while (seenIds.has(uniqueId)) {
+                    uniqueId = id + '_' + c;
+                    c++;
+                }
+                seenIds.add(uniqueId);
+
+                let opcoes = [];
+                if (tipo === 'select' && opcoesRaw) {
+                    opcoes = opcoesRaw.split(',').map(s => s.trim()).filter(Boolean);
+                }
+
+                fields.push({
+                    id: uniqueId,
+                    label: label,
+                    tipo: tipo,
+                    obrigatorio: obrigatorio,
+                    placeholder: placeholder,
+                    opcoes: opcoes
+                });
+            });
+
+            if (inputHidden) {
+                inputHidden.value = JSON.stringify(fields);
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

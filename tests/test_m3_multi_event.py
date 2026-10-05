@@ -6,6 +6,7 @@ and moderation controls across multiple simultaneous events.
 """
 
 import io
+import json
 import os
 import shutil
 import tempfile
@@ -410,6 +411,81 @@ class MultiEventTestCase(unittest.TestCase):
         self.assertEqual(resp_admin.status_code, 200)
         admin_html = resp_admin.get_data(as_text=True)
         self.assertIn("Hospital Municipal", admin_html)
+
+    def test_edit_event_fields_add_remove_update(self):
+        """Admin must be able to edit existing event, adding or removing custom fields."""
+        self._login_admin()
+
+        with self.app.app_context():
+            ev = db.create_event(
+                nome="Evento Inicial",
+                descricao="Desc inicial",
+                campos_personalizados=[{"id": "cidade", "label": "Cidade de Atuação", "tipo": "text"}]
+            )
+
+        # 1. GET /admin/events/<id>/edit renders existing data
+        resp_get = self.client.get(f"/admin/events/{ev['id']}/edit")
+        self.assertEqual(resp_get.status_code, 200)
+        get_html = resp_get.get_data(as_text=True)
+        self.assertIn("Evento Inicial", get_html)
+        self.assertIn("cidade", get_html)
+
+        # 2. POST /admin/events/<id>/edit: Update name, remove "cidade", add "unidade" & "tempo"
+        new_fields = [
+            {"id": "unidade", "label": "Unidade Hospitalar", "tipo": "select", "opcoes": ["H1", "H2"], "obrigatorio": True},
+            {"id": "tempo_servico", "label": "Tempo de Serviço", "tipo": "number", "obrigatorio": False}
+        ]
+        resp_post = self.client.post(
+            f"/admin/events/{ev['id']}/edit",
+            data={
+                "nome": "Evento Renomeado com Novos Campos",
+                "slug": ev["slug"],
+                "descricao": "Nova descrição",
+                "tema": "carnaval",
+                "ativo": "1",
+                "campos_personalizados": json.dumps(new_fields),
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(resp_post.status_code, 200)
+
+        # 3. Verify Database reflection
+        with self.app.app_context():
+            updated = db.get_event_by_id(ev["id"])
+            self.assertEqual(updated["nome"], "Evento Renomeado com Novos Campos")
+            self.assertEqual(updated["tema"], "carnaval")
+            fields = updated["campos_personalizados_parsed"]
+            self.assertEqual(len(fields), 2)
+            field_ids = [f["id"] for f in fields]
+            self.assertIn("unidade", field_ids)
+            self.assertIn("tempo_servico", field_ids)
+            self.assertNotIn("cidade", field_ids)
+
+        # 4. Verify Public Registration form reflects the updated fields
+        resp_reg = self.client.get(f"/e/{ev['slug']}/register")
+        self.assertEqual(resp_reg.status_code, 200)
+        reg_html = resp_reg.get_data(as_text=True)
+        self.assertIn("Unidade Hospitalar", reg_html)
+        self.assertIn("Tempo de Serviço", reg_html)
+        self.assertNotIn("Cidade de Atuação", reg_html)
+
+        # 5. Remove all custom fields
+        resp_clear = self.client.post(
+            f"/admin/events/{ev['id']}/edit",
+            data={
+                "nome": "Evento Renomeado com Novos Campos",
+                "slug": ev["slug"],
+                "descricao": "Nova descrição",
+                "tema": "carnaval",
+                "ativo": "1",
+                "campos_personalizados": "[]",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(resp_clear.status_code, 200)
+        with self.app.app_context():
+            cleared = db.get_event_by_id(ev["id"])
+            self.assertEqual(len(cleared["campos_personalizados_parsed"]), 0)
 
 
 if __name__ == "__main__":

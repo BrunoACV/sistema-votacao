@@ -516,6 +516,134 @@ def create_event() -> Any:
     return redirect(url_for("admin.dashboard", evento=new_event["slug"]))
 
 
+@admin_bp.route("/events/<int:event_id>/edit", methods=["GET", "POST"])
+@admin_required
+def edit_event(event_id: int) -> Any:
+    """
+    Endpoint for editing an existing voting event and configuring/modifying its custom registration fields.
+    """
+    event = db.get_event_by_id(event_id)
+    if not event:
+        msg = f"Evento #{event_id} não encontrado."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Not Found", "message": msg}), 404
+        flash(msg, "error")
+        return redirect(url_for("admin.dashboard"))
+
+    events = db.list_events()
+
+    if request.method == "GET":
+        campos_personalizados = event.get("campos_personalizados_parsed")
+        if campos_personalizados is None:
+            campos_personalizados = db.parse_custom_fields(event.get("campos_personalizados"))
+
+        return render_template(
+            "admin_event_edit.html",
+            event=event,
+            events=events,
+            nome=event["nome"],
+            slug=event["slug"],
+            descricao=event.get("descricao", ""),
+            tema=event.get("tema", "dracula"),
+            selected_theme=event.get("tema", "dracula"),
+            ativo=event["ativo"],
+            campos_personalizados=campos_personalizados
+        )
+
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+        nome = str(payload.get("nome") or "").strip()
+        slug = str(payload.get("slug") or "").strip()
+        descricao = str(payload.get("descricao") or "").strip()
+        tema = str(payload.get("tema") or event.get("tema", "dracula")).strip().lower()
+        ativo = 1 if payload.get("ativo", True) else 0
+        campos_personalizados = payload.get("campos_personalizados")
+    else:
+        nome = str(request.form.get("nome") or "").strip()
+        slug = str(request.form.get("slug") or "").strip()
+        descricao = str(request.form.get("descricao") or "").strip()
+        tema = str(request.form.get("tema") or event.get("tema", "dracula")).strip().lower()
+        ativo = 1 if request.form.get("ativo") in ("1", "on", "true", "True") else 0
+        campos_personalizados = request.form.get("campos_personalizados")
+
+    if not nome:
+        msg = "O nome do evento é obrigatório."
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return render_template(
+            "admin_event_edit.html",
+            event=event,
+            events=events,
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            selected_theme=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        ), 400
+
+    try:
+        updated = db.update_event(
+            event_id=event_id,
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        )
+    except (db.DuplicateEventSlugError, ValueError) as exc:
+        msg = str(exc)
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Bad Request", "message": msg}), 400
+        flash(msg, "error")
+        return render_template(
+            "admin_event_edit.html",
+            event=event,
+            events=events,
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            selected_theme=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        ), 400
+    except Exception as exc:
+        msg = f"Erro ao atualizar evento: {str(exc)}"
+        if request.is_json or "application/json" in request.headers.get("Accept", ""):
+            return jsonify({"status": "error", "error": "Server Error", "message": msg}), 500
+        flash(msg, "error")
+        return render_template(
+            "admin_event_edit.html",
+            event=event,
+            events=events,
+            nome=nome,
+            slug=slug,
+            descricao=descricao,
+            tema=tema,
+            selected_theme=tema,
+            ativo=ativo,
+            campos_personalizados=campos_personalizados
+        ), 500
+
+    success_msg = f"Evento '{updated['nome']}' e seus campos de inscrição foram atualizados com sucesso!"
+    logger.info("Evento #%d atualizado pelo moderador: Slug %s, Tema %s", updated["id"], updated["slug"], updated.get("tema"))
+
+    if request.is_json or "application/json" in request.headers.get("Accept", ""):
+        return jsonify({
+            "status": "ok",
+            "message": success_msg,
+            "event": updated,
+            "redirect_url": url_for("admin.dashboard", evento=updated["slug"])
+        }), 200
+
+    flash(success_msg, "success")
+    return redirect(url_for("admin.dashboard", evento=updated["slug"]))
+
+
 @admin_bp.route("/events/<int:event_id>/toggle-status", methods=["POST"])
 @admin_required
 def toggle_event_status(event_id: int) -> Any:

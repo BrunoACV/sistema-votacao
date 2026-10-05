@@ -54,6 +54,13 @@
          title="Visualizar a tela de votação pública deste concurso">
         Abrir Votação ↗
       </a>
+
+      <!-- Edit Event & Fields Button -->
+      <a href="{{ url_for('admin.edit_event', event_id=current_event.id) }}"
+         class="inline-flex items-center px-3.5 py-2 border border-[#bd93f9]/50 rounded-xl text-xs font-bold text-[#bd93f9] bg-[#282a36] hover:bg-[#bd93f9] hover:text-[#282a36] transition shadow"
+         title="Editar dados do concurso e configurar campos da ficha de inscrição">
+        Editar Concurso & Campos
+      </a>
     </div>
   </div>
 
@@ -200,6 +207,12 @@
                   {{ 'Pausar' if ev.ativo else 'Ativar' }}
                 </button>
               </form>
+
+              <a href="{{ url_for('admin.edit_event', event_id=ev.id) }}" 
+                 class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#bd93f9] bg-[#bd93f9]/15 hover:bg-[#bd93f9] hover:text-[#282a36] border border-[#bd93f9]/30 transition"
+                 title="Editar concurso e configurar campos">
+                Editar
+              </a>
 
               <a href="{{ url_for('public.vote', slug=ev.slug) }}" target="_blank"
                  class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#8be9fd] bg-[#282a36] hover:bg-[#8be9fd] hover:text-[#282a36] border border-[#8be9fd]/30 transition">
