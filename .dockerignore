@@ -15,9 +15,11 @@ __pycache__/
 .coverage
 htmlcov/
 
-# Dados persistentes e fotos: são volumes do host, não entram na imagem
-data/
-static/uploads/
+# Dados persistentes e fotos são volumes do host; mantemos apenas o snapshot seed
+data/*
+!data/voting.db.seed
+static/uploads/*
+!static/uploads/.gitkeep
 
 # Logs e controle de versão
 *.log

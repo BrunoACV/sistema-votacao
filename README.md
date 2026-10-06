@@ -33,8 +33,8 @@ Seguindo o padrão dos sistemas institucionais do INTS:
 
 ```bash
 # 1. Clonar o repositório
-git clone https://github.com/BrunoACV/sistema-votacao-ints.git
-cd sistema-votacao-ints
+git clone https://github.com/BrunoACV/sistema-votacao.git
+cd sistema-votacao
 
 # 2. Subir o contêiner
 docker compose up -d --build

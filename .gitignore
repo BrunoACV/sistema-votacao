@@ -30,12 +30,12 @@ htmlcov/
 # Sobrescritas locais que NAO devem ir para o Git
 .env.local
 
-# Dados do banco SQLite e fotos: sao volumes de producao montados pelo Docker
-data/*.db
-data/*.sqlite*
-static/uploads/*
-!static/uploads/.gitkeep
-!data/.gitkeep
+# O banco de dados SQLite oficial (data/voting.db) e fotos (static/uploads)
+# FICAM NO REPOSITORIO conforme solicitacao, para que o analista de infraestrutura
+# clone o projeto e ele suba imediatamente com a copia exata dos dados de hoje.
+data/*.db-wal
+data/*.db-shm
+data/*.tmp
 
 # Artefatos temporarios de agentes e auditoria
 .agents/

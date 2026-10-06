@@ -21,31 +21,34 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# Dependências de sistema mínimas para processamento de imagens (Pillow)
+# Dependências de sistema: Pillow e utilitário gosu para ajuste seguro de permissões
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg62-turbo \
     zlib1g \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Dependências Python antes do código: camada em cache reutilizada a cada build
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o código da aplicação
+# Copia o código da aplicação (incluindo o banco inicial e fotos do repositório)
 COPY . .
 
-# Cria pastas para persistência de volumes e define permissões com usuário não-root
+# Cria pastas para persistência de volumes e prepara usuário seguro
 RUN mkdir -p /app/data /app/static/uploads && \
     useradd -u 1000 -m -s /bin/bash appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app && \
+    chmod +x /app/entrypoint.sh
 
-# Usuário seguro sem privilégios de root
-USER appuser
 EXPOSE 9090
 
 # Saúde checada pelo endpoint oficial /health (retorna JSON 200)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD python -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:9090/health').getcode() == 200 else 1)"
+
+# Script de entrada que valida permissões dos volumes montados pelo host antes de iniciar
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Execução em produção com servidor WSGI Gunicorn (2 workers, 4 threads)
 CMD ["gunicorn", "-w", "2", "--threads", "4", "--bind", "0.0.0.0:9090", "--access-logfile", "-", "--error-logfile", "-", "run:app"]

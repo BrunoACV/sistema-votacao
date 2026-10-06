@@ -1,19 +1,19 @@
 # ---------------------------------------------------------------------------
-# Sistema de Votação Institucional de Halloween INTS em contêiner.
+# Sistema de Votação Institucional INTS em contêiner Docker.
 #
 #   Subir (e reconstruir a imagem):  docker compose up -d --build
 #   Ver o log:                       docker compose logs -f votacao
 #   Parar:                           docker compose down
 #   Reiniciar:                       docker compose restart votacao
 #
-# A porta de fora é HALLOWEEN_PORTA (padrão 9090); dentro do contêiner é sempre
-# 9090. Para outra porta:  HALLOWEEN_PORTA=9091 docker compose up -d
+# A porta no host é VOTACAO_PORTA (padrão 9090); dentro do contêiner é sempre 9090.
+# Para outra porta no servidor:  VOTACAO_PORTA=8080 docker compose up -d
 # ---------------------------------------------------------------------------
 services:
   votacao:
     build: .
-    image: sistema-votacao-ints:latest
-    container_name: sistema-votacao-ints
+    image: sistema-votacao:latest
+    container_name: sistema-votacao
     restart: unless-stopped
 
     # O .env do repositório entra como variável de ambiente, e não como arquivo
@@ -30,14 +30,15 @@ services:
       TZ: America/Bahia
 
     ports:
-      - "${HALLOWEEN_PORTA:-9090}:9090"
+      - "${VOTACAO_PORTA:-${HALLOWEEN_PORTA:-9090}}:9090"
 
     volumes:
       # Banco de dados SQLite persistente (participantes, fotos, votos, histórico).
-      # Pasta do host, e não volume anônimo: sobrevive a rebuilds e atualizações.
+      # Mapeado diretamente no diretório ./data do host: já contém a cópia atualizada
+      # do banco e persiste todos os novos votos e eventos.
       - ./data:/app/data
 
-      # Diretório de fotos das fantasias enviadas pelos candidatos.
+      # Diretório de fotos dos participantes enviadas no cadastro.
       - ./static/uploads:/app/static/uploads
 
     logging:

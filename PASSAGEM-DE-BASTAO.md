@@ -70,13 +70,13 @@ Seguindo o padrão do **Portal de Dashboards**, o deploy em produção é execut
 
 ### 5.1 Arquivos do Docker
 - **`Dockerfile`**: Base `python:3.11-slim-bookworm`, sem privilégios de root (roda com usuário `appuser` UID 1000), expõe a porta `9090` e executa via Gunicorn.
-- **`docker-compose.yml`**: Serviço `votacao`, container `sistema-votacao-ints`, imagem `sistema-votacao-ints:latest`, reinicialização `unless-stopped`, política de logs limitada (`10m`, 5 arquivos).
+- **`docker-compose.yml`**: Serviço `votacao`, container `sistema-votacao`, imagem `sistema-votacao:latest`, reinicialização `unless-stopped`, política de logs limitada (`10m`, 5 arquivos).
 - **`.dockerignore`**: Exclui `.env`, `.git`, `.venv`, `__pycache__` e testes, mantendo a imagem leve (~250 MB).
 
 ### 5.2 Persistência de Dados (Volumes)
 Dois diretórios do host são mapeados no contêiner para garantir sobrevivência total de dados entre deploys:
-1. `./data:/app/data` — Contém o banco de dados SQLite `voting.db`.
-2. `./static/uploads:/app/static/uploads` — Contém os arquivos JPG/PNG das fotos enviadas.
+1. `./data:/app/data` — Contém o banco de dados SQLite `voting.db` (já populado com a cópia oficial dos dados atuais).
+2. `./static/uploads:/app/static/uploads` — Contém as fotos homologadas dos participantes.
 
 ### 5.3 Comandos Rápidos
 ```bash
@@ -103,7 +103,7 @@ O arquivo `.env` fica versionado no repositório Git (conforme padrão instituci
 |---|---|---|
 | `HOST` | `0.0.0.0` | Endereço IP de escuta. |
 | `PORT` | `9090` | Porta interna da aplicação. |
-| `HALLOWEEN_PORTA` | `9090` | Porta externa mapeada no host pelo Docker Compose. |
+| `VOTACAO_PORTA` / `HALLOWEEN_PORTA` | `9090` | Porta externa mapeada no host pelo Docker Compose. |
 | `ADMIN_PASSWORD` | `Ints@Halloween2026!` | Senha de acesso ao painel de moderação. |
 | `SECRET_KEY` | *(Hash seguro)* | Chave de assinatura criptográfica de sessão Flask. |
 | `DATABASE_PATH` | `data/voting.db` | Caminho do arquivo SQLite. |

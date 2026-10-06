@@ -6,15 +6,19 @@ set -e
 cd "$(dirname "$0")"
 
 echo "=================================================="
-echo "  Sistema de Votacao de Halloween - INTS"
+echo "  Sistema de Votacao Institucional - INTS"
 echo "=================================================="
+
+# Garante a existencia das pastas de persistencia e permissoes no host
+mkdir -p data static/uploads
+chmod -R 775 data static/uploads 2>/dev/null || true
 
 # Se o docker compose estiver disponível, prioriza contêiner
 if command -v docker &> /dev/null && docker compose version &> /dev/null; then
     echo "[INFO] Subindo via Docker Compose..."
     docker compose up -d --build
     echo ""
-    echo "[SUCESSO] Sistema rodando no Docker!"
+    echo "[SUCESSO] Sistema rodando no Docker na porta 9090!"
     echo "Logs: docker compose logs -f votacao"
     exit 0
 fi
