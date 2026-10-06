@@ -69,8 +69,8 @@
                     
                     <!-- Candidate Photo with Fullscreen Aspect Normal trigger -->
                     <div class="relative h-72 w-full bg-[#1e1f29] overflow-hidden cursor-pointer"
-                         onclick="openPhotoModal('{{ url_for('static', filename='uploads/' + cand.foto_filename) if cand.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}', '{{ cand.nome_completo|e }}', '{{ cand.descricao|e }}')">
-                        <img src="{{ url_for('static', filename='uploads/' + cand.foto_filename) if cand.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
+                         onclick="openPhotoModal('{{ url_for('public.photo', filename=cand.foto_filename) if cand.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}', '{{ cand.nome_completo|e }}', '{{ cand.descricao|e }}')">
+                        <img loading="lazy" decoding="async" src="{{ url_for('public.photo', filename=cand.foto_filename) if cand.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
                              alt="{{ cand.nome_completo }}"
                              onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'"
                              class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
@@ -523,7 +523,7 @@
                 }
 
                 try {
-                    const response = await fetch("{{ url_for('public.vote') }}", {
+                    const response = await fetch(votingForm.action, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

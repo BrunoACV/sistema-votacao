@@ -269,7 +269,7 @@
                 <!-- Photo Thumbnail -->
                 <td class="px-5 py-4 whitespace-nowrap">
                   <div class="h-12 w-12 rounded-xl overflow-hidden bg-[#282a36] border border-[#6272a4]/40">
-                    <img src="{{ url_for('static', filename='uploads/' + p.foto_filename) if p.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
+                    <img loading="lazy" decoding="async" src="{{ url_for('public.photo', filename=p.foto_filename) if p.foto_filename else 'https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto' }}" 
                          alt="{{ p.nome_completo }}"
                          onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'"
                          class="h-full w-full object-cover">

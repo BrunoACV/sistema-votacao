@@ -521,3 +521,30 @@ def results(slug: Optional[str] = None):
         current_event=event,
         all_events=all_events,
     )
+
+
+@public_bp.route("/foto/<path:filename>", methods=["GET"])
+def photo(filename: str):
+    """
+    Serves a lightweight JPEG copy (max 1200px) of an uploaded photo.
+    The original files can be several MB; the copy is generated once and cached on disk.
+    """
+    from pathlib import Path
+    from flask import send_from_directory
+    from PIL import Image, ImageOps
+
+    upload_dir = Path(current_app.config["UPLOAD_FOLDER"]).resolve()
+    src = (upload_dir / filename).resolve()
+    if upload_dir not in src.parents or not src.is_file():
+        abort(404)
+    cache_dir = upload_dir / "_leve"
+    cache_dir.mkdir(exist_ok=True)
+    dest = cache_dir / (src.stem + ".jpg")
+    if not dest.exists() or dest.stat().st_mtime < src.stat().st_mtime:
+        with Image.open(src) as img:
+            img = ImageOps.exif_transpose(img).convert("RGB")
+            img.thumbnail((1200, 1200))
+            tmp = dest.with_suffix(".tmp")
+            img.save(tmp, "JPEG", quality=82, optimize=True, progressive=True)
+            tmp.replace(dest)
+    return send_from_directory(cache_dir, dest.name, max_age=60 * 60 * 24 * 30)
