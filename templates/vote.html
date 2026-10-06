@@ -131,7 +131,7 @@
             </div>
 
             <!-- Sticky Bottom Confirmation Bar -->
-            <div class="sticky bottom-6 z-30 bg-[#343746]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-[#bd93f9]/40 p-5 sm:p-6 max-w-2xl mx-auto glow-card space-y-4">
+            <div id="vote-panel" class="{{ '' if selected_candidate else 'hidden' }} sticky bottom-6 z-30 bg-[#343746]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-[#bd93f9]/40 p-5 sm:p-6 max-w-2xl mx-auto glow-card space-y-4">
                 
                 <!-- Candidate Selected Indicator -->
                 <div class="flex items-center justify-between p-3.5 bg-[#282a36] rounded-xl border border-[#6272a4]/40">
@@ -141,6 +141,7 @@
                     <div id="selected-summary-name" class="font-black text-sm sm:text-base text-[#ffb86c]">
                         Nenhum candidato selecionado
                     </div>
+                    <button type="button" onclick="clearSelection()" class="ml-3 shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-[#f8f8f2] bg-[#44475a] hover:bg-[#6272a4] transition">Fechar</button>
                 </div>
 
                 <!-- Voter Institutional Email Input -->
@@ -415,6 +416,15 @@
 
         syncButtonState();
 
+        // Mostra o painel de e-mail só depois que um candidato é escolhido
+        const panel = document.getElementById('vote-panel');
+        if (panel && candidateId !== null) {
+            const wasHidden = panel.classList.contains('hidden');
+            panel.classList.remove('hidden');
+            const emailEl = document.getElementById('voter_email') || panel.querySelector('input[type="email"]');
+            if (wasHidden && emailEl && !emailEl.value) emailEl.focus({ preventScroll: true });
+        }
+
         // Reseta todos os cards e destaca apenas o selecionado
         const allCards = document.querySelectorAll('.candidate-card');
         allCards.forEach(card => {
@@ -442,6 +452,18 @@
                 }
             }
         });
+    }
+
+    // Fecha o painel de e-mail e desfaz a escolha
+    function clearSelection() {
+        selectCandidate(null, '');
+        currentSelectedName = null;
+        const hiddenInput = document.getElementById('selected-candidate-input');
+        if (hiddenInput) hiddenInput.value = '';
+        const summaryName = document.getElementById('selected-summary-name');
+        if (summaryName) summaryName.textContent = 'Nenhum candidato selecionado';
+        const panel = document.getElementById('vote-panel');
+        if (panel) panel.classList.add('hidden');
     }
 
     // Inicialização ao carregar o DOM
