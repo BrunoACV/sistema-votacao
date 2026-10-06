@@ -69,7 +69,7 @@ O sistema foi desenvolvido especificamente para o concurso institucional de fant
 Seguindo o padrão do **Portal de Dashboards**, o deploy em produção é executado em contêineres gerenciados pelo Docker Compose:
 
 ### 5.1 Arquivos do Docker
-- **`Dockerfile`**: Base `python:3.11-slim-bookworm`, sem privilégios de root (roda com usuário `appuser` UID 1000), expõe a porta `8080` e executa via Gunicorn.
+- **`Dockerfile`**: Base `python:3.11-slim-bookworm`, sem privilégios de root (roda com usuário `appuser` UID 1000), expõe a porta `9090` e executa via Gunicorn.
 - **`docker-compose.yml`**: Serviço `votacao`, container `sistema-votacao-ints`, imagem `sistema-votacao-ints:latest`, reinicialização `unless-stopped`, política de logs limitada (`10m`, 5 arquivos).
 - **`.dockerignore`**: Exclui `.env`, `.git`, `.venv`, `__pycache__` e testes, mantendo a imagem leve (~250 MB).
 
@@ -102,8 +102,8 @@ O arquivo `.env` fica versionado no repositório Git (conforme padrão instituci
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `HOST` | `0.0.0.0` | Endereço IP de escuta. |
-| `PORT` | `8080` | Porta interna da aplicação. |
-| `HALLOWEEN_PORTA` | `8080` | Porta externa mapeada no host pelo Docker Compose. |
+| `PORT` | `9090` | Porta interna da aplicação. |
+| `HALLOWEEN_PORTA` | `9090` | Porta externa mapeada no host pelo Docker Compose. |
 | `ADMIN_PASSWORD` | `Ints@Halloween2026!` | Senha de acesso ao painel de moderação. |
 | `SECRET_KEY` | *(Hash seguro)* | Chave de assinatura criptográfica de sessão Flask. |
 | `DATABASE_PATH` | `data/voting.db` | Caminho do arquivo SQLite. |
@@ -126,7 +126,7 @@ server {
     client_max_body_size 15M;
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:9090;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
