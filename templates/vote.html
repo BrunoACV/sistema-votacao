@@ -75,10 +75,6 @@
                              onerror="this.src='https://placehold.co/600x400/282a36/bd93f9?text=Sem+Foto'"
                              class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
                         
-                        <!-- Candidate ID Badge -->
-                        <div class="absolute top-3 left-3 bg-[#282a36]/80 backdrop-blur-md text-[#ffb86c] border border-[#ffb86c]/30 text-xs font-black px-2.5 py-1 rounded-full shadow">
-                            #{{ cand.id }}
-                        </div>
 
                         <!-- Selected Badge on Top-Right -->
                         <div id="badge-selected-{{ cand.id }}" class="hidden absolute top-3 right-3 bg-[#50fa7b] text-[#282a36] font-black text-xs px-3 py-1 rounded-full shadow-xl flex items-center space-x-1 animate-pulse">
@@ -411,7 +407,7 @@
         // Atualiza texto resumo
         const summaryName = document.getElementById('selected-summary-name');
         if (summaryName) {
-            summaryName.innerHTML = `<span class="text-[#50fa7b]">Selecionado: ${candidateName} (#${candidateId})</span>`;
+            summaryName.innerHTML = `<span class="text-[#50fa7b]">Selecionado: ${candidateName}</span>`;
         }
 
         syncButtonState();
