@@ -20,8 +20,8 @@ if %ERRORLEVEL% equ 0 (
     echo [INFO] Docker detectado e ativo! Subindo via Docker Compose...
     docker compose up -d --build
     echo.
-    echo [SUCESSO] Sistema rodando no Docker na porta 8080!
-    echo Acesse: http://localhost:8080
+    echo [SUCESSO] Sistema rodando no Docker na porta 9090!
+    echo Acesse: http://localhost:9090
     echo Para ver os logs: docker compose logs -f votacao
     goto :FIM
   )

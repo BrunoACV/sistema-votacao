@@ -621,7 +621,7 @@ class TestM1Foundation(unittest.TestCase):
         """Verify configuration environments, directory auto-healing, and production security validation."""
         # 1. Development configuration
         dev_cfg = get_config("development")
-        self.assertEqual(dev_cfg.PORT, 8080)
+        self.assertEqual(dev_cfg.PORT, 9090)
         self.assertEqual(dev_cfg.HOST, "0.0.0.0")
         self.assertEqual(dev_cfg.ADMIN_PASSWORD, "admin123")
         self.assertTrue(dev_cfg.DEBUG)

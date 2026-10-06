@@ -14,8 +14,8 @@ if %ERRORLEVEL% equ 0 (
 )
 
 REM Encerra qualquer processo python rodando run.py
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8080 ^| findstr LISTENING 2^>nul') do (
-  echo Finalizando processo na porta 8080 (PID %%a)...
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :9090 ^| findstr LISTENING 2^>nul') do (
+  echo Finalizando processo na porta 9090 (PID %%a)...
   taskkill /F /PID %%a >nul 2>&1
 )
 

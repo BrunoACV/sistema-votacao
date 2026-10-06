@@ -1,10 +1,10 @@
 """
 run.py - Main entrypoint for INTS Institutional Voting System.
-Starts the Flask WSGI server bound to 0.0.0.0:8080 by default.
+Starts the Flask WSGI server bound to 0.0.0.0:9090 by default.
 
 Usage:
     python run.py
-    python run.py --host 0.0.0.0 --port 8080
+    python run.py --host 0.0.0.0 --port 9090
     python run.py --env production
 """
 
@@ -78,8 +78,8 @@ def main():
     parser.add_argument(
         "--port",
         type=int,
-        default=int(os.getenv("PORT", "8080")),
-        help="Porta TCP para escuta (padrão: 8080)",
+        default=int(os.getenv("PORT", "9090")),
+        help="Porta TCP para escuta (padrão: 9090)",
     )
     parser.add_argument(
         "--env",

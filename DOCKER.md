@@ -13,7 +13,7 @@ Guia para quem instala e atualiza o sistema de votação num servidor com Docker
 - **Rede de SAÍDA:**
   - Acesso à internet durante o build para baixar a imagem base `python:3.11-slim-bookworm` e pacotes do `requirements.txt`.
   - CDN Tailwind CSS (`cdn.tailwindcss.com`) acessada pelo navegador dos usuários.
-- **Rede de ENTRADA:** a porta publicada (padrão **8080** ou **8081** via Nginx) liberada para a rede corporativa/colaboradores.
+- **Rede de ENTRADA:** a porta publicada (padrão **9090** ou via Nginx) liberada para a rede corporativa/colaboradores.
 
 ---
 
@@ -25,9 +25,9 @@ cd sistema-votacao-ints
 docker compose up -d --build
 ```
 
-- **Outra porta no host:** se a porta 8080 já estiver ocupada no servidor, passe a variável antes:
+- **Outra porta no host:** se a porta 9090 já estiver ocupada no servidor, passe a variável antes:
   ```bash
-  HALLOWEEN_PORTA=8081 docker compose up -d --build
+  HALLOWEEN_PORTA=9091 docker compose up -d --build
   ```
 - **Conferir funcionamento:**
   - `docker compose ps` deve mostrar o contêiner `sistema-votacao-ints` como `Up` e `(healthy)`.
@@ -61,7 +61,7 @@ O comando `up --build` reconstrói a imagem com o código novo e recria o contê
 | **Reiniciar aplicação** | `docker compose restart votacao` |
 | **Parar contêiner** | `docker compose down` |
 | **Verificar status e saúde** | `docker compose ps` |
-| **Testar endpoint de saúde** | `curl -s http://localhost:8080/health` |
+| **Testar endpoint de saúde** | `curl -s http://localhost:9090/health` |
 
 ---
 
@@ -93,7 +93,7 @@ Para restaurar num servidor novo, basta extrair as pastas `data/` e `static/uplo
   Se o servidor utilizar Nginx na porta 80/443 apontando para o sistema, utilize o seguinte bloco de proxy:
   ```nginx
   location / {
-      proxy_pass http://127.0.0.1:8080;
+      proxy_pass http://127.0.0.1:9090;
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

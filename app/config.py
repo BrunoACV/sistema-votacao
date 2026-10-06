@@ -23,7 +23,7 @@ class Config:
 
     # Network Binding
     HOST: str = os.getenv("HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("PORT", "8080"))
+    PORT: int = int(os.getenv("PORT", "9090"))
 
     # Security: Admin Password
     ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "admin123")
@@ -88,7 +88,7 @@ class DevelopmentConfig(Config):
     TESTING: bool = False
     APP_ENV: str = "development"
     HOST: str = os.getenv("DEV_HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("DEV_PORT", "8080"))
+    PORT: int = int(os.getenv("DEV_PORT", "9090"))
     ADMIN_PASSWORD: str = os.getenv("DEV_ADMIN_PASSWORD", "admin123")
 
 

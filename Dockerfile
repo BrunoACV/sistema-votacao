@@ -16,7 +16,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     APP_ENV=production \
     TZ=America/Bahia \
-    PORT=8080 \
+    PORT=9090 \
     HOST=0.0.0.0
 
 WORKDIR /app
@@ -41,11 +41,11 @@ RUN mkdir -p /app/data /app/static/uploads && \
 
 # Usuário seguro sem privilégios de root
 USER appuser
-EXPOSE 8080
+EXPOSE 9090
 
 # Saúde checada pelo endpoint oficial /health (retorna JSON 200)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD python -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8080/health').getcode() == 200 else 1)"
+  CMD python -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:9090/health').getcode() == 200 else 1)"
 
 # Execução em produção com servidor WSGI Gunicorn (2 workers, 4 threads)
-CMD ["gunicorn", "-w", "2", "--threads", "4", "--bind", "0.0.0.0:8080", "--access-logfile", "-", "--error-logfile", "-", "run:app"]
+CMD ["gunicorn", "-w", "2", "--threads", "4", "--bind", "0.0.0.0:9090", "--access-logfile", "-", "--error-logfile", "-", "run:app"]

@@ -11,7 +11,7 @@ if command -v docker &> /dev/null && docker compose version &> /dev/null; then
 fi
 
 # Finaliza processos python na porta se ainda estiverem rodando
-PID=$(lsof -t -i:8080 2>/dev/null || true)
+PID=$(lsof -t -i:9090 2>/dev/null || true)
 if [ -n "$PID" ]; then
     echo "Encerrando processo $PID..."
     kill -9 "$PID" 2>/dev/null || true

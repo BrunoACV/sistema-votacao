@@ -43,7 +43,7 @@ docker compose up -d --build
 docker compose logs -f votacao
 ```
 
-O sistema estará acessível em: `http://localhost:8080`.
+O sistema estará acessível em: `http://localhost:9090`.
 
 Para detalhes completos de operação, portas alternativas e rotinas de backup, consulte o [DOCKER.md](DOCKER.md).
 

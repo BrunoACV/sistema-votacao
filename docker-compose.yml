@@ -6,8 +6,8 @@
 #   Parar:                           docker compose down
 #   Reiniciar:                       docker compose restart votacao
 #
-# A porta de fora é HALLOWEEN_PORTA (padrão 8080); dentro do contêiner é sempre
-# 8080. Para outra porta:  HALLOWEEN_PORTA=8081 docker compose up -d
+# A porta de fora é HALLOWEEN_PORTA (padrão 9090); dentro do contêiner é sempre
+# 9090. Para outra porta:  HALLOWEEN_PORTA=9091 docker compose up -d
 # ---------------------------------------------------------------------------
 services:
   votacao:
@@ -24,13 +24,13 @@ services:
 
     environment:
       # Fixos aqui, vencendo o .env para garantir alinhamento interno do contêiner
-      PORT: "8080"
+      PORT: "9090"
       HOST: "0.0.0.0"
       APP_ENV: production
       TZ: America/Bahia
 
     ports:
-      - "${HALLOWEEN_PORTA:-8080}:8080"
+      - "${HALLOWEEN_PORTA:-9090}:9090"
 
     volumes:
       # Banco de dados SQLite persistente (participantes, fotos, votos, histórico).
