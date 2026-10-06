@@ -302,6 +302,17 @@ def vote(slug: Optional[str] = None):
     Public voting endpoint scoped to an event.
     Displays candidates and processes consolidated institutional evaluations.
     """
+    if request.method == "POST" and not slug and not (request.args.get("evento") or request.args.get("event")):
+        # Pagina antiga (em cache) envia para /vote sem o evento: deduz pelo candidato escolhido.
+        body = request.get_json(silent=True) if request.is_json else request.form
+        picked = (body or {}).get("selected_candidate") or (body or {}).get("candidate_id") or (body or {}).get("participant_id")
+        if picked and str(picked).isdigit():
+            part = get_participant_by_id(int(picked))
+            if part and part.get("event_id"):
+                ev = get_event_by_id(int(part["event_id"]))
+                if ev:
+                    slug = ev["slug"]
+
     event = resolve_event(slug)
     candidates = list_participants(event_id=event["id"])
 
@@ -548,3 +559,11 @@ def photo(filename: str):
             img.save(tmp, "JPEG", quality=82, optimize=True, progressive=True)
             tmp.replace(dest)
     return send_from_directory(cache_dir, dest.name, max_age=60 * 60 * 24 * 30)
+
+
+@public_bp.after_request
+def no_stale_pages(response):
+    """HTML pages are always revalidated so nobody votes from an outdated copy of the page."""
+    if response.mimetype == "text/html":
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
