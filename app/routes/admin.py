@@ -30,7 +30,7 @@ from flask import (
     url_for,
 )
 
-from app import db, storage
+from app import db, event_focus, storage
 from app.config import Config
 
 logger = logging.getLogger(__name__)
@@ -77,8 +77,9 @@ def resolve_admin_event(target: Optional[str] = None) -> Dict[str, Any]:
         if not ev and target_str.isdigit():
             ev = db.get_event_by_id(int(target_str))
         if ev:
+            event_focus.remember(ev)
             return ev
-    return db.get_default_event()
+    return event_focus.focused_or_default()
 
 
 def is_admin_authenticated() -> bool:
@@ -853,7 +854,7 @@ def reset_votes() -> Any:
             target_event_id = ev["id"]
             event_name = ev["nome"]
     else:
-        ev = db.get_default_event()
+        ev = event_focus.focused_or_default()
         if ev:
             target_event_id = ev["id"]
             event_name = ev["nome"]

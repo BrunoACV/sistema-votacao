@@ -18,6 +18,7 @@ from flask import (
     abort,
 )
 
+from app import event_focus
 from app.db import (
     add_participant,
     list_participants,
@@ -68,8 +69,9 @@ def resolve_event(slug: Optional[str] = None) -> Dict[str, Any]:
             ev = get_event_by_id(int(target_str))
         if not ev:
             abort(404, description=f"Evento de votação '{target}' não foi encontrado.")
+        event_focus.remember(ev)
         return ev
-    return get_default_event()
+    return event_focus.focused_or_default()
 
 
 @public_bp.route("/", methods=["GET"])
