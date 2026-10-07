@@ -101,6 +101,14 @@ class EventFocusTestCase(unittest.TestCase):
             html = r.get_data(as_text=True)
             self.assertIn(f'title="{FOCO}"', html, url)  # caixa "Evento Ativo" do menu lateral
 
+    def test_indicador_de_evento_em_todas_as_telas_de_gestao(self):
+        self.client.post("/admin/login", data={"password": "admin_test_pass"}, follow_redirects=True)
+        self.client.get(f"/e/{self.foco['slug']}/vote")
+        for url in ("/admin", "/admin/voters", "/admin/users", "/admin/events/new", "/eventos", "/admin/change-password"):
+            r = self.client.get(url, follow_redirects=True)
+            self.assertEqual(r.status_code, 200, url)
+            self.assertIn(f'title="{FOCO}"', r.get_data(as_text=True), url)
+
 
 if __name__ == "__main__":
     unittest.main()

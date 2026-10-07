@@ -181,6 +181,19 @@ def create_app(config_input: Optional[Union[str, Type[Config], Config]] = None) 
             "default_theme": DEFAULT_THEME,
         }
 
+    # 8b. Evento em foco disponivel em toda tela (caixa "Evento Ativo" do menu do moderador).
+    # A view que passa current_event no render_template prevalece sobre este valor.
+    @app.context_processor
+    def inject_focused_event() -> Dict[str, Any]:
+        from flask import session as _session
+        from app import event_focus
+        if not _session.get("is_admin"):
+            return {}
+        try:
+            return {"current_event": event_focus.focused_or_default()}
+        except Exception:
+            return {}
+
     # 9. Security Response Headers
     @app.after_request
     def set_security_headers(response: Response) -> Response:
