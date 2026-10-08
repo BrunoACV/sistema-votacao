@@ -693,7 +693,9 @@ def delete_event(event_id: int) -> Any:
         flash(msg, "error")
         return redirect(url_for("admin.dashboard"))
 
+    _hist_desde = db.last_vote_deletion_id()
     deleted_data = db.delete_event_by_id(event_id)
+    db.tag_vote_deletions(_hist_desde, "evento excluído", session.get("username") or "moderador")
     if not deleted_data:
         msg = f"Evento #{event_id} não encontrado ou já foi excluído."
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
@@ -726,7 +728,9 @@ def delete_participant(participant_id: int) -> Any:
     """
     Cascade deletion endpoint for a candidate.
     """
+    _hist_desde = db.last_vote_deletion_id()
     deleted_data = db.delete_participant_by_id(participant_id)
+    db.tag_vote_deletions(_hist_desde, "candidato excluído", session.get("username") or "moderador")
     if not deleted_data:
         msg = f"Candidato #{participant_id} não encontrado ou já foi excluído."
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
@@ -774,10 +778,12 @@ def voters_audit() -> Any:
     if event_arg == "todos":
         current_event = None
         voters = db.get_voters_audit(event_id=-1)
+        deletions = db.list_vote_deletions()
         summary = db.get_voting_summary(event_id=-1)
     else:
         current_event = resolve_admin_event(event_arg)
         voters = db.get_voters_audit(event_id=current_event["id"])
+        deletions = db.list_vote_deletions(event_id=current_event["id"])
         summary = db.get_voting_summary(event_id=current_event["id"])
 
     if request.is_json or "application/json" in request.headers.get("Accept", ""):
@@ -793,6 +799,7 @@ def voters_audit() -> Any:
     return render_template(
         "admin_voters.html",
         current_event=current_event,
+        deletions=deletions,
         events=events,
         voters=voters,
         summary=summary
@@ -805,7 +812,9 @@ def delete_voter(voter_id: int) -> Any:
     """
     Cascade deletion endpoint for a voter and their cast vote.
     """
+    _hist_desde = db.last_vote_deletion_id()
     deleted_data = db.delete_vote_by_voter_id(voter_id)
+    db.tag_vote_deletions(_hist_desde, "auditoria de eleitores", session.get("username") or "moderador")
     if not deleted_data:
         msg = f"Eleitor #{voter_id} não encontrado ou já foi excluído."
         if request.is_json or "application/json" in request.headers.get("Accept", ""):
@@ -859,7 +868,9 @@ def reset_votes() -> Any:
             target_event_id = ev["id"]
             event_name = ev["nome"]
 
+    _hist_desde = db.last_vote_deletion_id()
     deleted_count = db.reset_all_votes(event_id=target_event_id)
+    db.tag_vote_deletions(_hist_desde, "zerar votos", session.get("username") or "moderador")
     success_msg = f"Todos os votos ({deleted_count}) do evento '{event_name}' foram zerados com sucesso."
     logger.info("Todos os votos foram zerados pelo moderador para o evento #%s. Total de votos removidos: %d", str(target_event_id), deleted_count)
 

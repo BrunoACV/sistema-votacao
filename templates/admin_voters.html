@@ -139,6 +139,46 @@
     {% endif %}
   </div>
 
+  <!-- Histórico de exclusões de votos -->
+  <div class="bg-[#343746] rounded-2xl border border-[#ff5555]/30 shadow-xl overflow-hidden" id="historico-exclusoes">
+    <div class="px-6 py-4 border-b border-[#6272a4]/20 flex items-center justify-between">
+      <h2 class="text-sm font-black uppercase tracking-wider text-[#ff5555]">Histórico de Votos Excluídos</h2>
+      <span class="text-xs text-[#6272a4]">{{ deletions|length }} registro(s){% if current_event %} neste evento{% endif %}</span>
+    </div>
+    {% if deletions %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-[#6272a4]/20 text-left text-sm" id="deletions-table">
+          <thead class="bg-[#282a36] text-[#6272a4] font-bold uppercase text-[11px] tracking-wider">
+            <tr>
+              <th class="px-6 py-3.5">Excluído em (UTC)</th>
+              <th class="px-6 py-3.5">Colaborador</th>
+              <th class="px-6 py-3.5">Voto que tinha</th>
+              <th class="px-6 py-3.5">Evento</th>
+              <th class="px-6 py-3.5">Votou em (UTC)</th>
+              <th class="px-6 py-3.5">Como</th>
+              <th class="px-6 py-3.5">Quem excluiu</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#6272a4]/20">
+            {% for d in deletions %}
+              <tr class="hover:bg-[#44475a]/40 transition-colors">
+                <td class="px-6 py-3 whitespace-nowrap text-xs text-[#f8f8f2]">{{ d.deleted_at }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-xs font-mono text-[#8be9fd]">{{ d.email }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-xs font-bold text-[#50fa7b]">{{ d.candidatos or '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-xs text-[#ffb86c]">{{ d.event_nome or '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-xs text-[#6272a4]">{{ d.voted_at or '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-xs text-[#f8f8f2]">{{ d.origem }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-xs font-bold text-[#ff79c6]">{{ d.moderador }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-8 text-center text-[#6272a4] text-sm">Nenhum voto excluído registrado.</div>
+    {% endif %}
+  </div>
+
 </div>
 {% endblock %}
 

@@ -588,9 +588,115 @@ def init_db(db_path: Optional[Union[str, Path]] = None) -> None:
         cur.execute("CREATE INDEX IF NOT EXISTS idx_votes_participant ON votes(participant_id);")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);")
 
+        # 7. Historico de exclusoes de votos (gravado pelo proprio banco, qualquer que seja a origem)
+        for stmt in VOTE_DELETIONS_SQL:
+            cur.execute(stmt)
+
         cur.execute("PRAGMA foreign_keys = ON;")
     finally:
         conn.close()
+
+
+VOTE_DELETIONS_SQL = [
+    """
+    CREATE TABLE IF NOT EXISTS vote_deletions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        voter_id INTEGER,
+        event_id INTEGER,
+        event_nome TEXT,
+        email TEXT,
+        voted_at TIMESTAMP,
+        candidatos TEXT,
+        origem TEXT,
+        moderador TEXT
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_vote_deletions_event ON vote_deletions(event_id, deleted_at)",
+    # Eleitor apagado: grava o eleitor e o(s) candidato(s) antes que o voto caia em cascata.
+    """
+    CREATE TRIGGER IF NOT EXISTS trg_voters_audit_delete BEFORE DELETE ON voters
+    BEGIN
+        INSERT INTO vote_deletions (voter_id, event_id, event_nome, email, voted_at, candidatos)
+        SELECT OLD.id, OLD.event_id,
+               (SELECT nome FROM events WHERE id = OLD.event_id),
+               OLD.email, OLD.voted_at,
+               (SELECT group_concat(p.nome_completo, ' | ')
+                  FROM votes v LEFT JOIN participants p ON p.id = v.participant_id
+                 WHERE v.voter_id = OLD.id)
+        WHERE NOT EXISTS (SELECT 1 FROM vote_deletions WHERE voter_id = OLD.id);
+    END
+    """,
+    # Voto apagado com o eleitor ainda presente (zerar votos, candidato removido, banco direto).
+    """
+    CREATE TRIGGER IF NOT EXISTS trg_votes_audit_delete BEFORE DELETE ON votes
+    WHEN EXISTS (SELECT 1 FROM voters WHERE id = OLD.voter_id)
+     AND EXISTS (SELECT 1 FROM participants WHERE id = OLD.participant_id)
+     AND EXISTS (SELECT 1 FROM events WHERE id = OLD.event_id)
+    BEGIN
+        INSERT INTO vote_deletions (voter_id, event_id, event_nome, email, voted_at, candidatos)
+        SELECT OLD.voter_id, OLD.event_id,
+               (SELECT nome FROM events WHERE id = OLD.event_id),
+               vt.email, vt.voted_at,
+               (SELECT nome_completo FROM participants WHERE id = OLD.participant_id)
+          FROM voters vt WHERE vt.id = OLD.voter_id;
+    END
+    """,
+    # Evento apagado: grava todos os eleitores dele antes da cascata.
+    """
+    CREATE TRIGGER IF NOT EXISTS trg_events_audit_delete BEFORE DELETE ON events
+    BEGIN
+        INSERT INTO vote_deletions (voter_id, event_id, event_nome, email, voted_at, candidatos)
+        SELECT vt.id, OLD.id, OLD.nome, vt.email, vt.voted_at,
+               (SELECT group_concat(p.nome_completo, ' | ')
+                  FROM votes v LEFT JOIN participants p ON p.id = v.participant_id
+                 WHERE v.voter_id = vt.id)
+          FROM voters vt
+         WHERE vt.event_id = OLD.id
+           AND NOT EXISTS (SELECT 1 FROM vote_deletions WHERE voter_id = vt.id);
+    END
+    """,
+    # Candidato apagado: grava os votos que ele tinha antes que caiam em cascata.
+    """
+    CREATE TRIGGER IF NOT EXISTS trg_participants_audit_delete BEFORE DELETE ON participants
+    BEGIN
+        INSERT INTO vote_deletions (voter_id, event_id, event_nome, email, voted_at, candidatos)
+        SELECT v.voter_id, v.event_id,
+               (SELECT nome FROM events WHERE id = v.event_id),
+               vt.email, vt.voted_at, OLD.nome_completo
+          FROM votes v JOIN voters vt ON vt.id = v.voter_id
+         WHERE v.participant_id = OLD.id
+           AND NOT EXISTS (SELECT 1 FROM vote_deletions WHERE voter_id = v.voter_id);
+    END
+    """,
+]
+
+
+def last_vote_deletion_id(conn: Optional[sqlite3.Connection] = None) -> int:
+    c = conn or get_db()
+    return c.execute("SELECT COALESCE(MAX(id), 0) FROM vote_deletions").fetchone()[0]
+
+
+def tag_vote_deletions(since_id: int, origem: str, moderador: str, conn: Optional[sqlite3.Connection] = None) -> None:
+    """Marca quem e por qual tela apagou os votos gravados depois de since_id."""
+    c = conn or get_db()
+    c.execute(
+        "UPDATE vote_deletions SET origem = ?, moderador = ? WHERE id > ? AND origem IS NULL",
+        (origem, moderador, since_id),
+    )
+
+
+def list_vote_deletions(event_id: Optional[int] = None, limit: int = 500, conn: Optional[sqlite3.Connection] = None) -> List[Dict[str, Any]]:
+    c = conn or get_db()
+    sql = ("SELECT id, deleted_at, voter_id, event_id, event_nome, email, voted_at, candidatos, "
+           "COALESCE(origem, 'direto no banco') AS origem, COALESCE(moderador, '-') AS moderador FROM vote_deletions")
+    args: list = []
+    if event_id is not None:
+        sql += " WHERE event_id = ?"
+        args.append(event_id)
+    sql += " ORDER BY id DESC LIMIT ?"
+    args.append(limit)
+    return [dict(r) for r in c.execute(sql, args).fetchall()]
 
 
 def init_app(app) -> None:
