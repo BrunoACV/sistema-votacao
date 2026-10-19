@@ -33,16 +33,25 @@ services:
       - "${VOTACAO_PORTA:-${HALLOWEEN_PORTA:-9090}}:9090"
 
     volumes:
-      # Banco de dados SQLite persistente (participantes, fotos, votos, histórico).
-      # Mapeado diretamente no diretório ./data do host: já contém a cópia atualizada
-      # do banco e persiste todos os novos votos e eventos.
-      - ./data:/app/data
+      # DADOS DE PRODUÇÃO em volumes nomeados do Docker, FORA da pasta do Git:
+      # git pull / clone novo / rebuild nunca tocam neles. Só "docker compose down -v"
+      # (com -v) apaga — não use -v em produção.
+      - votacao_dados:/app/data          # banco SQLite + backups automáticos
+      - votacao_fotos:/app/static/uploads # fotos dos candidatos
 
-      # Diretório de fotos dos participantes enviadas no cadastro.
-      - ./static/uploads:/app/static/uploads
+      # Banco e fotos iniciais que vêm no repositório (ou de instalação antiga com
+      # dados em ./data): lidos SÓ quando o volume está vazio, e sempre em modo leitura.
+      - ./data:/app/legado:ro
+      - ./static/uploads:/app/legado-fotos:ro
 
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "5"
+
+volumes:
+  votacao_dados:
+    name: sistema-votacao-dados
+  votacao_fotos:
+    name: sistema-votacao-fotos

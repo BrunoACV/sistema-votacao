@@ -16,8 +16,7 @@ __pycache__/
 htmlcov/
 
 # Dados persistentes e fotos são volumes do host; mantemos apenas o snapshot seed
-data/*
-!data/voting.db.seed
+data/
 static/uploads/*
 !static/uploads/.gitkeep
 

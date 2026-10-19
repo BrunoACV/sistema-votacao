@@ -51,4 +51,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Execução em produção com servidor WSGI Gunicorn (2 workers, 4 threads)
-CMD ["gunicorn", "-w", "2", "--threads", "4", "--bind", "0.0.0.0:9090", "--access-logfile", "-", "--error-logfile", "-", "run:app"]
+CMD ["gunicorn", "--preload", "-w", "2", "--threads", "4", "--bind", "0.0.0.0:9090", "--access-logfile", "-", "--error-logfile", "-", "run:app"]

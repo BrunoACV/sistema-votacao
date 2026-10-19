@@ -26,11 +26,22 @@ cd sistema-votacao
 docker compose up -d --build
 ```
 
-### Banco de Dados e Fotos inclusos no mesmo contêiner:
-- **Tudo no mesmo contêiner:** Não há contêiner separado de banco de dados (como MySQL ou Postgres). A aplicação utiliza **SQLite integrado**, rodando diretamente no mesmo contêiner em alta velocidade.
-- **Dados já inclusos:** O repositório já vem com a cópia exata do banco de dados oficial (`data/voting.db`) e todas as fotos dos participantes já homologados (`static/uploads/`).
-- **Persistência garantida via volumes:** As pastas `./data` e `./static/uploads` do servidor são montadas nos volumes `/app/data` e `/app/static/uploads` do contêiner. Novos votos, novos candidatos e novas fotos continuam gravados com total segurança e **sobrevivem a restarts, atualizações e rebuilds**.
-- **Resiliência de permissões:** O contêiner possui rotina automática de validação de permissões de escrita (`entrypoint.sh`), evitando falhas de permissão no volume montado.
+### Banco de dados e fotos: onde moram e por que nunca se perdem
+- **Tudo no mesmo contêiner:** não há contêiner separado de banco. A aplicação usa **SQLite**, dentro do próprio contêiner.
+- **Os dados de produção ficam em volumes do Docker, fora da pasta do Git:**
+  - `sistema-votacao-dados` → banco (`/app/data/voting.db`) e backups automáticos (`/app/data/backups/`)
+  - `sistema-votacao-fotos` → fotos dos candidatos (`/app/static/uploads/`)
+- **`git pull`, `git clone` novo e `docker compose up -d --build` nunca tocam nesses volumes.** O banco e as fotos que vêm no repositório (`./data/voting.db` e `./static/uploads/`) só são usados **na primeira instalação**, quando o volume ainda está vazio. Depois disso o contêiner avisa no log: `Banco de produção preservado`.
+- **Fotos novas do repositório** entram sem sobrescrever nenhuma foto existente.
+- **Backup automático:** a cada subida do contêiner (inclusive a cada publicação) é feita uma cópia do banco em `/app/data/backups/`, antes de qualquer migração. Ficam as 20 últimas.
+- **Nunca use `docker compose down -v`** em produção: o `-v` apaga os volumes, isto é, os votos.
+
+### Levar os votos que já existem para o servidor novo (só na primeira instalação)
+O banco que vem no repositório traz eventos, candidatos e configurações, mas **não os votos já feitos** (os e-mails de quem votou não ficam no Git).
+Para começar com os votos atuais, antes do primeiro `docker compose up`:
+1. Peça ao responsável pelo sistema a cópia atual do banco (`voting.db`).
+2. Coloque-a no servidor em `./data/voting.db` (substituindo a do repositório; **não faça commit dela**).
+3. Rode `docker compose up -d --build`. No log deve aparecer `Primeira instalação: criando o banco a partir de ./data/voting.db`.
 
 ### Ajuste de porta alternativa (opcional):
 Se a porta 9090 já estiver ocupada no servidor, basta informar a porta desejada antes:
@@ -56,7 +67,7 @@ docker compose up -d --build
 docker image prune -f
 ```
 
-O comando `up -d --build` reconstrói a imagem com o código novo e recria o contêiner sem perder os votos ou as fotos salvas nas pastas de persistência `./data` e `./static/uploads`.
+O comando `up -d --build` reconstrói a imagem com o código novo e recria o contêiner. **Votos, eleitores, candidatos, histórico de exclusões e fotos continuam exatamente como estavam**, porque moram nos volumes. Conferir no log: `docker compose logs votacao | grep INFO` deve mostrar `Banco de produção preservado` e o nome do backup feito na subida.
 
 ---
 
@@ -74,18 +85,18 @@ O comando `up -d --build` reconstrói a imagem com o código novo e recria o con
 
 ## 5 · Backup e Restauração
 
-Toda a informação viva do sistema está em duas pastas locais:
-
-1. **Banco SQLite:** pasta `./data/voting.db` (participantes, registros de votantes @ints, contagem de votos).
-2. **Fotos dos Participantes:** pasta `./static/uploads/` (imagens das candidaturas).
-
-Para fazer backup manual ou agendado:
+O contêiner já faz um backup do banco a cada subida (pasta `/app/data/backups/`, 20 últimos). Para um backup completo fora do servidor (banco + fotos):
 ```bash
-# Exemplo de backup diário
-tar -czvf backup-votacao-$(date +%Y%m%d).tar.gz data/ static/uploads/
+docker run --rm -v sistema-votacao-dados:/dados -v sistema-votacao-fotos:/fotos -v "$PWD":/saida alpine   tar -czf /saida/backup-votacao-$(date +%Y%m%d-%H%M).tar.gz -C / dados fotos
 ```
 
-Para restaurar num servidor novo, basta extrair as pastas `data/` e `static/uploads/` no diretório do projeto antes de rodar `docker compose up -d`.
+Restaurar um backup automático (exemplo):
+```bash
+docker compose exec votacao ls /app/data/backups
+docker compose stop votacao
+docker run --rm -v sistema-votacao-dados:/dados alpine cp /dados/backups/voting-AAAAMMDD-HHMMSS.db /dados/voting.db
+docker compose start votacao
+```
 
 ---
 
