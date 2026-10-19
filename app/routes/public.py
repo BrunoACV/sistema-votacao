@@ -19,6 +19,7 @@ from flask import (
 )
 
 from app import event_focus
+from app.routes.admin import admin_required
 from app.db import (
     add_participant,
     list_participants,
@@ -77,12 +78,14 @@ def resolve_event(slug: Optional[str] = None) -> Dict[str, Any]:
 @public_bp.route("/", methods=["GET"])
 def index():
     """
-    Entrypoint route. Redirects to /results of the active event.
+    Entrypoint route. Redirects to the voting screen of the focused event
+    (the podium is restricted to moderators).
     """
-    return redirect(url_for("public.results"))
+    return redirect(url_for("public.vote"))
 
 
 @public_bp.route("/eventos", methods=["GET"])
+@admin_required
 def events_catalog():
     """
     Public catalog listing all active and past voting events.
@@ -494,6 +497,7 @@ def vote_success(slug: Optional[str] = None):
 
 @public_bp.route("/results", methods=["GET"])
 @public_bp.route("/e/<slug>/results", methods=["GET"])
+@admin_required
 def results(slug: Optional[str] = None):
     """
     Public leaderboard and Olympic podium results endpoint scoped to an event.

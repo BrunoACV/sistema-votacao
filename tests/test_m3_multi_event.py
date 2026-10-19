@@ -199,7 +199,8 @@ class MultiEventTestCase(unittest.TestCase):
             ev = db.create_event(nome="Festival da Primavera", descricao="Celebrando a primavera")
             slug = ev["slug"]
 
-        # 1. Catalog route /eventos
+        # 1. Catalog route /eventos (moderator only)
+        self._login_admin()
         resp_catalog = self.client.get("/eventos")
         self.assertEqual(resp_catalog.status_code, 200)
         self.assertIn("Festival da Primavera".encode("utf-8"), resp_catalog.data)

@@ -129,11 +129,23 @@ class M2AppIntegrationTestCase(unittest.TestCase):
         self.assertEqual(data.get("status"), "ok")
         self.assertEqual(data.get("app"), "sistema_votacao_ints")
 
-    def test_root_endpoint_redirects_to_results(self):
-        """GET / must redirect to /results."""
+    def test_root_endpoint_redirects_to_vote(self):
+        """GET / must redirect to the voting screen, never to the podium."""
         response = self.client.get("/", follow_redirects=False)
         self.assertIn(response.status_code, (301, 302, 303, 307, 308))
-        self.assertIn("/results", response.headers.get("Location", ""))
+        self.assertIn("/vote", response.headers.get("Location", ""))
+        self.assertNotIn("/results", response.headers.get("Location", ""))
+
+    def test_podium_and_catalog_are_moderator_only(self):
+        """Anyone opening the bare IP, /results, /e/<slug>/results or /eventos without login is sent to the login page."""
+        for url in ("/results", "/e/halloween/results", "/eventos"):
+            res = self.client.get(url, follow_redirects=False, headers={"Accept": "text/html"})
+            self.assertIn(res.status_code, (302, 303), url)
+            self.assertIn("/admin/login", res.headers.get("Location", ""), url)
+        landing = self.client.get("/", follow_redirects=True, headers={"Accept": "text/html"})
+        self.assertNotIn("Pódio".encode("utf-8"), landing.data)
+        api = self.client.get("/results", headers={"Accept": "application/json"})
+        self.assertEqual(api.status_code, 401)
 
     # ==========================================================================
     # 2. Public Registration Lifecycle
@@ -499,11 +511,13 @@ class M2AppIntegrationTestCase(unittest.TestCase):
 
     def test_results_page_renders_empty_state_cleanly(self):
         """GET /results with no candidates renders cleanly without errors."""
+        self.client.post("/admin/login", data={"password": "secret_admin_test_pass"})
         res = self.client.get("/results")
         self.assertEqual(res.status_code, 200)
 
     def test_results_page_renders_podium(self):
         """GET /results with scored candidates renders podium (Ouro, Prata, Bronze)."""
+        self.client.post("/admin/login", data={"password": "secret_admin_test_pass"})
         # Register 3 candidates
         self.register_test_candidate("Primeiro Colocado", "cand1@ints.org.br", "D1")
         self.register_test_candidate("Segundo Colocado", "cand2@ints.org.br", "D2")

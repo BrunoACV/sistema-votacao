@@ -51,6 +51,7 @@ class EventFocusTestCase(unittest.TestCase):
         self.assertNotIn(FOCO, self._event_shown("/vote"))
 
     def test_catalogo_e_volta_mantem_evento(self):
+        self.client.post("/admin/login", data={"password": "admin_test_pass"})
         self.client.get(f"/e/{self.foco['slug']}/vote")
         self.assertEqual(self.client.get("/eventos").status_code, 200)
         for url in ("/vote", "/results", "/register", "/vote", "/results"):
@@ -60,6 +61,7 @@ class EventFocusTestCase(unittest.TestCase):
             self.assertNotIn(self.default["nome"], shown, url)
 
     def test_voto_sem_evento_na_url_vai_para_o_foco(self):
+        self.client.post("/admin/login", data={"password": "admin_test_pass"})
         self.client.get(f"/e/{self.foco['slug']}/results")
         r = self.client.post("/vote", json={"voter_email": "pessoa.teste@ints.org.br"},
                              headers={"Accept": "application/json"})
@@ -68,6 +70,7 @@ class EventFocusTestCase(unittest.TestCase):
         self.assertIn(FOCO, msg)  # evento sem participantes: mensagem cita o evento em foco
 
     def test_trocar_de_evento_troca_o_foco(self):
+        self.client.post("/admin/login", data={"password": "admin_test_pass"})
         self.client.get(f"/e/{self.foco['slug']}/vote")
         self.client.get(f"/vote?evento={self.outro['slug']}")
         self.assertIn("Outro Evento Paralelo", self._event_shown("/results"))
